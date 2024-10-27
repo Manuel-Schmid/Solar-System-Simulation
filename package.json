@@ -2,9 +2,15 @@
   "name": "Solar-System-Simulation",
   "version": "1.0.0",
   "description": "",
-  "main": "simulation/index.js",
+  "main": "simulation/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
 }
