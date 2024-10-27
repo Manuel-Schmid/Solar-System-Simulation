@@ -1,0 +1,10 @@
+{
+  "name": "Solar-System-Simulation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "simulation/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true
+}
