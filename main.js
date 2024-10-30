@@ -40,8 +40,10 @@ class Planet {
             totalFx += forces[0].force_x
             totalFz += forces[0].force_z
         }
-        this.xVel += totalFx / this.mass
-        this.zVel += totalFz / this.mass
+        this.xVel += totalFx / this.mass  * TRUE_SCALE * 0.01
+        this.zVel += totalFz / this.mass * TRUE_SCALE * 0.01
+        console.log(this.xVel)
+        console.log(this.zVel)
         this.sphere.position.x += this.xVel
         this.sphere.position.z += this.zVel
     }
@@ -54,7 +56,6 @@ class Planet {
             this.distanceToSun = distance
         }
         const force = G * this.mass * other.mass / distance ** 2 // law of attraction
-        console.log(force)
         const theta = Math.atan2(distance_z, distance_x)
         const force_x = Math.cos(theta) * force
         const force_z = Math.sin(theta) * force
@@ -71,7 +72,7 @@ const sun = new Planet(696340 * TRUE_SCALE, 1.98892 * 10 ** 30, 0xffa900);
 sun.isSun = true;
 
 const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x009dff, AU * TRUE_SCALE * 0.01, 0, 0);
-// earth.xVel = 0.0003
+earth.zVel = 1
 const planets = [sun, earth];
 
 camera.position.z = 140; // moving out the camera
