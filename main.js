@@ -56,7 +56,7 @@ class Planet {
         const distance_x = (other.sphere.position.x - this.sphere.position.x) / TRUE_SCALE / 0.01;
         const distance_z = other.sphere.position.z - this.sphere.position.z / TRUE_SCALE / 0.01;
         const distance = Math.sqrt(distance_x ** 2 + distance_z ** 2) // distance in km
-        console.log(convertMonetary(Math.round(distance))) // todo
+        console.log(convertDistance(distance)) // todo
         if (other.isSun) {
             this.distanceToSun = distance
         }
@@ -81,9 +81,8 @@ class Planet {
     }
 }
 
-function convertMonetary(value) { // todo delete
-    let val = (value/1).toFixed(2)
-    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+function convertDistance(value) { // todo delete
+    return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
 }
 
 const sun = new Planet(696340 * TRUE_SCALE * 0.5, 1.98892 * 10 ** 30, 0xffa900);
