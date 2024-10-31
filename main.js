@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {createStars} from "./star_generation";
+import {createStars, updateTriangles} from "./design_utils";
 
 
 const scene = new THREE.Scene();
@@ -67,7 +67,7 @@ class Planet {
 
         const distance_z = (other.sphere.position.z - this.sphere.position.z) / TRUE_SCALE;
         const distance = Math.sqrt(distance_x ** 2 + distance_z ** 2) // distance in km
-        console.log(convertDistance(distance)) // todo
+        // console.log(convertDistance(distance)) // todo
         if (other.isSun) {
             this.distanceToSun = distance
         }
@@ -153,14 +153,29 @@ const planets = [sun, mercury, venus, earth, mars]; // , jupiter, saturn, uranus
 camera.position.y = 400; // moving out the camera
 controls.update();
 
-// Call the function to create stars
+// Call function to create stars
 const stars = createStars()
 scene.add(stars);
+
+// create triangle 1 between two planets closest to each other and the sun
+const closeTriangleGeo = new THREE.BufferGeometry();
+const closeTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
+const closeTriangleOutline = new THREE.LineLoop(closeTriangleGeo, closeTriangleMat); // Create the line loop
+scene.add(closeTriangleOutline);
+
+// create triangle 2 between two planets farthest to each other and the sun
+const farTriangleGeo = new THREE.BufferGeometry();
+const farTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0xfc0341 ) }); // Line material
+const farTriangleOutline = new THREE.LineLoop(farTriangleGeo, farTriangleMat); // Create the line loop
+scene.add(farTriangleOutline);
+
 
 function render() { // runs with 60 fps
     for (const planet of planets){
         planet.updatePosition(planets)
     }
+
+    updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
 
     renderer.render( scene, camera );
 }
