@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import {createStars} from "./star_generation";
 
 
 const scene = new THREE.Scene();
@@ -12,16 +13,16 @@ const controls = new OrbitControls( camera, renderer.domElement );
 
 const G = 6.67428e-11  // Gravitational constant
 const AU = 1.496e+8 // 1 AU in km
-const TRUE_SCALE = 0.0001 // multiply km distances by this
+const TRUE_SCALE = 0.000001 // multiply km distances by this
 const PLANET_SCALE = 0.001 // multiply km distances by this
 
 // setting variables:
 let SHOW_ORBITS = true;
 
 class Planet {
-    constructor( radius, mass, colorHex, x=0, y=0, z=0, xVel=0, zVel=0, isSun=false) {
-        this.xVel = xVel;
-        this.zVel = zVel;
+    constructor( radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
+        this.xVel = 0;
+        this.zVel = 0;
         this.mass = mass;
         this.distanceToSun = 0;
         this.isSun = isSun;
@@ -32,9 +33,15 @@ class Planet {
         this.sphere = new THREE.Mesh( this.geometry, this.material );
         this.sphere.position.set(x, y, z)
         scene.add( this.sphere );
+
+        this.label = null
+        if (!isSun) {
+            this.label = this.createLabel(0 + " km");
+            this.sphere.add(this.label);
+        }
     }
     updatePosition(planets) {
-        if (this.isSun) { return } // fixed sun, this
+        if (this.isSun) { return } // fixed sun
         let totalFx = 0;
         let totalFz = 0;
         for (const planet of planets) {
@@ -45,16 +52,20 @@ class Planet {
             totalFx += forces[0].force_x
             totalFz += forces[0].force_z
         }
-        this.xVel += totalFx / this.mass  * TRUE_SCALE * 0.01
-        this.zVel += totalFz / this.mass * TRUE_SCALE * 0.01
+        this.xVel += totalFx / this.mass * TRUE_SCALE
+        this.zVel += totalFz / this.mass * TRUE_SCALE
         this.sphere.position.x += this.xVel
         this.sphere.position.z += this.zVel
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
+
+        this.updateLabel()
         if (SHOW_ORBITS) this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
-        const distance_x = (other.sphere.position.x - this.sphere.position.x) / TRUE_SCALE / 0.01;
-        const distance_z = other.sphere.position.z - this.sphere.position.z / TRUE_SCALE / 0.01;
+        const distance_x = (other.sphere.position.x - this.sphere.position.x) / TRUE_SCALE;
+        // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
+
+        const distance_z = (other.sphere.position.z - this.sphere.position.z) / TRUE_SCALE;
         const distance = Math.sqrt(distance_x ** 2 + distance_z ** 2) // distance in km
         console.log(convertDistance(distance)) // todo
         if (other.isSun) {
@@ -79,43 +90,72 @@ class Planet {
         const line = new THREE.Line( orbitGeometry, orbitMaterial );
         scene.add(line);
     }
+    createLabel(text) {
+        const canvas = document.createElement('canvas');
+        this.context = canvas.getContext('2d');
+        this.context.font = '24px Arial';
+        this.context.fillStyle = 'white';
+        this.context.fillText(text, 0, 24);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        this.spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+        const sprite = new THREE.Sprite(this.spriteMaterial);
+        sprite.scale.set(50, 25, 25);
+        sprite.position.set(0, 0, 0);
+        return sprite;
+    }
+    updateLabel() {
+        const text = convertDistance(this.distanceToSun) + " km";
+        this.context.clearRect(0, 0, 256, 256); // Clear the previous text
+        this.context.fillText(text, 0, 24);
+        this.spriteMaterial.map.needsUpdate = true; // Refresh the texture
+    }
 }
 
 function convertDistance(value) { // todo delete
     return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
 }
 
-const sun = new Planet(696340 * TRUE_SCALE * 0.5, 1.98892 * 10 ** 30, 0xffa900);
-sun.isSun = true;
 
-const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x8f8f8f, 0.387 * AU * TRUE_SCALE * 0.01, 0, 0);
+const sun = new Planet(696340 * 0.00005, 1.98892 * 10 ** 30, 0xffa900, 0, 0, 0, true);
+
+
+const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x8f8f8f,0.387 * AU * TRUE_SCALE, 0, 0);
 mercury.zVel = 1.49602;
 
-const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900, 0.72 * AU * TRUE_SCALE * 0.01, 0, 0);
-venus.zVel = 1.105288; // speed in og project / 31.684042
+const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * TRUE_SCALE, 0, 0);
+venus.zVel = 1.105288;
 
-const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x009dff, AU * TRUE_SCALE * 0.01, 0, 0);
-earth.zVel = 0.94;
+const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x009dff,AU * TRUE_SCALE, 0, 0);
+earth.zVel = 0.94; // speed in og project / 31.684042
 
-const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff1e00,1.524 * AU * TRUE_SCALE * 0.01, 0, 0);
+// const moon = new Planet(1000 * PLANET_SCALE, 7.34767 * 10 ** 22, 0x8f8f8f,(AU + (0.002710 * AU)) * TRUE_SCALE, 0, 0);
+// moon.zVel = 0.032287;
+// moon.zVel = 0.032287 + 0.94;
+
+const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff1e00,1.524 * AU * TRUE_SCALE, 0, 0);
 mars.zVel = 0.759909
 
-// const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d, 5.2 * AU * TRUE_SCALE * 0.01, 0, 0);
+// const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
 // jupiter.zVel = 0.412195
 //
-// const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f, 9.538 * AU * TRUE_SCALE * 0.01, 0, 0);
+// const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
 // saturn.zVel = 0.305516
 //
-// const uranus = new Planet(3389.5 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb, 19.56 * AU * TRUE_SCALE * 0.01, 0, 0);
+// const uranus = new Planet(3389.5 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * TRUE_SCALE, 0, 0);
 // uranus.zVel = 0.214619
 //
-// const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4, 29.90 * AU * TRUE_SCALE * 0.01, 0, 0);
+// const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
 // neptune.zVel = 0.171379
 
 const planets = [sun, mercury, venus, earth, mars]; // , jupiter, saturn, uranus, neptune
 
 camera.position.y = 400; // moving out the camera
 controls.update();
+
+// Call the function to create stars
+const stars = createStars()
+scene.add(stars);
 
 function render() { // runs with 60 fps
     for (const planet of planets){
