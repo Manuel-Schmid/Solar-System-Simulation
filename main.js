@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {createStars, updateTriangles} from "./design_utils";
+import {convertDistance} from "./utils";
 
 
 const scene = new THREE.Scene();
@@ -67,7 +68,7 @@ class Planet {
 
         const distance_z = (other.sphere.position.z - this.sphere.position.z) / TRUE_SCALE;
         const distance = Math.sqrt(distance_x ** 2 + distance_z ** 2) // distance in km
-        // console.log(convertDistance(distance)) // todo
+        console.log(convertDistance(distance)) // todo
         if (other.isSun) {
             this.distanceToSun = distance
         }
@@ -112,13 +113,8 @@ class Planet {
     }
 }
 
-function convertDistance(value) { // todo delete
-    return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
-}
 
-
-const sun = new Planet(696340 * 0.00005, 1.98892 * 10 ** 30, 0xffa900, 0, 0, 0, true);
-
+const sun = new Planet(696340 * 0.00005, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
 
 const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x8f8f8f,0.387 * AU * TRUE_SCALE, 0, 0);
 mercury.zVel = 1.49602;
@@ -126,14 +122,14 @@ mercury.zVel = 1.49602;
 const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * TRUE_SCALE, 0, 0);
 venus.zVel = 1.105288;
 
-const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x009dff,AU * TRUE_SCALE, 0, 0);
+const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * TRUE_SCALE, 0, 0);
 earth.zVel = 0.94; // speed in og project / 31.684042
 
 // const moon = new Planet(1000 * PLANET_SCALE, 7.34767 * 10 ** 22, 0x8f8f8f,(AU + (0.002710 * AU)) * TRUE_SCALE, 0, 0);
 // moon.zVel = 0.032287;
 // moon.zVel = 0.032287 + 0.94;
 
-const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff1e00,1.524 * AU * TRUE_SCALE, 0, 0);
+const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * TRUE_SCALE, 0, 0);
 mars.zVel = 0.759909
 
 // const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
@@ -154,8 +150,8 @@ camera.position.y = 400; // moving out the camera
 controls.update();
 
 // Call function to create stars
-const stars = createStars()
-scene.add(stars);
+// const stars = createStars()
+// scene.add(stars);
 
 // create triangle 1 between two planets closest to each other and the sun
 const closeTriangleGeo = new THREE.BufferGeometry();
@@ -169,10 +165,29 @@ const farTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().se
 const farTriangleOutline = new THREE.LineLoop(farTriangleGeo, farTriangleMat); // Create the line loop
 scene.add(farTriangleOutline);
 
+// create asteroid belt
+// const ringGeometry = new THREE.TorusGeometry(2.8 * AU * TRUE_SCALE, 0.3, 16, 100); // Major radius 1.5, tube radius 0.1
+// const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x8f8f8f, side: THREE.DoubleSide }); // Yellow color
+// const asteroidBelt = new THREE.Mesh(ringGeometry, ringMaterial);
+// asteroidBelt.rotation.x = Math.PI / 2; // Rotate ring to be horizontal
+// scene.add(asteroidBelt);
+
+// create moon
+const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
+const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x8f8f8f }); // White color
+const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+const moonOrbit = new THREE.Object3D();
+scene.add(moonOrbit); // Add the orbit object to the scene
+moon.position.set(0.06 * AU * TRUE_SCALE, 0, 0); // Position of moon relative to planet
+moonOrbit.add(moon); // Add the moon to the parent object
+
 
 function render() { // runs with 60 fps
     for (const planet of planets){
         planet.updatePosition(planets)
+        // planet.sphere.rotation.x += 0.01; // maybe delete because not visible anyway
+        moonOrbit.position.copy(earth.sphere.position); // Center the orbit on the planet
+        moonOrbit.rotation.y += 0.02; // Control the speed of the moon's orbit
     }
 
     updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);

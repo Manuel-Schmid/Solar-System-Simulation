@@ -8,10 +8,10 @@ export function createStars() {
     const colors = new Float32Array(starCount * 3); // r, g, b for each star
 
     const colorOptions = [
-        new THREE.Color().setHex( 0xffffff ), // white
+        // new THREE.Color().setHex( 0xffffff ), // white
         new THREE.Color().setHex( 0xff0000 ),
         new THREE.Color().setHex( 0xff00ea ),
-        new THREE.Color().setHex( 0x001eff ),
+        // new THREE.Color().setHex( 0x001eff ),
     ];
 
     for (let i = 0; i < starCount; i++) {

@@ -32,3 +32,7 @@ export function findVectorPair(vectorList, findClosest = true) {
     }
     return extremePair;
 }
+
+export function convertDistance(value) { // todo delete
+    return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+}
