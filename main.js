@@ -5,7 +5,7 @@ import {formatDistance} from "./utils";
 
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 2000 );
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -163,7 +163,8 @@ uranus.zVel = 6.7999974 / VELOCITY_FACTOR
 const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
 neptune.zVel = 5.4299794 / VELOCITY_FACTOR
 
-const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]; // , jupiter, saturn, uranus, neptune
+const planets = [sun, mercury, venus, earth, mars];
+// const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 
 camera.position.y = 400; // moving out the camera
 controls.update();
@@ -221,8 +222,7 @@ window.addEventListener('mousedown', (event) => { // Handle mouse click
 
     if (intersects.length > 0) {
         if (targetPlanet !== intersects[0].object) {
-            targetPlanet = intersects[0].object; // Get the planet from intersected object
-            moveToPlanet(targetPlanet);
+            moveToPlanet(intersects[0].object); // Get the planet from intersected object
         }
     }
 });
@@ -234,7 +234,7 @@ window.addEventListener('keydown', (event) => {
         return
     }
 
-    if (event.key === 'd') { // cycle distance unit
+    if (event.key.toLowerCase() === 'd') { // cycle distance unit
         const unit_index = distance_units.indexOf(distance_unit)
         if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
         else distance_unit = distance_units[0]
@@ -256,18 +256,24 @@ window.addEventListener('keydown', (event) => {
         return
     }
 
-    if (event.key >= '0' && event.key <= '9') {
+    if (event.key.toLowerCase() === 'c') {
+        moveToPlanet(sun.sphere, true);
+    }
+
+    if (event.key >= '1' && event.key <= '9') {
         const number = parseInt(event.key);
         if (planets[number]) {
-            targetPlanet = planets[number].sphere;
-            moveToPlanet(targetPlanet);
+            moveToPlanet(planets[number].sphere);
         }
     }
 });
 
 // Move camera to selected planet
-function moveToPlanet(planet) {
-    const targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 50, planet.position.z + 100); // Adjust camera position
+function moveToPlanet(planet, topDown=false) {
+    isCameraLocked = false;
+    targetPlanet = planet;
+    let targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 50, planet.position.z + 100); // Adjust camera position
+    if (topDown) targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 400, planet.position.z); // Adjust camera position
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
     const startTime = performance.now();
