@@ -14,12 +14,17 @@ const controls = new OrbitControls( camera, renderer.domElement );
 
 const G = 6.67428e-11  // Gravitational constant
 const AU = 1.496e+8 // 1 AU in km
+const LY = 9.461e+12 // 1 LY in km
 const TRUE_SCALE = 0.000001 // multiply km distances by this
 const PLANET_SCALE = 0.001 // multiply km distances by this
+const VELOCITY_FACTOR = 31.684042 // divide km/s by this
+let distance_units = ["km", "au", "ly"] // units for distances
 
 // setting variables:
 let SHOW_ORBITS = true;
 let PAUSED = false;
+let distance_unit = distance_units[0];
+
 
 class Planet {
     constructor( radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
@@ -107,9 +112,13 @@ class Planet {
         return sprite;
     }
     updateLabel() {
-        const text = convertDistance(this.distanceToSun) + " km";
+        const distance = (distance_unit === "km") ? this.distanceToSun : (distance_unit === "au") ? this.distanceToSun / AU : this.distanceToSun / LY;
+        const roundedDistance = (distance > 999) // number is bigger than 4 digits
+            ? convertDistance(distance)
+            : distance.toPrecision(4); // round to 4 significant decimals
+        const distanceText = roundedDistance + " " + distance_unit;
         this.context.clearRect(0, 0, 256, 256); // Clear the previous text
-        this.context.fillText(text, 0, 24);
+        this.context.fillText(distanceText, 0, 24);
         this.spriteMaterial.map.needsUpdate = true; // Refresh the texture
     }
 }
@@ -118,34 +127,30 @@ class Planet {
 const sun = new Planet(696340 * 0.00005, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
 
 const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x8f8f8f,0.387 * AU * TRUE_SCALE, 0, 0);
-mercury.zVel = 1.49602;
+mercury.zVel = 47.39996051284 / VELOCITY_FACTOR;
 
 const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * TRUE_SCALE, 0, 0);
-venus.zVel = 1.105288;
+venus.zVel = 35.019991414096 / VELOCITY_FACTOR;
 
 const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * TRUE_SCALE, 0, 0);
-earth.zVel = 0.94; // speed in og project / 31.684042
-
-// const moon = new Planet(1000 * PLANET_SCALE, 7.34767 * 10 ** 22, 0x8f8f8f,(AU + (0.002710 * AU)) * TRUE_SCALE, 0, 0);
-// moon.zVel = 0.032287;
-// moon.zVel = 0.032287 + 0.94;
+earth.zVel = 29.78299948 / VELOCITY_FACTOR; // speed in og project / 31.684042
 
 const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * TRUE_SCALE, 0, 0);
-mars.zVel = 0.759909
+mars.zVel = 24.076988672178 / VELOCITY_FACTOR
 
-// const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
-// jupiter.zVel = 0.412195
+const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
+jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
 //
 // const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
-// saturn.zVel = 0.305516
+// saturn.zVel = 9.679981775672 / VELOCITY_FACTOR
 //
 // const uranus = new Planet(3389.5 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * TRUE_SCALE, 0, 0);
-// uranus.zVel = 0.214619
+// uranus.zVel = 6.7999974 / VELOCITY_FACTOR
 //
 // const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
-// neptune.zVel = 0.171379
+// neptune.zVel = 5.4299794 / VELOCITY_FACTOR
 
-const planets = [sun, mercury, venus, earth, mars]; // , jupiter, saturn, uranus, neptune
+const planets = [sun, mercury, venus, earth, mars, jupiter]; // , jupiter, saturn, uranus, neptune
 
 camera.position.y = 400; // moving out the camera
 controls.update();
@@ -211,6 +216,20 @@ window.addEventListener('click', (event) => { // Handle mouse click
 window.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
         PAUSED = !PAUSED;
+    }
+});
+
+// change distance unit
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'd') {
+        const unit_index = distance_units.indexOf(distance_unit)
+        if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
+        else distance_unit = distance_units[0]
+        console.log(distance_unit)
+
+        for (const planet of planets) {
+            if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
+        }
     }
 });
 
