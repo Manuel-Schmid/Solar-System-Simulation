@@ -5,7 +5,7 @@ import {formatDistance} from "./utils";
 
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 2000 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -25,15 +25,17 @@ let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
 let SHOW_ORBITS = true;
+let SHOW_TRIANGLES = false;
 let PAUSED = false;
 let distance_unit = distance_units[0];
 
 
 class Planet {
-    constructor( radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
+    constructor(radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
+        this.radius = radius;
         this.distanceToSun = 0;
         this.isSun = isSun;
         this.orbits = [];
@@ -44,6 +46,7 @@ class Planet {
         this.sphere.position.set(x, y, z)
         scene.add( this.sphere );
 
+        this.ring = null
         this.label = null
         if (!isSun) {
             this.label = this.createLabel(0 + " km");
@@ -67,13 +70,14 @@ class Planet {
         this.sphere.position.x += this.xVel
         this.sphere.position.z += this.zVel
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
+        // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
+        if (this.ring) this.ring.updatePosition()
         this.updateLabel()
         if (SHOW_ORBITS) this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
         const distance_x = (other.sphere.position.x - this.sphere.position.x) / TRUE_SCALE;
-        // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
         const distance_z = (other.sphere.position.z - this.sphere.position.z) / TRUE_SCALE;
         const distance = Math.sqrt(distance_x ** 2 + distance_z ** 2) // distance in km
@@ -115,25 +119,54 @@ class Planet {
         return sprite;
     }
     updateLabel() {
-        const distanceText = convertDistance(this.distanceToSun) + " " + distance_unit;
+        const distanceText = convertDistance(this.distanceToSun);
         this.context.clearRect(0, 0, 256, 256); // Clear the previous text
         this.context.fillText(distanceText, 0, 24);
         this.spriteMaterial.map.needsUpdate = true; // Refresh the texture
     }
 }
 
-function convertDistance(distance) {
-    let calculatedDistance = 0;
-    if (distance_unit === "km") {
-        calculatedDistance = formatDistance(distance)
-    } else if (distance_unit === "au") {
-        calculatedDistance = (distance / AU).toPrecision(4) // round to 4 significant decimals
-    } else if (distance_unit === "lm") {
-        const lm = Math.floor(distance / LM)
-        const ls = Math.floor((distance % LM) / (LM / 60))
-        calculatedDistance = lm + ":" + ls
+class Ring {
+    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0) {
+        this.parentPlanet = planet
+        // Create a ring geometry around the planet
+        const innerRadius = this.parentPlanet.radius * innerRadiusFactor; // Inner radius slightly larger than planet
+        const outerRadius = this.parentPlanet.radius * outerRadiusFactor; // Outer radius of the ring
+        const ringSegments = 32;
+
+        const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, ringSegments);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: color,  // Ring color
+            side: THREE.DoubleSide, // Render on both sides
+            transparent: false,  // Optional: Make the ring partially transparent
+            opacity: 1          // Adjust transparency as needed
+        });
+
+        this.ringObj = new THREE.Mesh(ringGeometry, ringMaterial);
+        this.ringObj.rotation.x =  xAngle * Math.PI / 180; // rotation angle of the ring
+        this.ringObj.rotation.y = yAngle * Math.PI / 180
+        this.ringObj.position.set(this.parentPlanet.sphere.position.x, this.parentPlanet.sphere.position.y, this.parentPlanet.sphere.position.z);    // Center the ring at the planet's position
+
+        scene.add(this.ringObj);
     }
-    return calculatedDistance;
+    updatePosition() {
+        this.ringObj.position.set(this.parentPlanet.sphere.position.x, this.parentPlanet.sphere.position.y, this.parentPlanet.sphere.position.z)
+    }
+}
+
+function convertDistance(distance) {
+    if (distance_unit === "km") {
+        return formatDistance(distance) + " " + distance_unit
+    } else if (distance_unit === "au") {
+        return (distance / AU).toPrecision(4) + " " + distance_unit // round to 4 significant decimals
+    } else if (distance_unit === "lm") {
+        const lh = Math.floor(distance/LM/60)
+        const lm = Math.floor(distance/LM%60)
+        const ls = String((Math.floor((distance % LM) / (LM / 60)))).padStart(2, '0')
+        if (lh > 0) return lh + ":" +  String(lm).padStart(2, '0') + ":" + ls + " " + "lh";
+        return lm + ":" + ls + " " + distance_unit
+    }
+    return 0;
 }
 
 
@@ -146,44 +179,46 @@ const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 
 venus.zVel = 35.019991414096 / VELOCITY_FACTOR;
 
 const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * TRUE_SCALE, 0, 0);
-earth.zVel = 29.78299948 / VELOCITY_FACTOR; // speed in og project / 31.684042
+earth.zVel = 29.78299948 / VELOCITY_FACTOR;
 
 const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * TRUE_SCALE, 0, 0);
 mars.zVel = 24.076988672178 / VELOCITY_FACTOR
 
-const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
+const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
 jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
 
-const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
+const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
 saturn.zVel = 9.679981775672 / VELOCITY_FACTOR
+const saturnRing = new Ring(saturn, 1.6, 2.7, 0x8d8549, 90)
+saturn.ring = saturnRing
 
-const uranus = new Planet(3389.5 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * TRUE_SCALE, 0, 0);
+const uranus = new Planet(25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * TRUE_SCALE, 0, 0);
 uranus.zVel = 6.7999974 / VELOCITY_FACTOR
+const uranusRing = new Ring(uranus, 1.5, 1.6, 0xb0ffff, 188, 135)
+uranus.ring = uranusRing
 
-const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
+const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
 neptune.zVel = 5.4299794 / VELOCITY_FACTOR
 
-const planets = [sun, mercury, venus, earth, mars];
-// const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
+// const planets = [sun, mercury, venus, earth, mars];
+const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 
 camera.position.y = 400; // moving out the camera
 controls.update();
 
 // Call function to create stars
-// const stars = createStars()
-// scene.add(stars);
+const stars = createStars()
+scene.add(stars);
 
 // create triangle 1 between two planets closest to each other and the sun
 const closeTriangleGeo = new THREE.BufferGeometry();
 const closeTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
 const closeTriangleOutline = new THREE.LineLoop(closeTriangleGeo, closeTriangleMat); // Create the line loop
-scene.add(closeTriangleOutline);
 
 // create triangle 2 between two planets farthest to each other and the sun
 const farTriangleGeo = new THREE.BufferGeometry();
 const farTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0xfc0341 ) }); // Line material
 const farTriangleOutline = new THREE.LineLoop(farTriangleGeo, farTriangleMat); // Create the line loop
-scene.add(farTriangleOutline);
 
 // create asteroid belt
 // const ringGeometry = new THREE.TorusGeometry(2.8 * AU * TRUE_SCALE, 0.3, 16, 100); // Major radius 1.5, tube radius 0.1
@@ -214,13 +249,11 @@ window.addEventListener('mousedown', (event) => { // Handle mouse click
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     isCameraLocked = false;
 
-    // Update the raycaster with the camera and mouse position
     raycaster.setFromCamera(mouse, camera);
 
-    // Calculate objects intersecting the picking ray
     const intersects = raycaster.intersectObjects(planets.map(planet => planet.sphere));
 
-    if (intersects.length > 0) {
+    if (intersects.length > 1) {
         if (targetPlanet !== intersects[0].object) {
             moveToPlanet(intersects[0].object); // Get the planet from intersected object
         }
@@ -258,6 +291,17 @@ window.addEventListener('keydown', (event) => {
 
     if (event.key.toLowerCase() === 'c') {
         moveToPlanet(sun.sphere, true);
+    }
+
+    if (event.key.toLowerCase() === 't') {
+        SHOW_TRIANGLES = !SHOW_TRIANGLES
+        if (SHOW_TRIANGLES) {
+            scene.add(closeTriangleOutline);
+            scene.add(farTriangleOutline);
+        } else {
+            scene.remove(closeTriangleOutline);
+            scene.remove(farTriangleOutline);
+        }
     }
 
     if (event.key >= '1' && event.key <= '9') {
@@ -316,7 +360,7 @@ function render() { // runs with 60 fps
             moonOrbit.rotation.y += 0.02; // speed of moons orbit around earth
         }
 
-        updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
+        if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
     }
 
     // Update the camera's position if locked to a target planet

@@ -3,7 +3,7 @@ import {findVectorPair} from "./utils";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();
-    const starCount = 40000; // Number of stars
+    const starCount = 60000; // Number of stars
     const positions = new Float32Array(starCount * 3); // x, y, z for each star
     const colors = new Float32Array(starCount * 3); // r, g, b for each star
 
@@ -19,9 +19,9 @@ export function createStars() {
 
         // Generate positions while excluding the center range of -500 to 500 for x, y, and z
         do {
-            x = (Math.random() - 0.5) * 2000; // Scale to your desired range
-            y = (Math.random() - 0.5) * 2000; // Scale to your desired range
-            z = (Math.random() - 0.5) * 2000; // Scale to your desired range
+            x = (Math.random() - 0.5) * 10000; // Scale to your desired range
+            y = (Math.random() - 0.5) * 5000; // Scale to your desired range
+            z = (Math.random() - 0.5) * 10000; // Scale to your desired range
         } while (Math.abs(x) < 400 && Math.abs(y) < 400 && Math.abs(z) < 400); // Check if within the exclusion zone
 
         positions[i * 3] = x;
