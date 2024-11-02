@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {createStars, updateTriangles} from "./design_utils";
-import {convertDistance} from "./utils";
+import {formatDistance} from "./utils";
 
 
 const scene = new THREE.Scene();
@@ -11,14 +11,17 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 const controls = new OrbitControls( camera, renderer.domElement );
+// controls.enableDamping = true;
+// controls.dampingFactor = 0.1; // Adjust this value for smoother transitions (0.05 to 0.2 works well)
+
 
 const G = 6.67428e-11  // Gravitational constant
 const AU = 1.496e+8 // 1 AU in km
-const LY = 9.461e+12 // 1 LY in km
+const LM = 1.799e+7 // 1 Light minute in km
 const TRUE_SCALE = 0.000001 // multiply km distances by this
 const PLANET_SCALE = 0.001 // multiply km distances by this
 const VELOCITY_FACTOR = 31.684042 // divide km/s by this
-let distance_units = ["km", "au", "ly"] // units for distances
+let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
 let SHOW_ORBITS = true;
@@ -112,21 +115,31 @@ class Planet {
         return sprite;
     }
     updateLabel() {
-        const distance = (distance_unit === "km") ? this.distanceToSun : (distance_unit === "au") ? this.distanceToSun / AU : this.distanceToSun / LY;
-        const roundedDistance = (distance > 999) // number is bigger than 4 digits
-            ? convertDistance(distance)
-            : distance.toPrecision(4); // round to 4 significant decimals
-        const distanceText = roundedDistance + " " + distance_unit;
+        const distanceText = convertDistance(this.distanceToSun) + " " + distance_unit;
         this.context.clearRect(0, 0, 256, 256); // Clear the previous text
         this.context.fillText(distanceText, 0, 24);
         this.spriteMaterial.map.needsUpdate = true; // Refresh the texture
     }
 }
 
+function convertDistance(distance) {
+    let calculatedDistance = 0;
+    if (distance_unit === "km") {
+        calculatedDistance = formatDistance(distance)
+    } else if (distance_unit === "au") {
+        calculatedDistance = (distance / AU).toPrecision(4) // round to 4 significant decimals
+    } else if (distance_unit === "lm") {
+        const lm = Math.floor(distance / LM)
+        const ls = Math.floor((distance % LM) / (LM / 60))
+        calculatedDistance = lm + ":" + ls
+    }
+    return calculatedDistance;
+}
+
 
 const sun = new Planet(696340 * 0.00005, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
 
-const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x8f8f8f,0.387 * AU * TRUE_SCALE, 0, 0);
+const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * TRUE_SCALE, 0, 0);
 mercury.zVel = 47.39996051284 / VELOCITY_FACTOR;
 
 const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * TRUE_SCALE, 0, 0);
@@ -138,8 +151,8 @@ earth.zVel = 29.78299948 / VELOCITY_FACTOR; // speed in og project / 31.684042
 const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * TRUE_SCALE, 0, 0);
 mars.zVel = 24.076988672178 / VELOCITY_FACTOR
 
-const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
-jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
+// const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
+// jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
 //
 // const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
 // saturn.zVel = 9.679981775672 / VELOCITY_FACTOR
@@ -150,7 +163,7 @@ jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
 // const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
 // neptune.zVel = 5.4299794 / VELOCITY_FACTOR
 
-const planets = [sun, mercury, venus, earth, mars, jupiter]; // , jupiter, saturn, uranus, neptune
+const planets = [sun, mercury, venus, earth, mars]; // , jupiter, saturn, uranus, neptune
 
 camera.position.y = 400; // moving out the camera
 controls.update();
@@ -188,15 +201,17 @@ moon.position.set(0.06 * AU * TRUE_SCALE, 0, 0); // Position of moon relative to
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
-
 // Add raycaster and mouse vector for planet selection
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let targetPlanet = sun; // Default to the sun
+let targetPlanet = sun.sphere; // Default to the sun
+let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
+let cameraOffset = new THREE.Vector3(0, 0, 0); // Default offset
 
-window.addEventListener('click', (event) => { // Handle mouse click
+window.addEventListener('mousedown', (event) => { // Handle mouse click
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    isCameraLocked = false;
 
     // Update the raycaster with the camera and mouse position
     raycaster.setFromCamera(mouse, camera);
@@ -225,7 +240,6 @@ window.addEventListener('keydown', (event) => {
         const unit_index = distance_units.indexOf(distance_unit)
         if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
         else distance_unit = distance_units[0]
-        console.log(distance_unit)
 
         for (const planet of planets) {
             if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
@@ -235,8 +249,8 @@ window.addEventListener('keydown', (event) => {
 
 // Move camera to selected planet
 function moveToPlanet(planet) {
-    const targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 100, planet.position.z + 200); // Adjust camera position
-    const duration = 1; // Duration of the movement in seconds
+    const targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 50, planet.position.z + 100); // Adjust camera position
+    const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
     const startTime = performance.now();
 
@@ -244,7 +258,8 @@ function moveToPlanet(planet) {
         const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
         const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
         camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
-        camera.lookAt(planet.position); // Ensure the camera looks at the planet
+        controls.target.copy(planet.position); // Update the OrbitControls target to the new planet
+        controls.update(); // Update controls to apply the new target
 
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
@@ -254,6 +269,31 @@ function moveToPlanet(planet) {
     animate();
 }
 
+
+// Function to lock the camera to a target planet
+function lockCameraToPlanet(planet) {
+    isCameraLocked = true;
+    // Calculate initial offset based on the planet's current position
+    cameraOffset = new THREE.Vector3().subVectors(camera.position, planet.position);
+}
+
+// Event listener to detect key press for locking/unlocking the camera
+window.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'e') {
+        if (targetPlanet.position.length() > 0) { // if target planet is not the sun
+            if (isCameraLocked) {
+                unlockCamera(); // Unlock if already locked
+            } else {
+                lockCameraToPlanet(targetPlanet); // Lock to the current target
+            }
+        }
+    }
+});
+
+// Function to unlock the camera from the target planet
+function unlockCamera() {
+    isCameraLocked = false;
+}
 
 function render() { // runs with 60 fps
     if(!PAUSED) {
@@ -267,9 +307,20 @@ function render() { // runs with 60 fps
 
         updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
     }
-    if (targetPlanet !== sun) {
+
+    // Update the camera's position if locked to a target planet
+    if (isCameraLocked && targetPlanet) {
+        // Update camera's position based on the planet's position and fixed offset
+        camera.position.copy(targetPlanet.position).add(cameraOffset);
         camera.lookAt(targetPlanet.position);
+    } else {
+        // If not locked, allow OrbitControls to manage the camera freely
+        controls.target.copy(targetPlanet.position);
+        // controls.target.lerp(targetPlanet.position, 0.1); // Lerp factor of 0.1 for smoother transitions
+        controls.update();
     }
+
+
 
     renderer.render( scene, camera );
 }
