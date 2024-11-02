@@ -5,7 +5,7 @@ import {formatDistance} from "./utils";
 
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 2000 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -151,19 +151,19 @@ earth.zVel = 29.78299948 / VELOCITY_FACTOR; // speed in og project / 31.684042
 const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * TRUE_SCALE, 0, 0);
 mars.zVel = 24.076988672178 / VELOCITY_FACTOR
 
-// const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
-// jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
-//
-// const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
-// saturn.zVel = 9.679981775672 / VELOCITY_FACTOR
-//
-// const uranus = new Planet(3389.5 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * TRUE_SCALE, 0, 0);
-// uranus.zVel = 6.7999974 / VELOCITY_FACTOR
-//
-// const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
-// neptune.zVel = 5.4299794 / VELOCITY_FACTOR
+const jupiter = new Planet(3389.5 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * TRUE_SCALE, 0, 0);
+jupiter.zVel = 13.06000369219 / VELOCITY_FACTOR;
 
-const planets = [sun, mercury, venus, earth, mars]; // , jupiter, saturn, uranus, neptune
+const saturn = new Planet(3389.5 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * TRUE_SCALE, 0, 0);
+saturn.zVel = 9.679981775672 / VELOCITY_FACTOR
+
+const uranus = new Planet(3389.5 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * TRUE_SCALE, 0, 0);
+uranus.zVel = 6.7999974 / VELOCITY_FACTOR
+
+const neptune = new Planet(3389.5 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * TRUE_SCALE, 0, 0);
+neptune.zVel = 5.4299794 / VELOCITY_FACTOR
+
+const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]; // , jupiter, saturn, uranus, neptune
 
 camera.position.y = 400; // moving out the camera
 controls.update();
@@ -229,20 +229,38 @@ window.addEventListener('mousedown', (event) => { // Handle mouse click
 
 // Pause functionality
 window.addEventListener('keydown', (event) => {
-    if (event.code === 'Space') {
+    if (event.code === 'Space') { // un/pause the game
         PAUSED = !PAUSED;
+        return
     }
-});
 
-// change distance unit
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'd') {
+    if (event.key === 'd') { // cycle distance unit
         const unit_index = distance_units.indexOf(distance_unit)
         if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
         else distance_unit = distance_units[0]
 
         for (const planet of planets) {
             if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
+        }
+        return
+    }
+
+    if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
+        if (targetPlanet.position.length() > 0) { // if target planet is not the sun
+            if (isCameraLocked) {
+                unlockCamera(); // Unlock if already locked
+            } else {
+                lockCameraToPlanet(targetPlanet); // Lock to the current target
+            }
+        }
+        return
+    }
+
+    if (event.key >= '0' && event.key <= '9') {
+        const number = parseInt(event.key);
+        if (planets[number]) {
+            targetPlanet = planets[number].sphere;
+            moveToPlanet(targetPlanet);
         }
     }
 });
@@ -276,19 +294,6 @@ function lockCameraToPlanet(planet) {
     // Calculate initial offset based on the planet's current position
     cameraOffset = new THREE.Vector3().subVectors(camera.position, planet.position);
 }
-
-// Event listener to detect key press for locking/unlocking the camera
-window.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'e') {
-        if (targetPlanet.position.length() > 0) { // if target planet is not the sun
-            if (isCameraLocked) {
-                unlockCamera(); // Unlock if already locked
-            } else {
-                lockCameraToPlanet(targetPlanet); // Lock to the current target
-            }
-        }
-    }
-});
 
 // Function to unlock the camera from the target planet
 function unlockCamera() {

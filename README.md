@@ -6,7 +6,7 @@
 # Controls
 - Click on Planet: Camera targets that planet
 - E: Lock/Unlock Camera to/From Planet
-- D: cycle through distance units
+- D: cycle through distance unit
 - 
 
 # Todo
