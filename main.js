@@ -19,6 +19,7 @@ const PLANET_SCALE = 0.001 // multiply km distances by this
 
 // setting variables:
 let SHOW_ORBITS = true;
+let PAUSED = false;
 
 class Planet {
     constructor( radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
@@ -68,7 +69,7 @@ class Planet {
 
         const distance_z = (other.sphere.position.z - this.sphere.position.z) / TRUE_SCALE;
         const distance = Math.sqrt(distance_x ** 2 + distance_z ** 2) // distance in km
-        console.log(convertDistance(distance)) // todo
+        // console.log(convertDistance(distance)) // todo
         if (other.isSun) {
             this.distanceToSun = distance
         }
@@ -182,15 +183,74 @@ moon.position.set(0.06 * AU * TRUE_SCALE, 0, 0); // Position of moon relative to
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
-function render() { // runs with 60 fps
-    for (const planet of planets){
-        planet.updatePosition(planets)
-        // planet.sphere.rotation.x += 0.01; // maybe delete because not visible anyway
-        moonOrbit.position.copy(earth.sphere.position); // Center the orbit on the planet
-        moonOrbit.rotation.y += 0.02; // Control the speed of the moon's orbit
+
+// Add raycaster and mouse vector for planet selection
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let targetPlanet = sun; // Default to the sun
+
+window.addEventListener('click', (event) => { // Handle mouse click
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    // Update the raycaster with the camera and mouse position
+    raycaster.setFromCamera(mouse, camera);
+
+    // Calculate objects intersecting the picking ray
+    const intersects = raycaster.intersectObjects(planets.map(planet => planet.sphere));
+
+    if (intersects.length > 0) {
+        if (targetPlanet !== intersects[0].object) {
+            targetPlanet = intersects[0].object; // Get the planet from intersected object
+            moveToPlanet(targetPlanet);
+        }
+    }
+});
+
+// Pause functionality
+window.addEventListener('keydown', (event) => {
+    if (event.code === 'Space') {
+        PAUSED = !PAUSED;
+    }
+});
+
+// Move camera to selected planet
+function moveToPlanet(planet) {
+    const targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 100, planet.position.z + 200); // Adjust camera position
+    const duration = 1; // Duration of the movement in seconds
+    const startPosition = camera.position.clone();
+    const startTime = performance.now();
+
+    function animate() {
+        const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+        const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
+        camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+        camera.lookAt(planet.position); // Ensure the camera looks at the planet
+
+        if (t < 1) {
+            requestAnimationFrame(animate); // Continue animation
+        }
     }
 
-    updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
+    animate();
+}
+
+
+function render() { // runs with 60 fps
+    if(!PAUSED) {
+        for (const planet of planets) {
+            planet.updatePosition(planets)
+            // planet.sphere.rotation.x += 0.01; // rotation around own axis
+
+            moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
+            moonOrbit.rotation.y += 0.02; // speed of moons orbit around earth
+        }
+
+        updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
+    }
+    if (targetPlanet !== sun) {
+        camera.lookAt(targetPlanet.position);
+    }
 
     renderer.render( scene, camera );
 }
