@@ -21,7 +21,7 @@ const LM = 1.799e+7 // 1 Light minute in km
 const DISTANCE_SCALE = 0.0000001 // multiply km distances by this
 // const PLANET_SCALE = 0.000001 // multiply km distances by this
 const PLANET_SCALE = DISTANCE_SCALE // multiply km distances by this
-const TIME = 60 * 60 * 12   // one year in 12 Seconds
+const TIME = 60 * 60 * 6   // one year in 12 Seconds
 // const VELOCITY_FACTOR = 31.684042 // divide km/s by this
 let distance_units = ["km", "au", "lm"] // units for distances
 
@@ -50,10 +50,10 @@ class Planet {
 
         this.ring = null
         this.label = null
-        if (!isSun) {
-            this.label = this.createLabel(0 + " km");
-            this.sphere.add(this.label);
-        }
+        // if (!isSun) {
+        //     this.label = this.createLabel(0 + " km");
+        //     this.sphere.add(this.label);
+        // }
     }
     updatePosition(planets) {
         if (this.isSun) { return } // fixed sun
@@ -77,7 +77,7 @@ class Planet {
         // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
         if (this.ring) this.ring.updatePosition()
-        this.updateLabel()
+        // this.updateLabel()
         if (SHOW_ORBITS) this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
@@ -110,21 +110,22 @@ class Planet {
     createLabel(text) {
         const canvas = document.createElement('canvas');
         this.context = canvas.getContext('2d');
-        this.context.font = '11px Arial';
+        this.context.font = '4px Arial';
         this.context.fillStyle = 'white';
-        this.context.fillText(text, 0, 11);
+        this.context.fillText(text, 0, 24);
 
         const texture = new THREE.CanvasTexture(canvas);
         this.spriteMaterial = new THREE.SpriteMaterial({ map: texture });
         const sprite = new THREE.Sprite(this.spriteMaterial);
-        sprite.scale.set(5, 2.5, 2.5);
+        sprite.scale.set(50, 25, 25);
+        // sprite.position.copy(this.sphere.clone().add(new THREE.Vector3(0.01, 0.01, 0.01)));
         sprite.position.set(0, 0, 0);
         return sprite;
     }
     updateLabel() {
         const distanceText = convertDistance(this.distanceToSun);
         this.context.clearRect(0, 0, 256, 256); // Clear the previous text
-        this.context.fillText(distanceText, 0, 2.4);
+        this.context.fillText(distanceText, 0, 24);
         this.spriteMaterial.map.needsUpdate = true; // Refresh the texture
     }
 }
@@ -189,6 +190,9 @@ mars.zVel = 24.076988672178
 
 const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0);
 jupiter.zVel = 13.06000369219;
+const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xe1d6c4, 90)
+jupiter.ring = jupiterRing
+
 
 const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0);
 saturn.zVel = 9.679981775672;
@@ -275,9 +279,9 @@ window.addEventListener('keydown', (event) => {
         if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
         else distance_unit = distance_units[0]
 
-        for (const planet of planets) {
-            if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
-        }
+        // for (const planet of planets) {
+        //     if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
+        // }
         return
     }
 
@@ -321,10 +325,16 @@ function moveToPlanet(planet, topDown=false) {
     targetPlanet = planet;
     // console.log(planet.position.x, planet.position.y, planet.position.z)
     let targetPosition = null
-     // if c was pressed
+
+    let targetPlanetObj = null;
+    for (const planet of planets) {
+        if (planet.sphere === targetPlanet) targetPlanetObj = planet
+    }
+
     if (topDown) targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 40, planet.position.z);
-    else targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 0.01, planet.position.z + 0.001); // Adjust camera position
-     // Adjust camera position
+    else if(!PAUSED) targetPosition = (targetPlanet.position).add(new THREE.Vector3(((0-targetPlanet.position.x) / targetPlanet.position.x) * (targetPlanetObj.radius * 8), targetPlanetObj.radius, ((0-targetPlanet.position.z) / targetPlanet.position.z) * (targetPlanetObj.radius * 4)))
+    else targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 0.01, planet.position.z + 0.001)
+
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
