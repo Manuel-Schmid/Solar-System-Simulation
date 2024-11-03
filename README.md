@@ -12,7 +12,7 @@
 - 
 
 # Todo
-- X
+- time passed in simulation (consider pause)
 - X
 
 
