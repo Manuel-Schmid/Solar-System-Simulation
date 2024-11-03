@@ -5,7 +5,7 @@ import {formatDistance} from "./utils";
 
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.001, 1000 );
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.00001, 1000 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -190,9 +190,9 @@ mars.zVel = 24.076988672178
 const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0);
 jupiter.zVel = 13.06000369219;
 
-const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0xd6c96f,9.538 * AU * DISTANCE_SCALE, 0, 0);
+const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0);
 saturn.zVel = 9.679981775672;
-const saturnRing = new Ring(saturn, 1.6, 2.7, 0x8d8549, 90)
+const saturnRing = new Ring(saturn, 1.6, 2.7, 0x736c39, 90)
 saturn.ring = saturnRing
 
 const uranus = new Planet(25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0);
@@ -202,7 +202,6 @@ uranus.ring = uranusRing
 
 const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0);
 neptune.zVel = 5.4299794
-console.log(neptune.sphere.position )
 
 // const planets = [sun, mercury, venus, earth, mars];
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
@@ -251,7 +250,7 @@ let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 window.addEventListener('mousedown', (event) => { // Handle mouse click
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-    isCameraLocked = false;
+    // isCameraLocked = false;
 
     raycaster.setFromCamera(mouse, camera);
 
@@ -308,7 +307,7 @@ window.addEventListener('keydown', (event) => {
         }
     }
 
-    if (event.key >= '1' && event.key <= '9') {
+    if (event.key >= '0' && event.key <= '9') {
         const number = parseInt(event.key);
         if (planets[number]) {
             moveToPlanet(planets[number].sphere);
@@ -318,12 +317,16 @@ window.addEventListener('keydown', (event) => {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
-    isCameraLocked = false;
+    isCameraLocked = false
     targetPlanet = planet;
-    console.log(planet.position.x, planet.position.y, planet.position.z)
-    let targetPosition = new THREE.Vector3(planet.position.x + DISTANCE_SCALE * 0.2, planet.position.y + 0.5, planet.position.z - DISTANCE_SCALE * 2); // Adjust camera position
-    if (topDown) targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 40, planet.position.z); // Adjust camera position
-    const duration = 0.01; // Duration the movement in seconds
+    // console.log(planet.position.x, planet.position.y, planet.position.z)
+    let targetPosition = null
+     // if c was pressed
+    if (topDown) targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 40, planet.position.z);
+    else targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 0.01, planet.position.z + 0.001); // Adjust camera position
+     // Adjust camera position
+
+    const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
     const startTime = performance.now();
 
@@ -336,6 +339,8 @@ function moveToPlanet(planet, topDown=false) {
 
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
+        } else { // animation is finished
+            if (!topDown) isCameraLocked = true
         }
     }
 
@@ -356,8 +361,10 @@ function unlockCamera() {
 }
 
 function render() { // runs with 60 fps
+    let targetPlanetObj = null;
     if(!PAUSED) {
         for (const planet of planets) {
+            if (planet.sphere === targetPlanet) targetPlanetObj = planet
             planet.updatePosition(planets)
             // planet.sphere.rotation.x += 0.01; // rotation around own axis
 
@@ -368,12 +375,9 @@ function render() { // runs with 60 fps
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
     }
 
-    // Update the camera's position if locked to a target planet
+    if (isCameraLocked && targetPlanet && targetPlanetObj) {
 
-    isCameraLocked = true
-    if (isCameraLocked && targetPlanet) {
-        // Update camera's position based on the planet's position and fixed offset
-        camera.position.copy(targetPlanet.position).add(cameraOffset);
+        camera.position.copy(targetPlanet.position).add(new THREE.Vector3(((0-targetPlanet.position.x) / targetPlanet.position.x) * (targetPlanetObj.radius * 4), targetPlanetObj.radius, ((0-targetPlanet.position.z) / targetPlanet.position.z) * (targetPlanetObj.radius * 4)));
         camera.lookAt(targetPlanet.position);
     } else {
         // If not locked, allow OrbitControls to manage the camera freely
