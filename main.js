@@ -26,6 +26,7 @@ const TIME = 60 * 60 * 6   // one year in 12 Seconds
 let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
+let SHOW_LABELS = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
 let PAUSED = false;
@@ -77,7 +78,7 @@ class Planet {
         // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
         if (this.ring) this.ring.updatePosition()
-        this.updateLabel()
+        if (SHOW_LABELS) this.updateLabel()
         if (SHOW_ORBITS) this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
@@ -108,14 +109,9 @@ class Planet {
         scene.add(line);
     }
     createLabel(text) {
-        const tempCanvas = document.createElement('canvas');
-        const tempContext = tempCanvas.getContext('2d');
-        tempContext.font = '25px Arial';
-        const textWidth = tempContext.measureText(text).width;
-
         const canvas = document.createElement('canvas');
-        canvas.width = textWidth + 20; // Add padding to prevent cutoff
-        canvas.height = 70;            // Height for 25px font
+        canvas.width = 200; // Add padding to prevent cutoff
+        canvas.height = 150;            // Height for 25px font
         this.context = canvas.getContext('2d');
         this.context.font = '25px Arial';
         this.context.fillStyle = 'white';
@@ -128,23 +124,14 @@ class Planet {
         this.spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
         this.sprite = new THREE.Sprite(this.spriteMaterial);
         this.sprite.scale.set(0.001, 0.001, 0.001);
-        // sprite.position.copy(this.sphere.clone().add(new THREE.Vector3(0.01, 0.01, 0.01)));
-        this.sprite.position.set(0.008, 0.002, 0);
+        this.sprite.position.set(0.002, 0.001, 0);
+        if (!SHOW_LABELS) canvas.hidden = true;
         return this.sprite;
     }
     updateLabel() {
         const distanceText = convertDistance(this.distanceToSun);
-
-        const textWidth = this.context.measureText(distanceText).width;
-
-        // if (textWidth + 20 > this.context.canvas.width) {
-        //     this.context.canvas.width = textWidth + 20; // Update canvas width with padding
-        //     this.context.canvas.width = textWidth + 20; // Update canvas width with padding
-        // }
-
         this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
         this.context.fillText(distanceText, this.context.canvas.width / 2, this.context.canvas.height / 2);
-
         this.spriteMaterial.map.needsUpdate = true;
     }
 }
@@ -298,8 +285,10 @@ window.addEventListener('keydown', (event) => {
         if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
         else distance_unit = distance_units[0]
 
-        for (const planet of planets) {
-            if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
+        if (SHOW_LABELS) {
+            for (const planet of planets) {
+                if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
+            }
         }
         return
     }
