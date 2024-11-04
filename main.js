@@ -50,10 +50,10 @@ class Planet {
 
         this.ring = null
         this.label = null
-        // if (!isSun) {
-        //     this.label = this.createLabel(0 + " km");
-        //     this.sphere.add(this.label);
-        // }
+        if (!isSun) {
+            this.label = this.createLabel(0 + " km");
+            this.sphere.add(this.label);
+        }
     }
     updatePosition(planets) {
         if (this.isSun) { return } // fixed sun
@@ -77,7 +77,7 @@ class Planet {
         // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
         if (this.ring) this.ring.updatePosition()
-        // this.updateLabel()
+        this.updateLabel()
         if (SHOW_ORBITS) this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
@@ -108,25 +108,44 @@ class Planet {
         scene.add(line);
     }
     createLabel(text) {
+        const tempCanvas = document.createElement('canvas');
+        const tempContext = tempCanvas.getContext('2d');
+        tempContext.font = '25px Arial';
+        const textWidth = tempContext.measureText(text).width;
+
         const canvas = document.createElement('canvas');
+        canvas.width = textWidth + 20; // Add padding to prevent cutoff
+        canvas.height = 70;            // Height for 25px font
         this.context = canvas.getContext('2d');
-        this.context.font = '4px Arial';
+        this.context.font = '25px Arial';
         this.context.fillStyle = 'white';
-        this.context.fillText(text, 0, 24);
+        this.context.textAlign = 'center';  // Center-align for positioning
+        this.context.textBaseline = 'middle';
+
+        this.context.fillText(text, canvas.width / 2, canvas.height / 2);
 
         const texture = new THREE.CanvasTexture(canvas);
-        this.spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-        const sprite = new THREE.Sprite(this.spriteMaterial);
-        sprite.scale.set(50, 25, 25);
+        this.spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+        this.sprite = new THREE.Sprite(this.spriteMaterial);
+        this.sprite.scale.set(0.001, 0.001, 0.001);
         // sprite.position.copy(this.sphere.clone().add(new THREE.Vector3(0.01, 0.01, 0.01)));
-        sprite.position.set(0, 0, 0);
-        return sprite;
+        this.sprite.position.set(0.008, 0.002, 0);
+        return this.sprite;
     }
     updateLabel() {
         const distanceText = convertDistance(this.distanceToSun);
-        this.context.clearRect(0, 0, 256, 256); // Clear the previous text
-        this.context.fillText(distanceText, 0, 24);
-        this.spriteMaterial.map.needsUpdate = true; // Refresh the texture
+
+        const textWidth = this.context.measureText(distanceText).width;
+
+        // if (textWidth + 20 > this.context.canvas.width) {
+        //     this.context.canvas.width = textWidth + 20; // Update canvas width with padding
+        //     this.context.canvas.width = textWidth + 20; // Update canvas width with padding
+        // }
+
+        this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+        this.context.fillText(distanceText, this.context.canvas.width / 2, this.context.canvas.height / 2);
+
+        this.spriteMaterial.map.needsUpdate = true;
     }
 }
 
@@ -279,9 +298,9 @@ window.addEventListener('keydown', (event) => {
         if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
         else distance_unit = distance_units[0]
 
-        // for (const planet of planets) {
-        //     if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
-        // }
+        for (const planet of planets) {
+            if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
+        }
         return
     }
 
