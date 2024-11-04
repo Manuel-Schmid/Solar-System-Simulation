@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStars, updateTriangles} from "./design_utils";
 import {formatDistance} from "./utils";
 
@@ -26,7 +26,7 @@ const TIME = 60 * 60 * 6   // one year in 12 Seconds
 let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
-let SHOW_LABELS = true;
+let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
 let PAUSED = false;
@@ -50,11 +50,6 @@ class Planet {
         scene.add( this.sphere );
 
         this.ring = null
-        this.label = null
-        if (!isSun) {
-            this.label = this.createLabel(0 + " km");
-            this.sphere.add(this.label);
-        }
     }
     updatePosition(planets) {
         if (this.isSun) { return } // fixed sun
@@ -78,7 +73,6 @@ class Planet {
         // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
         if (this.ring) this.ring.updatePosition()
-        if (SHOW_LABELS) this.updateLabel()
         if (SHOW_ORBITS) this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
@@ -107,32 +101,6 @@ class Planet {
         if (!orbitGeometry) return orbitGeometry; // catch orbitGeometry undefined
         const line = new THREE.Line( orbitGeometry, orbitMaterial );
         scene.add(line);
-    }
-    createLabel(text) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 200; // Add padding to prevent cutoff
-        canvas.height = 150;            // Height for 25px font
-        this.context = canvas.getContext('2d');
-        this.context.font = '25px Arial';
-        this.context.fillStyle = 'white';
-        this.context.textAlign = 'center';  // Center-align for positioning
-        this.context.textBaseline = 'middle';
-
-        this.context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        this.spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-        this.sprite = new THREE.Sprite(this.spriteMaterial);
-        this.sprite.scale.set(0.001, 0.001, 0.001);
-        this.sprite.position.set(0.002, 0.001, 0);
-        if (!SHOW_LABELS) canvas.hidden = true;
-        return this.sprite;
-    }
-    updateLabel() {
-        const distanceText = convertDistance(this.distanceToSun);
-        this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
-        this.context.fillText(distanceText, this.context.canvas.width / 2, this.context.canvas.height / 2);
-        this.spriteMaterial.map.needsUpdate = true;
     }
 }
 
@@ -250,27 +218,32 @@ moon.position.set(0.06 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relativ
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
-// Add raycaster and mouse vector for planet selection
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let targetPlanet = sun.sphere; // Default to the sun
+let targetPlanet = sun; // Default to the sun
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 
+
+// Add raycaster and mouse vector for planet selection
+// const raycaster = new THREE.Raycaster();
+// const mouse = new THREE.Vector2();
 window.addEventListener('mousedown', (event) => { // Handle mouse click
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     // isCameraLocked = false;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(planets.map(planet => planet.sphere));
-
-    if (intersects.length > 1) {
-        if (targetPlanet !== intersects[0].object) {
-            moveToPlanet(intersects[0].object); // Get the planet from intersected object
-        }
-    }
+    // mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    // mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    //
+    // raycaster.setFromCamera(mouse, camera);
+    //
+    // const intersects = raycaster.intersectObjects(planets.map(planet => planet.sphere));
+    //
+    // if (intersects.length > 1) {
+    //     if (targetPlanet.sphere !== intersects[0].object) {
+    //         let targetPlanetObj = null;
+    //         for (const planet of planets) {
+    //             if (planet.sphere === intersects[0].object) targetPlanetObj = planet
+    //         }
+    //         moveToPlanet(targetPlanetObj); // Get the planet from intersected object
+    //     }
+    // }
 });
 
 // Pause functionality
@@ -281,20 +254,17 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.key.toLowerCase() === 'd') { // cycle distance unit
-        const unit_index = distance_units.indexOf(distance_unit)
-        if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
-        else distance_unit = distance_units[0]
-
-        if (SHOW_LABELS) {
-            for (const planet of planets) {
-                if (!planet.isSun) planet.updateLabel() // manually update labels (so it updates during pause as well)
-            }
+        if (SHOW_LABEL && targetPlanet && !targetPlanet.isSun) { // only update if planet is selected
+            const unit_index = distance_units.indexOf(distance_unit)
+            if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
+            else distance_unit = distance_units[0]
+            updateLabel();
         }
         return
     }
 
     if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
-        if (targetPlanet.position.length() > 0) { // if target planet is not the sun
+        if (targetPlanet.sphere.position.length() > 0) { // if target planet is not the sun
             if (isCameraLocked) {
                 unlockCamera(); // Unlock if already locked
             } else {
@@ -305,7 +275,7 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.key.toLowerCase() === 'c') {
-        moveToPlanet(sun.sphere, true);
+        moveToPlanet(sun, true);
     }
 
     if (event.key.toLowerCase() === 't') {
@@ -322,27 +292,36 @@ window.addEventListener('keydown', (event) => {
     if (event.key >= '0' && event.key <= '9') {
         const number = parseInt(event.key);
         if (planets[number]) {
-            moveToPlanet(planets[number].sphere);
+            moveToPlanet(planets[number]);
         }
     }
 });
 
+function updateLabel() {
+    const distanceLabel = document.getElementById('distance-label');
+    if (targetPlanet && !targetPlanet.isSun) {
+        distanceLabel.style.display = '';
+        distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun)
+    } else {
+        distanceLabel.style.display = 'none';
+    }
+}
+
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
-    isCameraLocked = false
-    targetPlanet = planet;
-    // console.log(planet.position.x, planet.position.y, planet.position.z)
-    let targetPosition = null
-
-    let targetPlanetObj = null;
-    for (const planet of planets) {
-        if (planet.sphere === targetPlanet) targetPlanetObj = planet
+    if (planet === targetPlanet) return;
+    let showLabelChanged = false
+    if (SHOW_LABEL) {
+        SHOW_LABEL = false // make label stop updating during transition
+        showLabelChanged = true
     }
 
-    if (topDown) targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 40, planet.position.z);
-    else if(!PAUSED) targetPosition = (targetPlanet.position).add(new THREE.Vector3(((0-targetPlanet.position.x) / targetPlanet.position.x) * (targetPlanetObj.radius * 8), targetPlanetObj.radius, ((0-targetPlanet.position.z) / targetPlanet.position.z) * (targetPlanetObj.radius * 4)))
-    else targetPosition = new THREE.Vector3(planet.position.x, planet.position.y + 0.01, planet.position.z + 0.001)
+    isCameraLocked = false
+    let targetPosition = null
 
+    if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
+    else if(!PAUSED) targetPosition = (planet.sphere.position).add(new THREE.Vector3(((0-planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 8), planet.radius, ((0-planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 4)))
+    else targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 0.01, planet.sphere.position.z + 0.001)
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
@@ -352,13 +331,16 @@ function moveToPlanet(planet, topDown=false) {
         const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
         const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
         camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
-        controls.target.copy(planet.position); // Update the OrbitControls target to the new planet
+        controls.target.copy(planet.sphere.position); // Update the OrbitControls target to the new planet
         controls.update(); // Update controls to apply the new target
 
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
+            targetPlanet = planet;
             if (!topDown) isCameraLocked = true
+            if (showLabelChanged) SHOW_LABEL = true
+            if (SHOW_LABEL) updateLabel()
         }
     }
 
@@ -370,7 +352,7 @@ function moveToPlanet(planet, topDown=false) {
 function lockCameraToPlanet(planet) {
     isCameraLocked = true;
     // Calculate initial offset based on the planet's current position
-    cameraOffset = new THREE.Vector3().subVectors(camera.position, planet.position);
+    cameraOffset = new THREE.Vector3().subVectors(camera.position, planet.sphere.position);
 }
 
 // Function to unlock the camera from the target planet
@@ -379,10 +361,8 @@ function unlockCamera() {
 }
 
 function render() { // runs with 60 fps
-    let targetPlanetObj = null;
     if(!PAUSED) {
         for (const planet of planets) {
-            if (planet.sphere === targetPlanet) targetPlanetObj = planet
             planet.updatePosition(planets)
             // planet.sphere.rotation.x += 0.01; // rotation around own axis
 
@@ -391,16 +371,16 @@ function render() { // runs with 60 fps
         }
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
+        if (SHOW_LABEL) updateLabel()
     }
 
-    if (isCameraLocked && targetPlanet && targetPlanetObj) {
-
-        camera.position.copy(targetPlanet.position).add(new THREE.Vector3(((0-targetPlanet.position.x) / targetPlanet.position.x) * (targetPlanetObj.radius * 4), targetPlanetObj.radius, ((0-targetPlanet.position.z) / targetPlanet.position.z) * (targetPlanetObj.radius * 4)));
-        camera.lookAt(targetPlanet.position);
+    if (isCameraLocked && targetPlanet) {
+        camera.position.copy(targetPlanet.sphere.position).add(new THREE.Vector3(((0-targetPlanet.sphere.position.x) / targetPlanet.sphere.position.x) * (targetPlanet.radius * 4), targetPlanet.radius, ((0-targetPlanet.sphere.position.z) / targetPlanet.sphere.position.z) * (targetPlanet.radius * 4)));
+        camera.lookAt(targetPlanet.sphere.position);
     } else {
         // If not locked, allow OrbitControls to manage the camera freely
-        controls.target.copy(targetPlanet.position);
-        // controls.target.lerp(targetPlanet.position, 0.1); // Lerp factor of 0.1 for smoother transitions
+        controls.target.copy(targetPlanet.sphere.position);
+        // controls.target.lerp(targetPlanet.sphere.position, 0.1); // Lerp factor of 0.1 for smoother transitions
         controls.update();
     }
 
