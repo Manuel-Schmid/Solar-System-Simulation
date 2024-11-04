@@ -214,7 +214,7 @@ const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x8f8f8f }); // White 
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonOrbit = new THREE.Object3D();
 scene.add(moonOrbit); // Add the orbit object to the scene
-moon.position.set(0.06 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
+moon.position.set(0.001 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
@@ -367,7 +367,7 @@ function render() { // runs with 60 fps
             // planet.sphere.rotation.x += 0.01; // rotation around own axis
 
             moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
-            moonOrbit.rotation.y += 0.02 * 0.0001; // speed of moons orbit around earth
+            moonOrbit.rotation.y += 0.02; // speed of moons orbit around earth
         }
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
