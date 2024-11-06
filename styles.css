@@ -5,15 +5,24 @@ body {
 }
 
 #distance-label {
+
+}
+
+#speed-label {
+}
+
+#label-container {
     position: absolute;
     top: 10px;
     left: 10px;
+    text-align: left;
     color: white;
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
     padding: 5px 10px;
     border-radius: 5px;
     font-family: Arial, sans-serif;
     font-size: 20px;
+    line-height: 25px;
 }
 
 .celebrate {

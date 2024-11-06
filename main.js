@@ -169,7 +169,7 @@ function convertDistance(distance) {
 const sun = new Planet(696340 * PLANET_SCALE, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
 
 const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0);
-mercury.zVel = 47.39996051284;
+mercury.zVel = 47.39996051284; // speed in km/s
 
 const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0);
 venus.zVel = 35.019991414096;
@@ -292,6 +292,18 @@ window.addEventListener('keydown', (event) => {
         return
     }
 
+    if (event.key.toLowerCase() === 's') {
+        if (targetPlanet && !targetPlanet.isSun) {
+            targetPlanet.xVel *= 0.8
+        }
+    }
+
+    if (event.key.toLowerCase() === 'f') {
+        if (targetPlanet && !targetPlanet.isSun) {
+            targetPlanet.xVel *= 1.2
+        }
+    }
+
     if (event.key.toLowerCase() === 'c') {
         moveToPlanet(sun, true);
     }
@@ -332,12 +344,18 @@ window.addEventListener('keydown', (event) => {
 });
 
 function updateLabel() {
-    const distanceLabel = document.getElementById('distance-label');
+    const labelContainer = document.getElementById('label-container');
     if (targetPlanet && !targetPlanet.isSun) {
-        distanceLabel.style.display = '';
+        const distanceLabel = document.getElementById('distance-label');
         distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun)
+
+        const speedLabel = document.getElementById('speed-label');
+        const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+        speedLabel.textContent = v.toPrecision(4) + " km/s"
+
+        labelContainer.style.display = '';
     } else {
-        distanceLabel.style.display = 'none';
+        labelContainer.style.display = 'none';
     }
 }
 
