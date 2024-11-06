@@ -49,6 +49,11 @@ class Planet {
         this.sphere.position.set(x, y, z)
         scene.add( this.sphere );
 
+        const vectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
+        const vectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.vectorLine = new THREE.Line( vectorLineGeometry, vectorLineMaterial );
+        this.vectorLine.frustumCulled = false;
+
         this.ring = null
     }
     updatePosition(planets) {
@@ -60,15 +65,28 @@ class Planet {
                 continue;
             }
             const forces = this.attraction(planet)
+            // console.log(forces[0].force_x + forces[0].force_z)
             totalFx += forces[0].force_x // Force in N
             totalFz += forces[0].force_z // Force in N
         }
 
-        this.xVel += ((totalFx / this.mass)/1000) * TIME // * MASS_SCALE
-        this.zVel += ((totalFz / this.mass)/1000) * TIME // * MASS_SCALE |  this is now in km/s again
+
+        const addedXVel = ((totalFx / this.mass)/1000) * TIME
+        const addedZVel = ((totalFz / this.mass)/1000) * TIME
+        this.xVel += addedXVel // in km/s
+        this.zVel += addedZVel // in km/s
 
         this.sphere.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
         this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
+
+        const vectorLinePoints = [
+            new THREE.Vector3(this.sphere.position.x + this.radius, 0, this.sphere.position.z + this.radius),
+            new THREE.Vector3(this.sphere.position.x + this.radius + addedXVel, 0, this.sphere.position.z + this.radius + addedZVel)
+        ]
+        console.log(vectorLinePoints)
+        this.vectorLine.geometry.setFromPoints( vectorLinePoints );
+        scene.add( this.vectorLine );
+
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
         // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
@@ -79,7 +97,6 @@ class Planet {
         const distance_x = ((other.sphere.position.x - this.sphere.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
         const distance_z = ((other.sphere.position.z - this.sphere.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
         const distance = (Math.sqrt(distance_x ** 2 + distance_z ** 2)) // distance in km
-        // console.log(convertDistance(distance)) // todo
         if (other.isSun) {
             this.distanceToSun = distance / 1000
         }
@@ -214,7 +231,7 @@ const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x8f8f8f }); // White 
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonOrbit = new THREE.Object3D();
 scene.add(moonOrbit); // Add the orbit object to the scene
-moon.position.set(0.001 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
+moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
@@ -276,6 +293,10 @@ window.addEventListener('keydown', (event) => {
 
     if (event.key.toLowerCase() === 'c') {
         moveToPlanet(sun, true);
+    }
+
+    if (event.key.toLowerCase() === 'o') {
+        SHOW_ORBITS = !SHOW_ORBITS;
     }
 
     if (event.key.toLowerCase() === 't') {
@@ -367,7 +388,7 @@ function render() { // runs with 60 fps
             // planet.sphere.rotation.x += 0.01; // rotation around own axis
 
             moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
-            moonOrbit.rotation.y += 0.02; // speed of moons orbit around earth
+            moonOrbit.rotation.y += 0.012; // moon orbit speed
         }
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
@@ -383,8 +404,6 @@ function render() { // runs with 60 fps
         // controls.target.lerp(targetPlanet.sphere.position, 0.1); // Lerp factor of 0.1 for smoother transitions
         controls.update();
     }
-
-
 
     renderer.render( scene, camera );
 }
