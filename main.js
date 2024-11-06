@@ -50,6 +50,17 @@ class Planet {
         this.sphere.position.set(x, y, z)
         scene.add( this.sphere );
 
+        // orbits
+        const maxPoints = 1000;  // Arbitrary initial size, can be increased dynamically
+        this.orbitPositions = new Float32Array(maxPoints * 3);
+        this.orbitGeometry = new THREE.BufferGeometry();
+        this.orbitGeometry.setAttribute('position', new THREE.BufferAttribute(this.orbitPositions, 3));
+        const orbitMaterial = new THREE.LineBasicMaterial({ color: this.colorHex });
+        this.orbitLine = new THREE.Line(this.orbitGeometry, orbitMaterial);
+        this.currentOrbitPointCount = 0;
+        this.orbitLine.frustumCulled = false;
+        scene.add(this.orbitLine);
+
         const vectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
         const vectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
         this.vectorLine = new THREE.Line( vectorLineGeometry, vectorLineMaterial );
@@ -108,17 +119,27 @@ class Planet {
         return [{force_x: force_x, force_z: force_z}]
     }
     drawOrbits() {
-        const orbitMaterial = new THREE.LineBasicMaterial( { color: this.colorHex } );
-        let orbitGeometry = undefined;
-        if (this.orbits.length <= 1) {
-            orbitGeometry = new THREE.BufferGeometry().setFromPoints(this.orbits);
-        } else {
-            const travelled = [this.orbits[this.orbits.length - 2], this.orbits[this.orbits.length - 1]]
-            orbitGeometry = new THREE.BufferGeometry().setFromPoints(travelled);
+        if (this.orbits.length < 2) return;
+        const lastPoint = this.orbits[this.orbits.length - 1];
+        this.addOrbitPoint(lastPoint);
+    }
+    addOrbitPoint(point) {
+        this.orbits.push(point);
+        if (this.currentOrbitPointCount >= this.orbitPositions.length / 3) {
+            const newPositions = new Float32Array(this.orbitPositions.length * 2); // If exceeds buffer size, expand it
+            newPositions.set(this.orbitPositions);
+            this.orbitPositions = newPositions;
+            this.orbitGeometry.setAttribute('position', new THREE.BufferAttribute(this.orbitPositions, 3));
         }
-        if (!orbitGeometry) return orbitGeometry; // catch orbitGeometry undefined
-        const line = new THREE.Line( orbitGeometry, orbitMaterial );
-        scene.add(line);
+
+        const index = this.currentOrbitPointCount * 3;
+        this.orbitPositions[index] = point.x;
+        this.orbitPositions[index + 1] = point.y;
+        this.orbitPositions[index + 2] = point.z;
+
+        this.currentOrbitPointCount++;
+        this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
+        this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
     }
 }
 
@@ -295,12 +316,14 @@ window.addEventListener('keydown', (event) => {
     if (event.key.toLowerCase() === 's') {
         if (targetPlanet && !targetPlanet.isSun) {
             targetPlanet.xVel *= 0.8
+            targetPlanet.zVel *= 0.8
         }
     }
 
     if (event.key.toLowerCase() === 'f') {
         if (targetPlanet && !targetPlanet.isSun) {
             targetPlanet.xVel *= 1.2
+            targetPlanet.zVel *= 1.2
         }
     }
 
