@@ -78,7 +78,6 @@ class Planet {
                 continue;
             }
             const forces = this.attraction(planet)
-            // console.log(forces[0].force_x + forces[0].force_z)
             totalFx += forces[0].force_x // Force in N
             totalFz += forces[0].force_z // Force in N
         }
@@ -141,6 +140,12 @@ class Planet {
         this.currentOrbitPointCount++;
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
+    }
+    clearOrbit() {
+        this.currentOrbitPointCount = 0;
+        this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
+        this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
+
     }
 }
 
@@ -340,6 +345,12 @@ window.addEventListener('keydown', (event) => {
 
     if (event.key.toLowerCase() === 'o') {
         SHOW_ORBITS = !SHOW_ORBITS;
+    }
+
+    if (event.key.toLowerCase() === 'r') {
+        for (const planet of planets) {
+            planet.clearOrbit()
+        }
     }
 
     if (event.key.toLowerCase() === 'v') {
