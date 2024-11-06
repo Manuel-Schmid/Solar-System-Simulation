@@ -29,6 +29,7 @@ let distance_units = ["km", "au", "lm"] // units for distances
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
+let SHOW_ATTRACTION_VECTORS = false;
 let PAUSED = false;
 let distance_unit = distance_units[0];
 
@@ -79,16 +80,16 @@ class Planet {
         this.sphere.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
         this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
-        const vectorLinePoints = [
-            new THREE.Vector3(this.sphere.position.x + this.radius, 0, this.sphere.position.z + this.radius),
-            new THREE.Vector3(this.sphere.position.x + this.radius + addedXVel, 0, this.sphere.position.z + this.radius + addedZVel)
-        ]
-        console.log(vectorLinePoints)
-        this.vectorLine.geometry.setFromPoints( vectorLinePoints );
-        scene.add( this.vectorLine );
+        if (SHOW_ATTRACTION_VECTORS) {
+            const vectorLinePoints = [
+                new THREE.Vector3(this.sphere.position.x + this.radius, 0, this.sphere.position.z + this.radius),
+                new THREE.Vector3(this.sphere.position.x + this.radius + addedXVel, 0, this.sphere.position.z + this.radius + addedZVel)
+            ]
+            this.vectorLine.geometry.setFromPoints( vectorLinePoints );
+            scene.add( this.vectorLine );
+        }
 
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
-        // console.log("X: " + Math.round(this.sphere.position.x) + " | Y: " + Math.round(this.sphere.position.z))
 
         if (this.ring) this.ring.updatePosition()
         if (SHOW_ORBITS) this.drawOrbits()
@@ -297,6 +298,18 @@ window.addEventListener('keydown', (event) => {
 
     if (event.key.toLowerCase() === 'o') {
         SHOW_ORBITS = !SHOW_ORBITS;
+    }
+
+    if (event.key.toLowerCase() === 'v') {
+        SHOW_ATTRACTION_VECTORS = !SHOW_ATTRACTION_VECTORS;
+
+        for (const planet of planets) {
+            if (SHOW_ATTRACTION_VECTORS) {
+                scene.add( planet.vectorLine );
+            } else {
+                scene.remove( planet.vectorLine );
+            }
+        }
     }
 
     if (event.key.toLowerCase() === 't') {
