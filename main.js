@@ -32,6 +32,7 @@ let SHOW_TRIANGLES = false;
 let SHOW_ATTRACTION_VECTORS = false;
 let PAUSED = false;
 let distance_unit = distance_units[0];
+let birdseye = true;
 
 
 class Planet {
@@ -327,6 +328,12 @@ window.addEventListener('keydown', (event) => {
         }
     }
 
+    if (event.key.toLowerCase() === 'm') {
+        if (targetPlanet) {
+            targetPlanet.mass *= 2
+        }
+    }
+
     if (event.key.toLowerCase() === 'c') {
         moveToPlanet(sun, true);
     }
@@ -361,30 +368,40 @@ window.addEventListener('keydown', (event) => {
     if (event.key >= '0' && event.key <= '9') {
         const number = parseInt(event.key);
         if (planets[number]) {
-            moveToPlanet(planets[number]);
+            if (event.altKey && birdseye) {
+                targetPlanet = planets[number]
+                if (SHOW_LABEL) updateLabel()
+            }
+            else moveToPlanet(planets[number]);
         }
     }
 });
 
 function updateLabel() {
     const labelContainer = document.getElementById('label-container');
-    if (targetPlanet && !targetPlanet.isSun) {
-        const distanceLabel = document.getElementById('distance-label');
-        distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun)
+    const distanceLabel = document.getElementById('distance-label');
+    const speedLabel = document.getElementById('speed-label');
+    const weightLabel = document.getElementById('weight-label');
 
-        const speedLabel = document.getElementById('speed-label');
-        const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
-        speedLabel.textContent = v.toPrecision(4) + " km/s"
-
-        labelContainer.style.display = '';
-    } else {
+    if (!targetPlanet || targetPlanet.isSun && birdseye) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
+    } else {
+        if(!targetPlanet.isSun) {
+            distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun)
+            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+            speedLabel.textContent = v.toPrecision(4) + " km/s"
+        } else {
+            distanceLabel.textContent = ""
+            speedLabel.textContent = ""
+        }
+        weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
+        labelContainer.style.display = '';
     }
 }
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
-    if (planet === targetPlanet) return;
+    if (planet === targetPlanet && !planet.isSun) return;
     let showLabelChanged = false
     if (SHOW_LABEL) {
         SHOW_LABEL = false // make label stop updating during transition
@@ -395,8 +412,12 @@ function moveToPlanet(planet, topDown=false) {
     let targetPosition = null
 
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
-    else if(!PAUSED) targetPosition = (planet.sphere.position).add(new THREE.Vector3(((0-planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 8), planet.radius, ((0-planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 4)))
-    else targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 0.01, planet.sphere.position.z + 0.001)
+    else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius)
+    else if(PAUSED) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 0.01, planet.sphere.position.z + 0.001)
+    else targetPosition = (planet.sphere.position).add(new THREE.Vector3(
+            ((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 8),
+            planet.radius,
+            ((0 - planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 4)))
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
@@ -413,7 +434,8 @@ function moveToPlanet(planet, topDown=false) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
             targetPlanet = planet;
-            if (!topDown) isCameraLocked = true
+            birdseye = topDown
+            if (!topDown && !targetPlanet.isSun) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
         }

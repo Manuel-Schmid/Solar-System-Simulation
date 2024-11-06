@@ -4,13 +4,6 @@ body {
     padding: 0;
 }
 
-#distance-label {
-
-}
-
-#speed-label {
-}
-
 #label-container {
     position: absolute;
     top: 10px;
