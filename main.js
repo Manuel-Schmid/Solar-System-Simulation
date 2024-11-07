@@ -29,7 +29,7 @@ let distance_units = ["km", "au", "lm"] // units for distances
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
-let SHOW_ATTRACTION_VECTORS = false;
+let SHOW_VECTORS = false;
 let PAUSED = false;
 let distance_unit = distance_units[0];
 let birdseye = true;
@@ -62,10 +62,15 @@ class Planet {
         this.orbitLine.frustumCulled = false;
         scene.add(this.orbitLine);
 
-        const vectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
-        const vectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
-        this.vectorLine = new THREE.Line( vectorLineGeometry, vectorLineMaterial );
-        this.vectorLine.frustumCulled = false;
+        const gVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
+        const gVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.gVectorLine = new THREE.Line( gVectorLineGeometry, gVectorLineMaterial );
+        this.gVectorLine.frustumCulled = false;
+
+        const vVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
+        const vVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.vVectorLine = new THREE.Line( vVectorLineGeometry, vVectorLineMaterial );
+        this.vVectorLine.frustumCulled = false;
 
         this.ring = null
     }
@@ -91,13 +96,23 @@ class Planet {
         this.sphere.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
         this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
-        if (SHOW_ATTRACTION_VECTORS) {
-            const vectorLinePoints = [
+        if (SHOW_VECTORS) {
+            const gVectorLinePoints = [
                 new THREE.Vector3(this.sphere.position.x + this.radius, 0, this.sphere.position.z + this.radius),
                 new THREE.Vector3(this.sphere.position.x + this.radius + addedXVel, 0, this.sphere.position.z + this.radius + addedZVel)
             ]
-            this.vectorLine.geometry.setFromPoints( vectorLinePoints );
-            scene.add( this.vectorLine );
+
+            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+            const forceV = (this.mass * ((v*1000)  ** 2)) / this.distanceToSun * 1000
+            const vVectorLinePoints = [
+                new THREE.Vector3(this.sphere.position.x + this.radius, 0, this.sphere.position.z + this.radius),
+                new THREE.Vector3(this.sphere.position.x + this.radius + ((this.xVel * DISTANCE_SCALE) * TIME), 0, this.sphere.position.z + this.radius + ((this.zVel * DISTANCE_SCALE) * TIME))
+            ]
+
+            this.gVectorLine.geometry.setFromPoints( gVectorLinePoints );
+            this.vVectorLine.geometry.setFromPoints( vVectorLinePoints );
+            scene.add( this.gVectorLine );
+            scene.add( this.vVectorLine );
         }
 
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
@@ -354,13 +369,15 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.key.toLowerCase() === 'v') {
-        SHOW_ATTRACTION_VECTORS = !SHOW_ATTRACTION_VECTORS;
+        SHOW_VECTORS = !SHOW_VECTORS;
 
         for (const planet of planets) {
-            if (SHOW_ATTRACTION_VECTORS) {
-                scene.add( planet.vectorLine );
+            if (SHOW_VECTORS) {
+                scene.add( planet.gVectorLine );
+                scene.add( planet.vVectorLine );
             } else {
-                scene.remove( planet.vectorLine );
+                scene.remove( planet.gVectorLine );
+                scene.remove( planet.vVectorLine );
             }
         }
     }
