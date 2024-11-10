@@ -438,7 +438,7 @@ function moveToPlanet(planet, topDown=false) {
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
     else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius)
     else if(PAUSED) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 0.01, planet.sphere.position.z + 0.001)
-    else targetPosition = (planet.sphere.position).add(new THREE.Vector3(
+    else targetPosition = planet.sphere.position.clone().add(new THREE.Vector3(
             ((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 8),
             planet.radius,
             ((0 - planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 4)))
