@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStars, updateTriangles} from "./design_utils";
-import {formatDistance} from "./utils";
+import {formatDistance, PlanetRingGeometry} from "./utils";
 
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.00001, 1000 );
 const renderer = new THREE.WebGLRenderer();
+const textureLoader = new THREE.TextureLoader();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
@@ -26,6 +27,7 @@ let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
 let SHOW_VECTORS = false;
+let REALISTIC_LIGHT = true;
 let PAUSED = false;
 
 // program variables
@@ -36,7 +38,7 @@ let distance_unit = distance_units[0];
 let birdseye = true;
 
 class Planet {
-    constructor(radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
+    constructor(radius, mass, colorHex, x=0, y=0, z=0, isSun=false, mapPath=null) {
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
@@ -45,9 +47,30 @@ class Planet {
         this.isSun = isSun;
         this.orbits = [];
         this.colorHex = colorHex;
+
         this.geometry = new THREE.SphereGeometry( radius, 32, 16 );
-        this.material = new THREE.MeshBasicMaterial( { color: colorHex } ); // hex code in format "0xffffff"
-        this.sphere = new THREE.Mesh( this.geometry, this.material );
+        this.material = new THREE.MeshStandardMaterial({
+            color: colorHex,
+            roughness: 0.8, // less rough, more reflective
+            // metalness: 0.1, // metallic, reflective effect
+        });
+        if (mapPath && !isSun) {
+            this.material.color = null;
+            const texture = textureLoader.load(mapPath);
+            texture.colorSpace = THREE.SRGBColorSpace
+            this.material.map = texture;
+        }
+        if (isSun) {
+            this.material = new THREE.MeshStandardMaterial({
+                color: colorHex,   // Sun color (yellow)
+                emissive: colorHex, // Make the Sun emit light (self-illumination)
+                emissiveIntensity: 1, // Adjust intensity of emission
+                roughness: 0.1,     // Optional: Set material roughness
+                metalness: 0.2      // Optional: Set material metalness
+            });
+        }
+
+        this.sphere = new THREE.Mesh(this.geometry, this.material);
         this.sphere.position.set(x, y, z)
         scene.add( this.sphere );
 
@@ -158,24 +181,43 @@ class Planet {
         this.currentOrbitPointCount = 0;
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
-
     }
 }
 
 class Ring {
-    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0) {
+    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0, alphaTextureUrl = null) {
         this.parentPlanet = planet
         const innerRadius = this.parentPlanet.radius * innerRadiusFactor; // Inner radius slightly larger than planet
         const outerRadius = this.parentPlanet.radius * outerRadiusFactor; // Outer radius of the ring
-        const ringSegments = 32;
+        const ringSegments = 64;
 
-        const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, ringSegments);
-        const ringMaterial = new THREE.MeshBasicMaterial({
-            color: color,  // Ring color
-            side: THREE.DoubleSide, // Render on both sides
-            transparent: false,  // Optional: Make the ring partially transparent
-            opacity: 1          // Adjust transparency as needed
+        const ringGeometry = new PlanetRingGeometry(innerRadius, outerRadius, ringSegments, ringSegments);
+
+        let alphaTexture = null;
+        if (alphaTextureUrl) {
+            alphaTexture = textureLoader.load(alphaTextureUrl);
+            alphaTexture.colorSpace = THREE.SRGBColorSpace
+            alphaTexture.anisotropy = 32;  // Optional: Improve texture quality if needed
+        }
+
+        const ringMaterial = new THREE.MeshStandardMaterial({
+            color: color,
+            emissive: color, // Make the Sun emit light (self-illumination)
+            emissiveIntensity: 0.5, // Adjust intensity of emission
+            side: THREE.DoubleSide,     // Render on both sides of the ring
+            transparent: true,          // Enable transparency (important for alpha maps)
+            opacity: 1,                 // Set opacity (adjust for overall transparency)
+            roughness: 0.5,             // Control the roughness of the ring's surface
+            metalness: 0.1,             // Optional: Set metalness for the ring's surface
+            map: alphaTexture,     // Apply the alpha texture (this controls transparency)
+            // Optional: Additional settings for alpha map handling
+            alphaTest: 0.5,             // Optional: Alpha cutoff for rendering (0.5 = no transparency below this value)
+            depthTest: true,            // Optional: Control depth testing behavior
+            depthWrite: false           // Optional: Prevent depth writes for transparent areas
         });
+
+        if (alphaTexture) ringMaterial.color = null;
+
 
         this.ringObj = new THREE.Mesh(ringGeometry, ringMaterial);
         this.ringObj.rotation.x =  xAngle * Math.PI / 180; // rotation angle of the ring
@@ -205,36 +247,36 @@ function convertDistance(distance) {
 }
 
 
-const sun = new Planet(696340 * PLANET_SCALE * 10, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
+const sun = new Planet(696340 * PLANET_SCALE * 10, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true); // 'planet_textures/2k_sun.jpg'
 
-const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0);
+const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
 
-const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0);
+const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_venus_surface.jpg');
 venus.zVel = 35.019991414096;
 
-const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0);
+const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_earth_daymap.jpg');
 earth.zVel = 29.78299948;
 
-const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0);
+const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_mars.jpg');
 mars.zVel = 24.076988672178
 
-const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0);
+const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_jupiter.jpg');
 jupiter.zVel = 13.06000369219;
-const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xe1d6c4, 90)
+const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xC0B09E, 90)
 jupiter.ring = jupiterRing
 
-const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0);
+const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_saturn.jpg');
 saturn.zVel = 9.679981775672;
-const saturnRing = new Ring(saturn, 1.6, 2.7, 0x736c39, 90)
+const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 90, 0, 'planet_textures/2k_saturn_ring_alpha.png')
 saturn.ring = saturnRing
 
-const uranus = new Planet(25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0);
+const uranus = new Planet(25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
 const uranusRing = new Ring(uranus, 1.5, 1.6, 0xb0ffff, 188, 135)
 uranus.ring = uranusRing
 
-const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0);
+const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_neptune.jpg');
 neptune.zVel = 5.4299794
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
@@ -243,6 +285,16 @@ const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, nept
 camera.position.y = 40; // moving out the camera
 targetPlanet = sun
 controls.update();
+
+
+// lighting
+const sunLight = new THREE.PointLight(0xffffff, 3, 1000);
+sunLight.position.set(0, 0, 0);
+sunLight.decay = 0;
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
+
+updateLighting()
 
 
 // create star background
@@ -278,7 +330,13 @@ window.addEventListener('keydown', (event) => {
         return
     }
 
-    if (event.key.toLowerCase() === 'l') { // un/pause the game
+    if (event.key.toLowerCase() === 'l') { // switch lighting
+        REALISTIC_LIGHT = !REALISTIC_LIGHT;
+        updateLighting()
+        return
+    }
+
+    if (event.key.toLowerCase() === 'i') { // hide/show label
         SHOW_LABEL = !SHOW_LABEL;
         updateLabel()
         return
@@ -468,6 +526,16 @@ function moveToPlanet(planet, topDown=false) {
     animate();
 }
 
+function updateLighting() {
+    if (REALISTIC_LIGHT) {
+        scene.add(sunLight)
+        scene.remove(ambientLight);
+    } else {
+        scene.remove(sunLight)
+        scene.add(ambientLight);
+    }
+}
+
 
 function lockCameraToPlanet(planet) {
     isCameraLocked = true;
@@ -482,11 +550,12 @@ function render() { // runs with 60 fps
     if(!PAUSED) {
         for (const planet of planets) {
             planet.updatePosition(planets)
-            // planet.sphere.rotation.x += 0.01; // rotation around own axis
+            planet.sphere.rotation.y += 0.01; // rotation around own axis
 
             moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
             moonOrbit.rotation.y += 0.012; // moon orbit speed
         }
+        if (REALISTIC_LIGHT) sunLight.position.copy(sun.sphere.position)
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
         if (SHOW_LABEL) updateLabel()
