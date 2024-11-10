@@ -9,9 +9,13 @@ export function createStars() {
 
     const colorOptions = [
         // new THREE.Color().setHex( 0xffffff ), // white
-        new THREE.Color().setHex( 0xff0000 ),
-        new THREE.Color().setHex( 0xff00ea ),
-        // new THREE.Color().setHex( 0x001eff ),
+        // new THREE.Color().setHex( 0xf3a4a4 ), // red
+        // new THREE.Color().setHex( 0xb9b9ea ), // purple
+        // new THREE.Color().setHex( 0xf6c68e ), // purple
+
+        new THREE.Color().setHex( 0x7300ff ), // blue
+        new THREE.Color().setHex( 0xff00ea ), // pink
+        // new THREE.Color().setHex( 0xff0000 ), // red
     ];
 
     for (let i = 0; i < starCount; i++) {
@@ -19,9 +23,9 @@ export function createStars() {
 
         // Generate positions while excluding the center range of -500 to 500 for x, y, and z
         do {
-            x = (Math.random() - 0.5) * 2000; // Scale to your desired range
-            y = (Math.random() - 0.5) * 2000; // Scale to your desired range
-            z = (Math.random() - 0.5) * 2000; // Scale to your desired range
+            x = (Math.random() - 0.5) * 3000; // Scale to your desired range
+            y = (Math.random() - 0.5) * 3000; // Scale to your desired range
+            z = (Math.random() - 0.5) * 3000; // Scale to your desired range
         } while (Math.abs(x) < 200 && Math.abs(y) < 200 && Math.abs(z) < 200); // Check if within the exclusion zone
 
         positions[i * 3] = x;

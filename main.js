@@ -11,18 +11,13 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 const controls = new OrbitControls( camera, renderer.domElement );1
-// controls.enableDamping = true;
-// controls.dampingFactor = 0.1; // Adjust this value for smoother transitions (0.05 to 0.2 works well)
-
 
 const G = 6.67428e-11  // Gravitational constant
 const AU = 1.496e+8 // 1 AU in km
 const LM = 1.799e+7 // 1 Light minute in km
 const DISTANCE_SCALE = 0.0000001 // multiply km distances by this
-// const PLANET_SCALE = 0.000001 // multiply km distances by this
 const PLANET_SCALE = DISTANCE_SCALE // multiply km distances by this
 const TIME = 60 * 60 * 6   // one year in 12 Seconds
-// const VELOCITY_FACTOR = 31.684042 // divide km/s by this
 let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
@@ -31,9 +26,13 @@ let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
 let SHOW_VECTORS = false;
 let PAUSED = false;
+
+// program variables
+let targetPlanet = null; // Default to the sun
+let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
+let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 let distance_unit = distance_units[0];
 let birdseye = true;
-
 
 class Planet {
     constructor(radius, mass, colorHex, x=0, y=0, z=0, isSun=false) {
@@ -86,7 +85,6 @@ class Planet {
             totalFx += forces[0].force_x // Force in N
             totalFz += forces[0].force_z // Force in N
         }
-
 
         const addedXVel = ((totalFx / this.mass)/1000) * TIME
         const addedZVel = ((totalFz / this.mass)/1000) * TIME
@@ -167,7 +165,6 @@ class Planet {
 class Ring {
     constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0) {
         this.parentPlanet = planet
-        // Create a ring geometry around the planet
         const innerRadius = this.parentPlanet.radius * innerRadiusFactor; // Inner radius slightly larger than planet
         const outerRadius = this.parentPlanet.radius * outerRadiusFactor; // Outer radius of the ring
         const ringSegments = 32;
@@ -227,7 +224,6 @@ jupiter.zVel = 13.06000369219;
 const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xe1d6c4, 90)
 jupiter.ring = jupiterRing
 
-
 const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0);
 saturn.zVel = 9.679981775672;
 const saturnRing = new Ring(saturn, 1.6, 2.7, 0x736c39, 90)
@@ -241,13 +237,15 @@ uranus.ring = uranusRing
 const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0);
 neptune.zVel = 5.4299794
 
-// const planets = [sun, mercury, venus, earth, mars];
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 
+
 camera.position.y = 40; // moving out the camera
+targetPlanet = sun
 controls.update();
 
-// Call function to create stars
+
+// create star background
 const stars = createStars()
 scene.add(stars);
 
@@ -255,18 +253,13 @@ scene.add(stars);
 const closeTriangleGeo = new THREE.BufferGeometry();
 const closeTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
 const closeTriangleOutline = new THREE.LineLoop(closeTriangleGeo, closeTriangleMat); // Create the line loop
+closeTriangleOutline.frustumCulled = false;
 
 // create triangle 2 between two planets farthest to each other and the sun
 const farTriangleGeo = new THREE.BufferGeometry();
 const farTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0xfc0341 ) }); // Line material
 const farTriangleOutline = new THREE.LineLoop(farTriangleGeo, farTriangleMat); // Create the line loop
-
-// create asteroid belt
-// const ringGeometry = new THREE.TorusGeometry(2.8 * AU * DISTANCE_SCALE, 0.3, 16, 100); // Major radius 1.5, tube radius 0.1
-// const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x8f8f8f, side: THREE.DoubleSide }); // Yellow color
-// const asteroidBelt = new THREE.Mesh(ringGeometry, ringMaterial);
-// asteroidBelt.rotation.x = Math.PI / 2; // Rotate ring to be horizontal
-// scene.add(asteroidBelt);
+farTriangleOutline.frustumCulled = false;
 
 // create moon
 const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
@@ -278,35 +271,7 @@ moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon rel
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
-let targetPlanet = sun; // Default to the sun
-let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
-let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
-
-
-// Add raycaster and mouse vector for planet selection
-// const raycaster = new THREE.Raycaster();
-// const mouse = new THREE.Vector2();
-window.addEventListener('mousedown', (event) => { // Handle mouse click
-    // isCameraLocked = false;
-    // mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    // mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-    //
-    // raycaster.setFromCamera(mouse, camera);
-    //
-    // const intersects = raycaster.intersectObjects(planets.map(planet => planet.sphere));
-    //
-    // if (intersects.length > 1) {
-    //     if (targetPlanet.sphere !== intersects[0].object) {
-    //         let targetPlanetObj = null;
-    //         for (const planet of planets) {
-    //             if (planet.sphere === intersects[0].object) targetPlanetObj = planet
-    //         }
-    //         moveToPlanet(targetPlanetObj); // Get the planet from intersected object
-    //     }
-    // }
-});
-
-// Pause functionality
+// event listeners
 window.addEventListener('keydown', (event) => {
     if (event.code === 'Space') { // un/pause the game
         PAUSED = !PAUSED;
@@ -473,14 +438,11 @@ function moveToPlanet(planet, topDown=false) {
 }
 
 
-// Function to lock the camera to a target planet
 function lockCameraToPlanet(planet) {
     isCameraLocked = true;
-    // Calculate initial offset based on the planet's current position
-    cameraOffset = new THREE.Vector3().subVectors(camera.position, planet.sphere.position);
+    cameraOffset = new THREE.Vector3().subVectors(camera.position, planet.sphere.position); // Calculate offset based on planet's current position
 }
 
-// Function to unlock the camera from the target planet
 function unlockCamera() {
     isCameraLocked = false;
 }
@@ -505,7 +467,6 @@ function render() { // runs with 60 fps
     } else {
         // If not locked, allow OrbitControls to manage the camera freely
         controls.target.copy(targetPlanet.sphere.position);
-        // controls.target.lerp(targetPlanet.sphere.position, 0.1); // Lerp factor of 0.1 for smoother transitions
         controls.update();
     }
 
