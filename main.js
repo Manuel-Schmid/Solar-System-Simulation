@@ -21,6 +21,7 @@ const TIME = 60 * 60 * 6   // one year in 12 Seconds
 let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
+let FIRST_INTERACTION = false;
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
@@ -74,7 +75,6 @@ class Planet {
         this.ring = null
     }
     updatePosition(planets) {
-        if (this.isSun) { return } // fixed sun
         let totalFx = 0;
         let totalFz = 0;
         for (const planet of planets) {
@@ -205,7 +205,7 @@ function convertDistance(distance) {
 }
 
 
-const sun = new Planet(696340 * PLANET_SCALE, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
+const sun = new Planet(696340 * PLANET_SCALE * 10, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true);
 
 const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0);
 mercury.zVel = 47.39996051284; // speed in km/s
@@ -300,14 +300,14 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.key.toLowerCase() === 's') {
-        if (targetPlanet && !targetPlanet.isSun) {
+        if (targetPlanet) {
             targetPlanet.xVel *= 0.8
             targetPlanet.zVel *= 0.8
         }
     }
 
     if (event.key.toLowerCase() === 'f') {
-        if (targetPlanet && !targetPlanet.isSun) {
+        if (targetPlanet) {
             targetPlanet.xVel *= 1.2
             targetPlanet.zVel *= 1.2
         }
@@ -375,18 +375,14 @@ function updateLabel() {
     const distanceLabel = document.getElementById('distance-label');
     const speedLabel = document.getElementById('speed-label');
     const weightLabel = document.getElementById('weight-label');
-
-    if (!targetPlanet || targetPlanet.isSun && birdseye) { // if no target planet or birdseye view: no label
+    if (!SHOW_LABEL || !targetPlanet || !FIRST_INTERACTION) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
-        if(!targetPlanet.isSun) {
-            distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun)
-            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
-            speedLabel.textContent = v.toPrecision(4) + " km/s"
-        } else {
-            distanceLabel.textContent = ""
-            speedLabel.textContent = ""
-        }
+        if (targetPlanet.isSun) distanceLabel.textContent = ""
+        else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun)
+
+        const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+        speedLabel.textContent = v.toPrecision(4) + " km/s"
         weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
         labelContainer.style.display = '';
     }
@@ -394,6 +390,7 @@ function updateLabel() {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
+    FIRST_INTERACTION = true;
     if (planet === targetPlanet && !planet.isSun) return;
     let showLabelChanged = false
     if (SHOW_LABEL) {
@@ -461,13 +458,15 @@ function render() { // runs with 60 fps
         if (SHOW_LABEL) updateLabel()
     }
 
-    if (isCameraLocked && targetPlanet) {
-        camera.position.copy(targetPlanet.sphere.position).add(new THREE.Vector3(((0-targetPlanet.sphere.position.x) / targetPlanet.sphere.position.x) * (targetPlanet.radius * 4), targetPlanet.radius, ((0-targetPlanet.sphere.position.z) / targetPlanet.sphere.position.z) * (targetPlanet.radius * 4)));
-        camera.lookAt(targetPlanet.sphere.position);
-    } else {
-        // If not locked, allow OrbitControls to manage the camera freely
-        controls.target.copy(targetPlanet.sphere.position);
-        controls.update();
+    if (targetPlanet) {
+        if (isCameraLocked) {
+            camera.position.copy(targetPlanet.sphere.position).add(new THREE.Vector3(((0-targetPlanet.sphere.position.x) / targetPlanet.sphere.position.x) * (targetPlanet.radius * 4), targetPlanet.radius, ((0-targetPlanet.sphere.position.z) / targetPlanet.sphere.position.z) * (targetPlanet.radius * 4)));
+            camera.lookAt(targetPlanet.sphere.position);
+        } else {
+            // If not locked, allow OrbitControls to manage the camera freely
+            controls.target.copy(targetPlanet.sphere.position);
+            controls.update();
+        }
     }
 
     renderer.render( scene, camera );
