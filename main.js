@@ -278,6 +278,12 @@ window.addEventListener('keydown', (event) => {
         return
     }
 
+    if (event.key.toLowerCase() === 'l') { // un/pause the game
+        SHOW_LABEL = !SHOW_LABEL;
+        updateLabel()
+        return
+    }
+
     if (event.key.toLowerCase() === 'd') { // cycle distance unit
         if (SHOW_LABEL && targetPlanet && !targetPlanet.isSun) { // only update if planet is selected
             const unit_index = distance_units.indexOf(distance_unit)
@@ -321,6 +327,34 @@ window.addEventListener('keydown', (event) => {
 
     if (event.key.toLowerCase() === 'c') {
         moveToPlanet(sun, true);
+    }
+
+    if (event.key.toLowerCase() === 'x') {
+        isCameraLocked = false;
+
+        const duration = 1;
+        const startPosition = camera.position.clone();
+        const startTime = performance.now();
+
+        const targetPosition = new THREE.Vector3(0,40,0)
+
+        function animate() {
+            const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+            const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
+            camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+            controls.target.copy(new THREE.Vector3(0,0,0)); // Update the OrbitControls target to the new planet
+            controls.update(); // Update controls to apply the new target
+
+            if (t < 1) {
+                requestAnimationFrame(animate); // Continue animation
+            } else { // animation is finished
+                targetPlanet = null;
+                FIRST_INTERACTION = false;
+                if (SHOW_LABEL) updateLabel()
+            }
+        }
+
+        animate();
     }
 
     if (event.key.toLowerCase() === 'o') {
