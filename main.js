@@ -139,7 +139,7 @@ class Planet {
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
 
         if (this.ring) this.ring.updatePosition()
-        if (SHOW_ORBITS) this.drawOrbits()
+        this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
         const distance_x = ((other.sphere.position.x - this.sphere.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
@@ -177,7 +177,7 @@ class Planet {
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
     }
-    clearOrbit() {
+    resetOrbit() {
         this.currentOrbitPointCount = 0;
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
@@ -417,11 +417,15 @@ window.addEventListener('keydown', (event) => {
 
     if (event.key.toLowerCase() === 'o') {
         SHOW_ORBITS = !SHOW_ORBITS;
+        for (const planet of planets) {
+            if (SHOW_ORBITS) scene.add(planet.orbitLine);
+            else scene.remove(planet.orbitLine);
+        }
     }
 
     if (event.key.toLowerCase() === 'r') {
         for (const planet of planets) {
-            planet.clearOrbit()
+            planet.resetOrbit()
         }
     }
 
