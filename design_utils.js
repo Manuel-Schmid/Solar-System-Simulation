@@ -13,7 +13,7 @@ export function createStars() {
         // new THREE.Color().setHex( 0xb9b9ea ), // purple
         // new THREE.Color().setHex( 0xf6c68e ), // purple
 
-        new THREE.Color().setHex( 0x7300ff ), // blue
+        // new THREE.Color().setHex( 0x7300ff ), // blue
         new THREE.Color().setHex( 0xff00ea ), // pink
         new THREE.Color().setHex( 0xff0000 ), // red
     ];
