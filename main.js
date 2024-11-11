@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStars, updateTriangles} from "./design_utils";
 import {formatDistance, PlanetRingGeometry} from "./utils";
+import FakeGlowMaterial from "./GlowMaterial";
 
 
 const scene = new THREE.Scene();
@@ -17,7 +18,7 @@ const G = 6.67428e-11  // Gravitational constant
 const AU = 1.496e+8 // 1 AU in km
 const LM = 1.799e+7 // 1 Light minute in km
 const DISTANCE_SCALE = 0.0000001 // multiply km distances by this
-const PLANET_SCALE = DISTANCE_SCALE // multiply km distances by this
+const PLANET_SCALE = DISTANCE_SCALE * 10 // multiply km distances by this
 const TIME = 60 * 60 * 6   // one year in 12 Seconds
 let distance_units = ["km", "au", "lm"] // units for distances
 
@@ -51,6 +52,7 @@ class Planet {
         this.colorHex = colorHex;
         this.lowQMapPath = lowQMapPath;
         this.highQMapPath = highQMapPath;
+        this.glowSphere = null
 
         this.geometry = new THREE.SphereGeometry( radius, 64, 32 );
         this.material = new THREE.MeshStandardMaterial({
@@ -58,20 +60,25 @@ class Planet {
             roughness: 0.8, // less rough, more reflective
             // metalness: 0.1, // metallic, reflective effect
         });
-        if (lowQMapPath && !isSun) {
+        if (lowQMapPath) {
             this.material.color = null;
             const texture = textureLoader.load(lowQMapPath);
             texture.colorSpace = THREE.SRGBColorSpace
             this.material.map = texture;
+
+            if (isSun) this.material = new THREE.MeshBasicMaterial({ map: texture });
         }
+
         if (isSun) {
-            this.material = new THREE.MeshStandardMaterial({
-                color: colorHex,   // Sun color (yellow)
-                emissive: colorHex, // Make the Sun emit light (self-illumination)
-                emissiveIntensity: 1, // Adjust intensity of emission
-                roughness: 0.1,     // Optional: Set material roughness
-                metalness: 0.2      // Optional: Set material metalness
+            // sun glow effect
+            const fakeGlowMaterial = new FakeGlowMaterial({
+                falloff: 0.4,
+                glowColor: new THREE.Color("#ff0000"),
+                // glowColor: new THREE.Color("#ff2f00"),
+                glowSharpness: 0.7,
             });
+            this.glowSphere = new THREE.Mesh( new THREE.SphereGeometry( radius * 2, 64, 32 ), fakeGlowMaterial);
+            scene.add(this.glowSphere);
         }
 
         this.sphere = new THREE.Mesh(this.geometry, this.material);
@@ -142,6 +149,7 @@ class Planet {
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
 
         if (this.ring) this.ring.updatePosition()
+        if (this.glowSphere) this.glowSphere.position.copy(this.sphere.position)
         this.drawOrbits()
     }
     attraction(other) { // attraction between self & other planet
@@ -253,7 +261,7 @@ function convertDistance(distance) {
 }
 
 
-const sun = new Planet("Sun", 696340 * PLANET_SCALE * 10, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, null, null); // 'planet_textures/2k/2k_sun.jpg'
+const sun = new Planet("Sun", 696340 * PLANET_SCALE, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
 
 const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
