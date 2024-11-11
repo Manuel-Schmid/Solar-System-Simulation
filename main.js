@@ -25,9 +25,10 @@ let distance_units = ["km", "au", "lm"] // units for distances
 let FIRST_INTERACTION = false;
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
+let HIGH_QUALITY_TEXTURES = false;
 let SHOW_TRIANGLES = false;
 let SHOW_VECTORS = false;
-let REALISTIC_LIGHT = false;
+let REALISTIC_LIGHTING = false;
 let PAUSED = false;
 
 // program variables
@@ -38,7 +39,7 @@ let distance_unit = distance_units[0];
 let birdseye = true;
 
 class Planet {
-    constructor(radius, mass, colorHex, x=0, y=0, z=0, isSun=false, mapPath=null) {
+    constructor(radius, mass, colorHex, x=0, y=0, z=0, isSun=false, lowQMapPath=null, highQMapPath=null) {
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
@@ -47,16 +48,18 @@ class Planet {
         this.isSun = isSun;
         this.orbits = [];
         this.colorHex = colorHex;
+        this.lowQMapPath = lowQMapPath;
+        this.highQMapPath = highQMapPath;
 
-        this.geometry = new THREE.SphereGeometry( radius, 32, 16 );
+        this.geometry = new THREE.SphereGeometry( radius, 64, 32 );
         this.material = new THREE.MeshStandardMaterial({
             color: colorHex,
             roughness: 0.8, // less rough, more reflective
             // metalness: 0.1, // metallic, reflective effect
         });
-        if (mapPath && !isSun) {
+        if (lowQMapPath && !isSun) {
             this.material.color = null;
-            const texture = textureLoader.load(mapPath);
+            const texture = textureLoader.load(lowQMapPath);
             texture.colorSpace = THREE.SRGBColorSpace
             this.material.map = texture;
         }
@@ -186,8 +189,10 @@ class Planet {
 }
 
 class Ring {
-    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0, alphaTextureUrl = null) {
+    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0, lowQMapPath=null, highQMapPath=null) {
         this.parentPlanet = planet
+        this.lowQMapPath = lowQMapPath;
+        this.highQMapPath = highQMapPath;
         const innerRadius = this.parentPlanet.radius * innerRadiusFactor; // Inner radius slightly larger than planet
         const outerRadius = this.parentPlanet.radius * outerRadiusFactor; // Outer radius of the ring
         const ringSegments = 64;
@@ -195,8 +200,8 @@ class Ring {
         const ringGeometry = new PlanetRingGeometry(innerRadius, outerRadius, ringSegments, ringSegments);
 
         let alphaTexture = null;
-        if (alphaTextureUrl) {
-            alphaTexture = textureLoader.load(alphaTextureUrl);
+        if (this.lowQMapPath) {
+            alphaTexture = textureLoader.load(this.lowQMapPath);
             alphaTexture.colorSpace = THREE.SRGBColorSpace
             alphaTexture.anisotropy = 32;  // Optional: Improve texture quality if needed
         }
@@ -249,43 +254,43 @@ function convertDistance(distance) {
 }
 
 
-const sun = new Planet(696340 * PLANET_SCALE * 10, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true); // 'planet_textures/2k_sun.jpg'
+const sun = new Planet(696340 * PLANET_SCALE * 10, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, null, null); // 'planet_textures/2k/2k_sun.jpg'
 
-const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_mercury.jpg');
+const mercury = new Planet(2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
 
-const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_venus_surface.jpg');
+const venus = new Planet(6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_venus_surface.jpg', 'planet_textures/8k/8k_venus_surface.jpg');
 venus.zVel = 35.019991414096;
 
-const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_earth_daymap.jpg');
+const earth = new Planet(6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
 earth.zVel = 29.78299948;
 
-const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_mars.jpg');
+const mars = new Planet(3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mars.jpg', 'planet_textures/8k/8k_mars.jpg');
 mars.zVel = 24.076988672178
 
-const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_jupiter.jpg');
+const jupiter = new Planet(69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_jupiter.jpg', 'planet_textures/8k/8k_jupiter.jpg');
 jupiter.zVel = 13.06000369219;
 const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xC0B09E, 90)
 jupiter.ring = jupiterRing
 
-const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_saturn.jpg');
+const saturn = new Planet(58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
 saturn.zVel = 9.679981775672;
-const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 90, 0, 'planet_textures/2k_saturn_ring_alpha.png')
+const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 90, 0, 'planet_textures/2k/2k_saturn_ring_alpha.png') // todo
 saturn.ring = saturnRing
 
-const uranus = new Planet(25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_uranus.jpg');
+const uranus = new Planet(25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
 const uranusRing = new Ring(uranus, 1.5, 1.6, 0xb0ffff, 188, 135)
 uranus.ring = uranusRing
 
-const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k_neptune.jpg');
+const neptune = new Planet(24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_neptune.jpg');
 neptune.zVel = 5.4299794
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 
 
 camera.position.y = 40; // moving out the camera
-targetPlanet = sun
+// targetPlanet = sun
 controls.update();
 
 
@@ -338,7 +343,7 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.key.toLowerCase() === 'l') { // switch lighting
-        REALISTIC_LIGHT = !REALISTIC_LIGHT;
+        REALISTIC_LIGHTING = !REALISTIC_LIGHTING;
         updateLighting()
         return
     }
@@ -427,6 +432,23 @@ window.addEventListener('keydown', (event) => {
         for (const planet of planets) {
             if (SHOW_ORBITS) scene.add(planet.orbitLine);
             else scene.remove(planet.orbitLine);
+        }
+    }
+
+    if (event.key.toLowerCase() === 'q') {
+        HIGH_QUALITY_TEXTURES = !HIGH_QUALITY_TEXTURES;
+        for (const planet of planets) {
+            if (planet.lowQMapPath && planet.highQMapPath) {
+                const texture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.highQMapPath : planet.lowQMapPath);
+                texture.colorSpace = THREE.SRGBColorSpace
+                planet.sphere.material.map = texture
+            }
+            if (planet.ring && planet.ring.lowQMapPath && planet.ring.highQMapPath) {
+                const alphaTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.ring.highQMapPath : planet.ring.lowQMapPath);
+                alphaTexture.colorSpace = THREE.SRGBColorSpace
+                alphaTexture.anisotropy = 32;  // Optional: Improve texture quality if needed
+                planet.ring.ringObj.material.map = alphaTexture
+            }
         }
     }
 
@@ -538,7 +560,7 @@ function moveToPlanet(planet, topDown=false) {
 }
 
 function updateLighting() {
-    if (REALISTIC_LIGHT) {
+    if (REALISTIC_LIGHTING) {
         scene.add(sunLight)
         scene.add(softAmbientLight);
         scene.remove(brightAmbientLight);
@@ -564,12 +586,12 @@ function render() { // runs with 60 fps
     if(!PAUSED) {
         for (const planet of planets) {
             planet.updatePosition(planets)
-            planet.sphere.rotation.y += 0.01; // rotation around own axis
 
             moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
             moonOrbit.rotation.y += 0.012; // moon orbit speed
         }
-        if (REALISTIC_LIGHT) sunLight.position.copy(sun.sphere.position)
+        if (targetPlanet) targetPlanet.sphere.rotation.y += 0.01; // only rotate targeted planet
+        if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
         if (SHOW_LABEL) updateLabel()

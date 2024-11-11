@@ -19,6 +19,6 @@
 
 # Todo
 - time passed in simulation (consider pause)
-- X
+- Saturn ring upscaling
 
 
