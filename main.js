@@ -29,7 +29,7 @@ let SHOW_ORBITS = true;
 let HIGH_QUALITY_TEXTURES = false;
 let SHOW_TRIANGLES = false;
 let SHOW_VECTORS = false;
-let REALISTIC_LIGHTING = false;
+let REALISTIC_LIGHTING = true;
 let PAUSED = false;
 
 // program variables
@@ -265,7 +265,7 @@ function convertDistance(distance) {
 }
 
 
-const sun = new Planet("Sun", 696340 * PLANET_SCALE, 1.98892 * 10 ** 30, 0xffffff, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+const sun = new Planet("Sun", 696340 * PLANET_SCALE, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
 
 const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
@@ -324,6 +324,14 @@ updateLighting()
 const stars = createStars()
 scene.add(stars);
 
+// textureLoader.load('8k_stars_milky_way.jpg' , function(texture)
+// textureLoader.load('8k_stars.jpg' , function(texture)
+// {
+//     texture.colorSpace = THREE.SRGBColorSpace
+//     scene.background = texture;
+// });
+
+
 // create triangle 1 between two planets closest to each other and the sun
 const closeTriangleGeo = new THREE.BufferGeometry();
 const closeTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
@@ -338,11 +346,20 @@ farTriangleOutline.frustumCulled = false;
 
 // create moon
 const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
-const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x8f8f8f }); // White color
+const moonMapPath = 'planet_textures/2k/2k_moon.jpg'
+const moonTexture = textureLoader.load(moonMapPath);
+moonTexture.colorSpace = THREE.SRGBColorSpace
+const moonMaterial = new THREE.MeshStandardMaterial({
+    // color: 0x8f8f8f,
+    map: moonTexture,
+    roughness: 0.8, // less rough, more reflective
+});
+
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonOrbit = new THREE.Object3D();
 scene.add(moonOrbit); // Add the orbit object to the scene
 moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
+moon.rotation.y = Math.PI;
 moonOrbit.add(moon); // Add the moon to the parent object
 
 
@@ -626,7 +643,7 @@ function render() { // runs with 60 fps
             moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
             moonOrbit.rotation.y += 0.012; // moon orbit speed
         }
-        if (targetPlanet) targetPlanet.sphere.rotation.y += 0.01; // only rotate targeted planet
+        if (targetPlanet) targetPlanet.sphere.rotation.y += 0.005; // only rotate targeted planet
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
