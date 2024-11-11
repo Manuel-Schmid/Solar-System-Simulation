@@ -12,7 +12,7 @@ const textureLoader = new THREE.TextureLoader();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-const controls = new OrbitControls( camera, renderer.domElement );1
+const controls = new OrbitControls( camera, renderer.domElement );
 
 const G = 6.67428e-11  // Gravitational constant
 const AU = 1.496e+8 // 1 AU in km
@@ -66,7 +66,9 @@ class Planet {
             texture.colorSpace = THREE.SRGBColorSpace
             this.material.map = texture;
 
-            if (isSun) this.material = new THREE.MeshBasicMaterial({ map: texture });
+            if (isSun) { // noinspection JSValidateTypes
+                this.material = new THREE.MeshBasicMaterial({ map: texture });
+            }
         }
 
         if (isSun) {
@@ -77,10 +79,12 @@ class Planet {
                 // glowColor: new THREE.Color("#ff2f00"),
                 glowSharpness: 0.7,
             });
+            // noinspection JSCheckFunctionSignatures
             this.glowSphere = new THREE.Mesh( new THREE.SphereGeometry( radius * 2, 64, 32 ), fakeGlowMaterial);
             scene.add(this.glowSphere);
         }
 
+        // noinspection JSCheckFunctionSignatures
         this.sphere = new THREE.Mesh(this.geometry, this.material);
         this.sphere.position.set(x, y, z)
         // this.sphere.castShadow = true;
@@ -202,7 +206,7 @@ class Ring {
         this.highQMapPath = highQMapPath;
         const innerRadius = this.parentPlanet.radius * innerRadiusFactor; // Inner radius slightly larger than planet
         const outerRadius = this.parentPlanet.radius * outerRadiusFactor; // Outer radius of the ring
-        const ringSegments = 64;
+        const ringSegments = 96;
 
         const ringGeometry = new PlanetRingGeometry(innerRadius, outerRadius, ringSegments, ringSegments);
 
@@ -231,7 +235,7 @@ class Ring {
 
         if (alphaTexture) ringMaterial.color = null;
 
-
+        // noinspection JSCheckFunctionSignatures
         this.ringObj = new THREE.Mesh(ringGeometry, ringMaterial);
         this.ringObj.rotation.x =  xAngle * Math.PI / 180; // rotation angle of the ring
         this.ringObj.rotation.y = yAngle * Math.PI / 180
