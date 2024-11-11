@@ -27,7 +27,7 @@ let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let SHOW_TRIANGLES = false;
 let SHOW_VECTORS = false;
-let REALISTIC_LIGHT = true;
+let REALISTIC_LIGHT = false;
 let PAUSED = false;
 
 // program variables
@@ -72,6 +72,7 @@ class Planet {
 
         this.sphere = new THREE.Mesh(this.geometry, this.material);
         this.sphere.position.set(x, y, z)
+        // this.sphere.castShadow = true;
         scene.add( this.sphere );
 
         // orbits
@@ -224,6 +225,7 @@ class Ring {
         this.ringObj.rotation.y = yAngle * Math.PI / 180
         this.ringObj.position.set(this.parentPlanet.sphere.position.x, this.parentPlanet.sphere.position.y, this.parentPlanet.sphere.position.z);    // Center the ring at the planet's position
 
+        // this.ringObj.receiveShadow = true
         scene.add(this.ringObj);
     }
     updatePosition() {
@@ -288,11 +290,16 @@ controls.update();
 
 
 // lighting
+// renderer.shadowMap.enabled = true;
+// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 const sunLight = new THREE.PointLight(0xffffff, 3, 1000);
 sunLight.position.set(0, 0, 0);
+// sunLight.castShadow = true;
 sunLight.decay = 0;
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
+const softAmbientLight = new THREE.AmbientLight(0x404040, 0.7); // Soft white ambient light
+const brightAmbientLight = new THREE.AmbientLight(0xffffff, 2.5);
 
 updateLighting()
 
@@ -533,10 +540,13 @@ function moveToPlanet(planet, topDown=false) {
 function updateLighting() {
     if (REALISTIC_LIGHT) {
         scene.add(sunLight)
-        scene.remove(ambientLight);
+        scene.add(softAmbientLight);
+        scene.remove(brightAmbientLight);
+
     } else {
         scene.remove(sunLight)
-        scene.add(ambientLight);
+        scene.remove(softAmbientLight);
+        scene.add(brightAmbientLight);
     }
 }
 
