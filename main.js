@@ -23,7 +23,6 @@ const TIME = 60 * 60 * 6   // one year in 12 Seconds
 let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
-let FIRST_INTERACTION = false;
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let HIGH_QUALITY_TEXTURES = false;
@@ -111,6 +110,11 @@ class Planet {
         this.vVectorLine = new THREE.Line( vVectorLineGeometry, vVectorLineMaterial );
         this.vVectorLine.frustumCulled = false;
 
+        const tangentLineMaterial = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+        const tangentLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.tangentLine = new THREE.Line( tangentLineGeometry, tangentLineMaterial );
+        this.tangentLine.frustumCulled = false;
+
         this.ring = null
     }
     updatePosition(planets) {
@@ -141,13 +145,22 @@ class Planet {
 
             const vVectorLinePoints = [
                 new THREE.Vector3(this.sphere.position.x + this.radius, 0, this.sphere.position.z + this.radius),
-                new THREE.Vector3(this.sphere.position.x + this.radius + ((this.xVel * DISTANCE_SCALE) * TIME), 0, this.sphere.position.z + this.radius + ((this.zVel * DISTANCE_SCALE) * TIME))
+                new THREE.Vector3(this.sphere.position.x + this.radius + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.sphere.position.z + this.radius + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
             ]
+
+            // const lastPoint = this.orbits[this.orbits.length - 1];
+            // console.log(lastPoint);
+            // const tangentLinePoints = [
+            //     new THREE.Vector3(lastPoint.x, lastPoint.y, lastPoint.z),
+            //     new THREE.Vector3(this.sphere.position.x * 2, this.sphere.position.y, this.sphere.position.z * 2)
+            // ]
 
             this.gVectorLine.geometry.setFromPoints( gVectorLinePoints );
             this.vVectorLine.geometry.setFromPoints( vVectorLinePoints );
+            // this.tangentLine.geometry.setFromPoints( tangentLinePoints );
             scene.add( this.gVectorLine );
             scene.add( this.vVectorLine );
+            // scene.add( this.tangentLine );
         }
 
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
@@ -456,7 +469,6 @@ window.addEventListener('keydown', (event) => {
                 requestAnimationFrame(animate); // Continue animation
             } else { // animation is finished
                 targetPlanet = null;
-                FIRST_INTERACTION = false;
                 if (SHOW_LABEL) updateLabel()
             }
         }
@@ -531,7 +543,9 @@ window.addEventListener('keydown', (event) => {
             pushTextToLabel('Move to ' + planets[number].name)
             if (event.altKey && birdseye) {
                 targetPlanet = planets[number]
-                if (SHOW_LABEL) updateLabel()
+                if (SHOW_LABEL) {
+                    updateLabel()
+                }
             }
             else moveToPlanet(planets[number]);
         }
@@ -543,7 +557,7 @@ function updateLabel() {
     const distanceLabel = document.getElementById('distance-label');
     const speedLabel = document.getElementById('speed-label');
     const weightLabel = document.getElementById('weight-label');
-    if (!SHOW_LABEL || !targetPlanet || !FIRST_INTERACTION) { // if no target planet or birdseye view: no label
+    if (!SHOW_LABEL || !targetPlanet) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
         if (targetPlanet.isSun) distanceLabel.textContent = ""
@@ -558,7 +572,6 @@ function updateLabel() {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
-    FIRST_INTERACTION = true;
     if (planet === targetPlanet && !planet.isSun) return;
     let showLabelChanged = false
     if (SHOW_LABEL) {
@@ -570,7 +583,7 @@ function moveToPlanet(planet, topDown=false) {
     let targetPosition = null
 
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
-    else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius)
+    else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius + 0.4, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius + 0.4)
     else if(PAUSED) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 0.01, planet.sphere.position.z + 0.001)
     else targetPosition = planet.sphere.position.clone().add(new THREE.Vector3(
             ((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 8),
