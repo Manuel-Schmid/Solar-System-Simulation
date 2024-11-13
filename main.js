@@ -19,7 +19,7 @@ const AU = 1.496e+8 // 1 AU in km
 const LM = 1.799e+7 // 1 Light minute in km
 const DISTANCE_SCALE = 0.0000001 // multiply km distances by this
 const PLANET_SCALE = DISTANCE_SCALE * 10 // multiply km distances by this
-const TIME = 60 * 60 * 6   // one year in 12 Seconds
+const TIME = 60 * 60 * 6   // 6 = one year in 24 Seconds
 let distance_units = ["km", "au", "lm"] // units for distances
 
 // setting variables:
@@ -39,12 +39,14 @@ let distance_unit = distance_units[0];
 let birdseye = true;
 
 class Planet {
-    constructor(name, radius, mass, colorHex, x=0, y=0, z=0, isSun=false, lowQMapPath=null, highQMapPath=null) {
+    constructor(name, radius, axialTilt, dayLength, mass, colorHex, x=0, y=0, z=0, isSun=false, lowQMapPath=null, highQMapPath=null) {
         this.name = name
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
         this.radius = radius;
+        this.axialTilt = axialTilt;
+        this.rotationSpeed = -1 * 1.57 / (dayLength / 24); // sci-acc
         this.distanceToSun = 0;
         this.isSun = isSun;
         this.orbits = [];
@@ -54,6 +56,8 @@ class Planet {
         this.glowSphere = null
 
         this.geometry = new THREE.SphereGeometry( radius, 64, 32 );
+        this.geometry.rotateY(THREE.MathUtils.degToRad(90));
+
         this.material = new THREE.MeshStandardMaterial({
             color: colorHex,
             roughness: 0.8, // less rough, more reflective
@@ -85,8 +89,8 @@ class Planet {
 
         // noinspection JSCheckFunctionSignatures
         this.sphere = new THREE.Mesh(this.geometry, this.material);
+        this.sphere.rotation.x = THREE.MathUtils.degToRad(axialTilt); // axis tilt
         this.sphere.position.set(x, y, z)
-        // this.sphere.castShadow = true;
         scene.add( this.sphere );
 
         // orbits
@@ -148,19 +152,19 @@ class Planet {
                 new THREE.Vector3(this.sphere.position.x + this.radius + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.sphere.position.z + this.radius + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
             ]
 
-            // const lastPoint = this.orbits[this.orbits.length - 1];
-            // console.log(lastPoint);
-            // const tangentLinePoints = [
-            //     new THREE.Vector3(lastPoint.x, lastPoint.y, lastPoint.z),
-            //     new THREE.Vector3(this.sphere.position.x * 2, this.sphere.position.y, this.sphere.position.z * 2)
-            // ]
+            const lastPoint = this.orbits[this.orbits.length - 1];
+            console.log(lastPoint);
+            const tangentLinePoints = [
+                new THREE.Vector3(lastPoint.x, lastPoint.y, lastPoint.z),
+                new THREE.Vector3((2 * this.sphere.position.x) - lastPoint.x, 0, (2 * this.sphere.position.z) - lastPoint.z)
+            ]
 
             this.gVectorLine.geometry.setFromPoints( gVectorLinePoints );
             this.vVectorLine.geometry.setFromPoints( vVectorLinePoints );
-            // this.tangentLine.geometry.setFromPoints( tangentLinePoints );
+            this.tangentLine.geometry.setFromPoints( tangentLinePoints );
             scene.add( this.gVectorLine );
             scene.add( this.vVectorLine );
-            // scene.add( this.tangentLine );
+            scene.add( this.tangentLine );
         }
 
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
@@ -213,7 +217,7 @@ class Planet {
 }
 
 class Ring {
-    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, xAngle, yAngle=0, lowQMapPath=null, highQMapPath=null) {
+    constructor(planet, innerRadiusFactor, outerRadiusFactor, color, opacity, lowQMapPath=null, highQMapPath=null) {
         this.parentPlanet = planet
         this.lowQMapPath = lowQMapPath;
         this.highQMapPath = highQMapPath;
@@ -236,12 +240,12 @@ class Ring {
             emissiveIntensity: 0.5, // Adjust intensity of emission
             side: THREE.DoubleSide,     // Render on both sides of the ring
             transparent: true,          // Enable transparency (important for alpha maps)
-            opacity: 1,                 // Set opacity (adjust for overall transparency)
+            opacity: opacity,                 // Set opacity (adjust for overall transparency)
             roughness: 0.5,             // Control the roughness of the ring's surface
             metalness: 0.1,             // Optional: Set metalness for the ring's surface
             map: alphaTexture,     // Apply the alpha texture (this controls transparency)
             // Optional: Additional settings for alpha map handling
-            alphaTest: 0.5,             // Optional: Alpha cutoff for rendering (0.5 = no transparency below this value)
+            alphaTest: 0.3,             // Optional: Alpha cutoff for rendering (0.5 = no transparency below this value)
             depthTest: true,            // Optional: Control depth testing behavior
             depthWrite: false           // Optional: Prevent depth writes for transparent areas
         });
@@ -250,8 +254,7 @@ class Ring {
 
         // noinspection JSCheckFunctionSignatures
         this.ringObj = new THREE.Mesh(ringGeometry, ringMaterial);
-        this.ringObj.rotation.x =  xAngle * Math.PI / 180; // rotation angle of the ring
-        this.ringObj.rotation.y = yAngle * Math.PI / 180
+        this.ringObj.rotation.x = THREE.MathUtils.degToRad(this.parentPlanet.axialTilt + 90); // axis tilt
         this.ringObj.position.set(this.parentPlanet.sphere.position.x, this.parentPlanet.sphere.position.y, this.parentPlanet.sphere.position.z);    // Center the ring at the planet's position
 
         // this.ringObj.receiveShadow = true
@@ -278,36 +281,36 @@ function convertDistance(distance) {
 }
 
 
-const sun = new Planet("Sun", 696340 * PLANET_SCALE, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+const sun = new Planet("Sun", 696340 * PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
 
-const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
+const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 0,  58*24, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
 
-const venus = new Planet("Venus", 6051.8 * PLANET_SCALE, 4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_venus_surface.jpg', 'planet_textures/8k/8k_venus_surface.jpg');
+const venus = new Planet("Venus", 6051.8 * PLANET_SCALE, 0, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_venus_surface.jpg', 'planet_textures/8k/8k_venus_surface.jpg');
 venus.zVel = 35.019991414096;
 
-const earth = new Planet("Earth", 6371 * PLANET_SCALE, 5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
+const earth = new Planet("Earth", 6371 * PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
 earth.zVel = 29.78299948;
 
-const mars = new Planet("Mars", 3389.5 * PLANET_SCALE, 6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mars.jpg', 'planet_textures/8k/8k_mars.jpg');
+const mars = new Planet("Mars", 3389.5 * PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mars.jpg', 'planet_textures/8k/8k_mars.jpg');
 mars.zVel = 24.076988672178
 
-const jupiter = new Planet("Jupiter", 69911 * PLANET_SCALE, 1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_jupiter.jpg', 'planet_textures/8k/8k_jupiter.jpg');
+const jupiter = new Planet("Jupiter", 69911 * PLANET_SCALE,  0, 10,1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_jupiter.jpg', 'planet_textures/8k/8k_jupiter.jpg');
 jupiter.zVel = 13.06000369219;
-const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xC0B09E, 90)
+const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xC0B09E,0.9)
 jupiter.ring = jupiterRing
 
-const saturn = new Planet("Saturn", 58232 * PLANET_SCALE, 5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
+const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
 saturn.zVel = 9.679981775672;
-const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 90, 0, 'planet_textures/2k/2k_saturn_ring_alpha.png') // todo
+const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 1, 'planet_textures/2k/2k_saturn_ring_alpha.png') // todo
 saturn.ring = saturnRing
 
-const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
+const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 0, 17,8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
-const uranusRing = new Ring(uranus, 1.5, 1.6, 0xb0ffff, 188, 135)
+const uranusRing = new Ring(uranus, 1.5, 1.6, 0xb0ffff, 0.5)
 uranus.ring = uranusRing
 
-const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_neptune.jpg');
+const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 10, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_neptune.jpg');
 neptune.zVel = 5.4299794
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
@@ -518,9 +521,11 @@ window.addEventListener('keydown', (event) => {
             if (SHOW_VECTORS) {
                 scene.add( planet.gVectorLine );
                 scene.add( planet.vVectorLine );
+                scene.add( planet.tangentLine );
             } else {
                 scene.remove( planet.gVectorLine );
                 scene.remove( planet.vVectorLine );
+                scene.remove( planet.tangentLine );
             }
         }
     }
@@ -656,7 +661,8 @@ function render() { // runs with 60 fps
             moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
             moonOrbit.rotation.y += 0.012; // moon orbit speed
         }
-        if (targetPlanet) targetPlanet.sphere.rotation.y += 0.005; // only rotate targeted planet
+
+        if (targetPlanet) targetPlanet.sphere.rotation.y += targetPlanet.rotationSpeed;
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
 
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
