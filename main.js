@@ -29,6 +29,7 @@ let HIGH_QUALITY_TEXTURES = false;
 let SHOW_TRIANGLES = false;
 let SHOW_VECTORS = false;
 let REALISTIC_LIGHTING = true;
+let TRUE_ROTATION_SPEEDS = false;
 let PAUSED = false;
 
 // program variables
@@ -104,6 +105,7 @@ class Planet {
         this.orbitLine.frustumCulled = false;
         scene.add(this.orbitLine);
 
+        // vectors
         const gVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
         const gVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
         this.gVectorLine = new THREE.Line( gVectorLineGeometry, gVectorLineMaterial );
@@ -114,10 +116,18 @@ class Planet {
         this.vVectorLine = new THREE.Line( vVectorLineGeometry, vVectorLineMaterial );
         this.vVectorLine.frustumCulled = false;
 
-        const tangentLineMaterial = new THREE.LineBasicMaterial( { color: 0xff0000 } );
-        const tangentLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
-        this.tangentLine = new THREE.Line( tangentLineGeometry, tangentLineMaterial );
-        this.tangentLine.frustumCulled = false;
+        if (!isSun) {
+            const axisHeight = this.radius * 2.5
+            const axisCoords = [
+                new THREE.Vector3(0, -axisHeight, 0), // Start below the sphere
+                new THREE.Vector3(0, axisHeight, 0)   // End above the sphere
+            ];
+            const axisLineMaterial = new THREE.LineBasicMaterial( { color: 0x00ff08 } );
+            const axisLineGeometry = new THREE.BufferGeometry().setFromPoints(axisCoords);
+            this.axisLine = new THREE.Line( axisLineGeometry, axisLineMaterial );
+            this.axisLine.rotation.x = THREE.MathUtils.degToRad(axialTilt); // axis tilt
+            this.axisLine.frustumCulled = false;
+        }
 
         this.ring = null
     }
@@ -152,24 +162,17 @@ class Planet {
                 new THREE.Vector3(this.sphere.position.x + this.radius + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.sphere.position.z + this.radius + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
             ]
 
-            const lastPoint = this.orbits[this.orbits.length - 1];
-            console.log(lastPoint);
-            const tangentLinePoints = [
-                new THREE.Vector3(lastPoint.x, lastPoint.y, lastPoint.z),
-                new THREE.Vector3((2 * this.sphere.position.x) - lastPoint.x, 0, (2 * this.sphere.position.z) - lastPoint.z)
-            ]
-
             this.gVectorLine.geometry.setFromPoints( gVectorLinePoints );
             this.vVectorLine.geometry.setFromPoints( vVectorLinePoints );
-            this.tangentLine.geometry.setFromPoints( tangentLinePoints );
             scene.add( this.gVectorLine );
             scene.add( this.vVectorLine );
-            scene.add( this.tangentLine );
+            scene.add( this.axisLine );
         }
 
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
 
         if (this.ring) this.ring.updatePosition()
+        if (SHOW_VECTORS && !this.isSun) this.axisLine.position.set(this.sphere.position.x, this.sphere.position.y, this.sphere.position.z);
         if (this.glowSphere) this.glowSphere.position.copy(this.sphere.position)
         this.drawOrbits()
     }
@@ -305,12 +308,12 @@ saturn.zVel = 9.679981775672;
 const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 1, 'planet_textures/2k/2k_saturn_ring_alpha.png') // todo
 saturn.ring = saturnRing
 
-const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 0, 17,8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
+const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
 const uranusRing = new Ring(uranus, 1.5, 1.6, 0xb0ffff, 0.5)
 uranus.ring = uranusRing
 
-const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 10, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_neptune.jpg');
+const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 0, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_neptune.jpg');
 neptune.zVel = 5.4299794
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
@@ -377,6 +380,7 @@ scene.add(moonOrbit); // Add the orbit object to the scene
 moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moon.rotation.y = Math.PI;
 moonOrbit.add(moon); // Add the moon to the parent object
+// moonOrbit.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
 
 
 // event listeners
@@ -392,6 +396,11 @@ window.addEventListener('keydown', (event) => {
         pushTextToLabel(REALISTIC_LIGHTING ? 'Enable realistic lighting' : 'Disable realistic lighting');
         updateLighting()
         return
+    }
+
+    if (event.key.toLowerCase() === 'r') {
+        TRUE_ROTATION_SPEEDS = !TRUE_ROTATION_SPEEDS;
+        pushTextToLabel(TRUE_ROTATION_SPEEDS ? 'Enable accurate rotation speeds' : 'Disable accurate rotation speeds')
     }
 
     if (event.key.toLowerCase() === 'i') { // hide/show label
@@ -443,6 +452,13 @@ window.addEventListener('keydown', (event) => {
         pushTextToLabel('Double planet mass')
         if (targetPlanet) {
             targetPlanet.mass *= 2
+        }
+    }
+
+    if (event.key.toLowerCase() === 'n') {
+        pushTextToLabel('Half planet mass')
+        if (targetPlanet) {
+            targetPlanet.mass *= 0.5
         }
     }
 
@@ -506,7 +522,7 @@ window.addEventListener('keydown', (event) => {
         }
     }
 
-    if (event.key.toLowerCase() === 'r') {
+    if (event.key.toLowerCase() === 'p') {
         pushTextToLabel('Reset orbits')
         for (const planet of planets) {
             planet.resetOrbit()
@@ -521,11 +537,11 @@ window.addEventListener('keydown', (event) => {
             if (SHOW_VECTORS) {
                 scene.add( planet.gVectorLine );
                 scene.add( planet.vVectorLine );
-                scene.add( planet.tangentLine );
+                scene.add( planet.axisLine );
             } else {
                 scene.remove( planet.gVectorLine );
                 scene.remove( planet.vVectorLine );
-                scene.remove( planet.tangentLine );
+                scene.remove( planet.axisLine );
             }
         }
     }
@@ -578,6 +594,8 @@ function updateLabel() {
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
     if (planet === targetPlanet && !planet.isSun) return;
+    if(targetPlanet && !planet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
+
     let showLabelChanged = false
     if (SHOW_LABEL) {
         SHOW_LABEL = false // make label stop updating during transition
@@ -657,14 +675,17 @@ function render() { // runs with 60 fps
     if(!PAUSED) {
         for (const planet of planets) {
             planet.updatePosition(planets)
-
-            moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
-            moonOrbit.rotation.y += 0.012; // moon orbit speed
+        }
+        // rotations
+        if (targetPlanet) {
+            targetPlanet.sphere.rotation.y += TRUE_ROTATION_SPEEDS && !targetPlanet.isSun ? targetPlanet.rotationSpeed : -0.009;
+            if (targetPlanet === earth) {
+                moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
+                moonOrbit.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
+            }
         }
 
-        if (targetPlanet) targetPlanet.sphere.rotation.y += targetPlanet.rotationSpeed;
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
-
         if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
         if (SHOW_LABEL) updateLabel()
     }
