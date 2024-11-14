@@ -4,6 +4,25 @@ body {
     padding: 0;
     width: 100%;
     height: 100%;
+
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+    color: white;
+}
+
+#loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    line-height: 25px;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    user-select: none;
 }
 
 #label-container {
@@ -15,9 +34,6 @@ body {
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
     padding: 5px 10px;
     border-radius: 5px;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    line-height: 20px;
     user-select: none;
 }
 
@@ -35,9 +51,6 @@ body {
     background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
     padding: 5px 10px;
     border-radius: 5px;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    line-height: 20px;
     user-select: none;
 }
 
