@@ -3,7 +3,7 @@ import {findVectorPair} from "./utils";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();
-    const starCount = 20000; // Number of stars
+    const starCount = 10000; // Number of stars
     const positions = new Float32Array(starCount * 3); // x, y, z for each star
     const colors = new Float32Array(starCount * 3); // r, g, b for each star
 

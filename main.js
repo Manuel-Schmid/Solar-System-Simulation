@@ -670,7 +670,7 @@ function pushTextToLabel(text) {
     window.setTimeout(function() {
         actionLabelContainer.classList.remove('center-label-show')
         actionLabelContainer.style.display = "none"
-    }, 700); // time in ms
+    }, 800); // time in ms
 }
 
 function lockCameraToPlanet(planet) {
@@ -690,8 +690,11 @@ function rotateTargetPlanet() {
         } else if (targetPlanet === uranus) {
             targetPlanet.sphere.rotation.x += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009;
             return
+        } else if (targetPlanet.isSun) {
+            targetPlanet.sphere.rotation.y += -0.001;
+            return
         }
-        targetPlanet.sphere.rotation.y += TRUE_ROTATION_SPEEDS && !targetPlanet.isSun ? targetPlanet.rotationSpeed : -0.009;
+        targetPlanet.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009;
     }
 }
 
