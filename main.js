@@ -201,7 +201,7 @@ class Planet {
         let totalFx = 0;
         let totalFz = 0;
         for (const planet of planets) {
-            if (planet.mass === this.mass) {
+            if (planet.name === this.name) {
                 continue;
             }
             const forces = this.attraction(planet)
