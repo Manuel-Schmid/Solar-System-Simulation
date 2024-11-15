@@ -527,6 +527,12 @@ window.addEventListener('keydown', (event) => {
         pushTextToLabel('Move to Sun')
         moveToPlanet(sun, true);
     }
+    if (event.key.toLowerCase() === '.') {
+        pushTextToLabel('Equate planetary mass with solar mass')
+        if (targetPlanet) {
+            targetPlanet.mass = sun.mass
+        }
+    }
     if (event.key.toLowerCase() === 'x') {
         isCameraLocked = false;
         pushTextToLabel('Topdown view')
