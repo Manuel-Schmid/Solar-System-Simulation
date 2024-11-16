@@ -94,7 +94,7 @@ class Planet {
                 const cloudTexture = textureLoader.load('planet_textures/2k/2k_earth_clouds.jpg')
                 texture.colorSpace = THREE.SRGBColorSpace
 
-                let cloudGeo = new THREE.SphereGeometry(this.radius * 1.01, 64, 32)
+                let cloudGeo = new THREE.SphereGeometry(this.radius * 1.005, 64, 32)
                 let cloudsMat = new THREE.MeshStandardMaterial({
                     alphaMap: cloudTexture,
                     transparent: true,
@@ -528,9 +528,26 @@ window.addEventListener('keydown', (event) => {
         moveToPlanet(sun, true);
     }
     if (event.key.toLowerCase() === '.') {
-        pushTextToLabel('Equate planetary mass with solar mass')
-        if (targetPlanet) {
-            targetPlanet.mass = sun.mass
+        pushTextToLabel('Evolve planet into a star')
+        if (targetPlanet && !targetPlanet.isSun) {
+            const newSun = new Planet(targetPlanet.name + "Sun", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+            newSun.xVel = targetPlanet.xVel;
+            newSun.zVel = targetPlanet.zVel;
+            newSun.orbits = targetPlanet.orbits;
+            for (let i = 0; i < planets.length - 1; i++) {
+                if (planets[i] === targetPlanet) {
+                    scene.remove(planets[i].sphere)
+                    if (planets[i].ring) scene.remove(planets[i].ring.ringObj)
+                    if (planets[i].atmosphere) scene.remove(planets[i].atmosphere)
+                    if (planets[i].clouds) scene.remove(planets[i].clouds)
+                    if (targetPlanet.name === "Earth") scene.remove(moonOrbit);
+
+                    planets[i] = newSun
+                    targetPlanet = newSun
+                    if (isCameraLocked) moveToPlanet(targetPlanet)
+                    return
+                }
+            }
         }
     }
     if (event.key.toLowerCase() === 'x') {
