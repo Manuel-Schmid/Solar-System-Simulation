@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {updateTriangles} from "./scripts/design_utils";
+import {createStars, updateTriangles} from "./scripts/design_utils";
 import {convertDistance, PlanetRingGeometry} from "./scripts/utils";
 import FakeGlowMaterial from "./scripts/GlowMaterial";
 import {EXRLoader} from "three/addons";
@@ -122,10 +122,10 @@ class Planet {
                 const atmosphereTexture = textureLoader.load('planet_textures/2k/2k_venus_atmosphere.jpg')
                 atmosphereTexture.colorSpace = THREE.SRGBColorSpace
 
-                let atmosphereGeo = new THREE.SphereGeometry(this.radius * 1.03, 64, 64)
+                let atmosphereGeo = new THREE.SphereGeometry(this.radius * 1.015, 64, 64)
                 let atmosphereMat = new THREE.MeshStandardMaterial({
                     map: atmosphereTexture,
-                    opacity: 0.75,
+                    opacity: 0.6,
                     transparent: true,
                     roughness: 0.7,
                     metalness: 0.6,
@@ -392,16 +392,16 @@ const brightAmbientLight = new THREE.AmbientLight(0xffffff, 2.5);
 updateLighting()
 
 // create star background
-// const stars = createStars()
-// scene.add(stars);
+const stars = createStars()
+scene.add(stars);
 
 // exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
-exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
+// exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
 // exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
-{
-    starmapTexture.mapping = THREE.EquirectangularReflectionMapping
-    scene.background = starmapTexture;
-});
+// {
+//     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+//     scene.background = starmapTexture;
+// });
 
 
 // add constellation grid sphere
