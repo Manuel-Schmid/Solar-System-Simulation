@@ -3,7 +3,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createStars, updateTriangles} from "./scripts/design_utils";
 import {convertDistance, PlanetRingGeometry} from "./scripts/utils";
 import FakeGlowMaterial from "./scripts/GlowMaterial";
-import {EXRLoader} from "three/addons";
+import {EXRLoader, GLTFLoader} from "three/addons";
 
 
 const scene = new THREE.Scene();
@@ -12,6 +12,7 @@ const renderer = new THREE.WebGLRenderer();
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);
 const exrLoader = new EXRLoader(loadingManager);
+const gltfLoader = new GLTFLoader(loadingManager);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
@@ -42,6 +43,7 @@ let PAUSED = false;
 
 // program variables
 let targetPlanet = null; // Default to the sun
+let jwst_selected = false; // Default to the sun
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 let distance_unit = distance_units[0];
@@ -218,7 +220,13 @@ class Planet {
         this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
         this.updateVectorLines(addedXVel, addedZVel)
-        this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
+        console.log(jwstOrbit.position)
+        if (this.name === "Mars" && jwst)  {
+            const jwstWorldPosition = new THREE.Vector3();
+            jwst.getWorldPosition(jwstWorldPosition);
+            this.orbits.push(new THREE.Vector3(jwstWorldPosition.x, jwstWorldPosition.y, jwstWorldPosition.z ))
+        }
+        else this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
 
         if (this.ring) this.ring.ringObj.position.copy(this.sphere.position)
         if (this.glowSphere) this.glowSphere.position.copy(this.sphere.position)
@@ -443,6 +451,26 @@ moonOrbit.add(moon); // Add the moon to the parent object
 // moonOrbit.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
 
 
+// create James Webb space telescope
+let jwst = null
+const jwstOrbit = new THREE.Object3D();
+let jwst_scale_factor = 0.0001
+gltfLoader.load('models/james_webb_space_telescope.glb' , (gltf) =>
+{
+    jwst = gltf.scene
+
+    scene.add(jwstOrbit); // Add the orbit object to the scene
+    jwstOrbit.add(jwst)
+
+    jwst.position.set(0.1, 0, 0.1);
+    jwst.scale.set(jwst_scale_factor, jwst_scale_factor, jwst_scale_factor);
+    jwst.rotation.z = Math.PI * 1.5;
+});
+
+
+let jwstCameraOffset = new THREE.Vector3(jwst_scale_factor * 30, jwst_scale_factor * 30, jwst_scale_factor * 30)
+
+
 // event listeners
 window.addEventListener('keydown', (event) => {
     if (event.code === 'Space') { // un/pause the game
@@ -484,6 +512,21 @@ window.addEventListener('keydown', (event) => {
         return
     }
     if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
+        if (jwst_selected) {
+            pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
+            if (isCameraLocked) {
+                isCameraLocked = false
+            } else {
+                isCameraLocked = true;
+                const jwstWorldPosition = new THREE.Vector3();
+                jwst.getWorldPosition(jwstWorldPosition);
+
+                if (PAUSED) jwstCameraOffset = new THREE.Vector3().subVectors(camera.position, jwstWorldPosition);
+                else cameraOffset = jwstCameraOffset
+            }
+            return
+        }
+
         if (!targetPlanet) return
         if (targetPlanet.sphere.position.length() > 0) { // if target planet is not the sun
             pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
@@ -634,7 +677,8 @@ window.addEventListener('keydown', (event) => {
         const number = parseInt(event.key);
         if (planets[number]) {
             pushTextToLabel('Move to ' + planets[number].name)
-            if (event.altKey && birdseye) {
+            if (event.altKey) {
+                birdseye = true
                 targetPlanet = planets[number]
                 if (SHOW_LABEL) {
                     updateLabel()
@@ -642,6 +686,48 @@ window.addEventListener('keydown', (event) => {
             }
             else moveToPlanet(planets[number]);
         }
+    }
+    if (event.key.toLowerCase() === 'j') {
+        pushTextToLabel('Move to James Webb Space Telescope')
+        if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
+        let showLabelChanged = false
+        if (SHOW_LABEL) {
+            SHOW_LABEL = false // make label stop updating during transition
+            showLabelChanged = true
+        }
+
+        isCameraLocked = false
+
+        const targetPosition = new THREE.Vector3(jwstOrbit.position.x, jwstOrbit.position.y, jwstOrbit.position.z)
+        console.log(jwstOrbit)
+        cameraOffset = jwstCameraOffset
+        targetPosition.x += jwstCameraOffset.x
+        targetPosition.y += jwstCameraOffset.y
+        targetPosition.z += jwstCameraOffset.z
+
+        const duration = 1; // Duration the movement in seconds
+        const startPosition = camera.position.clone();
+        const startTime = performance.now();
+
+        function animate() {
+            const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+            const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
+            camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+            controls.target.copy(jwst.position); // Update the OrbitControls target to the new planet
+            controls.update(); // Update controls to apply the new target
+
+            if (t < 1) {
+                requestAnimationFrame(animate); // Continue animation
+            } else { // animation is finished
+                targetPlanet = null;
+                jwst_selected = true
+                isCameraLocked = true
+                if (showLabelChanged) SHOW_LABEL = true
+                if (SHOW_LABEL) updateLabel()
+            }
+        }
+
+        animate();
     }
 });
 
@@ -678,6 +764,7 @@ function updateGridTexture() {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
+    jwst_selected = false
     if (planet === targetPlanet && !planet.isSun) return;
     if(targetPlanet && !planet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
 
@@ -696,6 +783,9 @@ function moveToPlanet(planet, topDown=false) {
         targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y, planet.sphere.position.z)
     }
     cameraOffset = calcPlanetOffset(planet)
+    targetPosition.x += cameraOffset.x
+    targetPosition.y += cameraOffset.y
+    targetPosition.z += cameraOffset.z
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
@@ -750,8 +840,51 @@ function pushTextToLabel(text) {
     }, 800); // time in ms
 }
 
+let earthPosition = new THREE.Vector3();
+let sunPosition = new THREE.Vector3();
+let directionVector = new THREE.Vector3();
+let perpendicularAxis = new THREE.Vector3();
+let orbitRotationAngle = 0; // Initialize the rotation angle
+
+function updateJWSTOrbit() {
+    // Update Earth and Sun positions
+    earth.sphere.getWorldPosition(earthPosition);
+    sun.sphere.getWorldPosition(sunPosition);
+
+    // Compute the direction vector from Earth to Sun
+    directionVector.subVectors(sunPosition, earthPosition).normalize();
+
+    // Compute a perpendicular axis (e.g., using the Z-axis or another up vector)
+    const upVector = new THREE.Vector3(0, 0, 1); // Example up vector
+    perpendicularAxis.crossVectors(directionVector, upVector).normalize();
+
+    // Handle edge case: upVector collinear with directionVector
+    if (perpendicularAxis.length() === 0) {
+        // Choose a different up vector (e.g., X-axis)
+        upVector.set(1, 0, 0);
+        perpendicularAxis.crossVectors(directionVector, upVector).normalize();
+    }
+
+    // Rotate the orbit around the perpendicular axis
+    orbitRotationAngle += 0.01; // Increment the rotation angle
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromAxisAngle(directionVector, orbitRotationAngle); // Rotation around the direction vector
+
+    // Apply the quaternion rotation while maintaining perpendicular orientation
+    jwstOrbit.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), perpendicularAxis); // Align plane
+    jwstOrbit.quaternion.multiply(quaternion); // Add the turning motion
+}
+
+
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
+
+    const d = 0.010027 * AU * DISTANCE_SCALE
+    const eVector = Math.sqrt(((earth.sphere.position.x - sun.sphere.position.x) ** 2) + ((earth.sphere.position.z - sun.sphere.position.z) ** 2))
+    jwstOrbit.position.x = (earth.sphere.position.x + d * (earth.sphere.position.x - sun.sphere.position.x) / eVector)
+    jwstOrbit.position.z = (earth.sphere.position.z + d * (earth.sphere.position.z - sun.sphere.position.z) / eVector)
+    updateJWSTOrbit()
+
     if (targetPlanet && !targetPlanet.isSun) {
          if (targetPlanet === uranus) {
             targetPlanet.sphere.rotation.x += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009;
@@ -779,7 +912,20 @@ function render() { // runs with 60 fps
         if (SHOW_LABEL) updateLabel()
     }
 
-    if (targetPlanet) {
+    if (jwst_selected) {
+        const jwstWorldPosition = new THREE.Vector3();
+        jwst.getWorldPosition(jwstWorldPosition);
+        // new THREE.Vector3(jwstWorldPosition.x, jwstWorldPosition.y, jwstWorldPosition.z ))
+
+        if (isCameraLocked) {
+            camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
+            camera.lookAt(jwstWorldPosition);
+        } else {
+            // If not locked, allow OrbitControls to manage the camera freely
+            controls.target.copy(jwstWorldPosition);
+            controls.update();
+        }
+    } else if (targetPlanet) {
         if (isCameraLocked) {
             camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
             camera.lookAt(targetPlanet.sphere.position);
