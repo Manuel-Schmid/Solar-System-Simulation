@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {createCircle, createStars, drawConnection} from "./scripts/design_utils";
-import {convertDistance, PlanetRingGeometry} from "./scripts/utils";
+import {convertDistance, getDistanceBetweenPoints, getPointXBeyondLine, PlanetRingGeometry} from "./scripts/utils";
 import FakeGlowMaterial from "./scripts/GlowMaterial";
 import {EXRLoader, GLTFLoader} from "three/addons";
 
@@ -47,6 +47,7 @@ let jwstSelected = false; // Default to the sun
 let inEarthSystem = false;
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
 let isCameraSunLocked = false; // Flag to indicate if the camera is locked to a planet
+let sunLockedCameraDistance = 0
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 let distanceUnit = distanceUnits[0];
 let backgroundGrid = backgroundTextures[0];
@@ -514,6 +515,7 @@ window.addEventListener('keydown', (event) => {
             pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
             if (isCameraLocked) {
                 isCameraLocked = false
+                isCameraSunLocked = false
             } else {
                 isCameraLocked = true;
                 const jwstWorldPosition = new THREE.Vector3();
@@ -533,14 +535,18 @@ window.addEventListener('keydown', (event) => {
                 isCameraSunLocked = false
             } else {
                 isCameraLocked = true;
-                if (event.shiftKey) {
-                    isCameraSunLocked = true
-                }
                 if (PAUSED) cameraOffset = new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position);
                 else cameraOffset = calcPlanetOffset(targetPlanet)
             }
         }
         return
+    }
+    if (event.shiftKey) {
+        if (targetPlanet || jwstSelected) {
+            isCameraSunLocked = !isCameraSunLocked
+            pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
+            if (isCameraSunLocked && !isCameraLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
+        }
     }
     if (event.key.toLowerCase() === 's') {
         pushTextToLabel('Decrease planet speed')
@@ -597,6 +603,7 @@ window.addEventListener('keydown', (event) => {
     }
     if (event.key.toLowerCase() === 'x') {
         isCameraLocked = false;
+        isCameraSunLocked = false
         pushTextToLabel('Topdown view')
 
         const duration = 1;
@@ -628,8 +635,7 @@ window.addEventListener('keydown', (event) => {
             if (SHOW_ORBITS) scene.add(planet.orbitLine);
             else scene.remove(planet.orbitLine);
         }
-        if (SHOW_ORBITS) jwstPlane.add(jwstOrbit)
-        else jwstPlane.remove(jwstOrbit)
+        jwstOrbit.visible = SHOW_ORBITS;
     }
     if (event.key.toLowerCase() === 'q') {
         HIGH_QUALITY_TEXTURES = !HIGH_QUALITY_TEXTURES;
@@ -676,6 +682,7 @@ window.addEventListener('keydown', (event) => {
         }
     }
     if (event.key >= '0' && event.key <= '9') {
+        isCameraSunLocked = false
         const number = parseInt(event.key);
         if (planets[number]) {
             pushTextToLabel('Move to ' + planets[number].name)
@@ -699,6 +706,7 @@ window.addEventListener('keydown', (event) => {
         }
 
         isCameraLocked = false
+        isCameraSunLocked = false
 
         updateJWSTPosition()
         const jwstWorldPosition = new THREE.Vector3();
@@ -727,7 +735,7 @@ window.addEventListener('keydown', (event) => {
             } else { // animation is finished
                 targetPlanet = null;
                 scene.add(jwstPlane)
-                if (SHOW_ORBITS) jwstPlane.add(jwstOrbit)
+                if (SHOW_ORBITS) jwstOrbit.visible = true;
                 jwstSelected = true
                 inEarthSystem = true
                 isCameraLocked = true
@@ -774,7 +782,7 @@ function updateGridTexture() {
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
     jwstSelected = false
-    if (SHOW_ORBITS) jwstPlane.remove(jwstOrbit)
+    if (SHOW_ORBITS) jwstOrbit.visible = false;
     inEarthSystem = (planet.name === "Earth");
     if (planet === targetPlanet && !planet.isSun) return;
     if(targetPlanet && !planet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
@@ -786,6 +794,7 @@ function moveToPlanet(planet, topDown=false) {
     }
 
     isCameraLocked = false
+    isCameraSunLocked = false
     let targetPosition = null
     if (inEarthSystem) moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
 
@@ -860,9 +869,9 @@ function updateJWSTPosition() {
     earth.sphere.getWorldPosition(P2);
 
     // update Orbit position
-    const vectorLen = Math.sqrt(((P2.x - P1.x) ** 2) + ((P2.z - P1.z) ** 2))
-    jwstPlane.position.x = (P2.x + (d * ((P2.x - P1.x) / vectorLen)))
-    jwstPlane.position.z = (P2.z + (d * ((P2.z - P1.z) / vectorLen)))
+    const P3 = getPointXBeyondLine(P1, P2, d)
+    jwstPlane.position.x = P3.x
+    jwstPlane.position.z = P3.z
 
     // update orbit plane horizontal alignment
     const alpha = Math.atan2((P2.z - P1.z), P2.x - P1.x);
@@ -870,6 +879,7 @@ function updateJWSTPosition() {
 
     // update orbit plane vertical rotation
     jwstPlane.rotation.z +=  -0.007
+    jwst.rotation.y +=  0.005
 }
 
 function rotateTargetPlanet() {
@@ -906,7 +916,16 @@ function render() { // runs with 60 fps
         const jwstWorldPosition = new THREE.Vector3();
         jwst.getWorldPosition(jwstWorldPosition);
 
-        if (isCameraLocked) {
+        if (isCameraSunLocked) {
+            const jwstOrbitWorldPosition = new THREE.Vector3();
+            jwstOrbit.getWorldPosition(jwstOrbitWorldPosition);
+
+            const d = 0.0006 * AU * DISTANCE_SCALE
+            const P3 = getPointXBeyondLine(sun.sphere.position, jwstOrbitWorldPosition, d)
+            camera.position.copy(new THREE.Vector3(P3.x, 0, P3.z))
+            camera.lookAt(jwstOrbitWorldPosition);
+
+        } else if (isCameraLocked) {
             camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
             camera.lookAt(jwstWorldPosition);
         } else {
@@ -914,27 +933,18 @@ function render() { // runs with 60 fps
             controls.update();
         }
     } else if (targetPlanet) {
-        if (isCameraLocked) {
-            if (isCameraSunLocked) {
-                const d = targetPlanet.radius * 20
-
-                // Calculate the unit vector from the planet to the Sun
-                const toSunVector = new THREE.Vector3(
-                    sun.sphere.position.x - targetPlanet.sphere.position.x,
-                    0, // Assuming you're working in the XZ plane
-                    sun.sphere.position.z - targetPlanet.sphere.position.z
-                ).normalize();
-
-                // Calculate the camera offset to ensure the correct distance
-                cameraOffset.set(
-                    -d * toSunVector.x, // Negative to place the camera behind the planet
-                    0,                  // Y-axis offset, adjust if needed for elevation
-                    -d * toSunVector.z
-                );
-            }
+        if (!isCameraSunLocked) sunLockedCameraDistance = 0
+        if (isCameraSunLocked) {
+            const d = (sunLockedCameraDistance > 0) ? sunLockedCameraDistance : targetPlanet.radius * AU * DISTANCE_SCALE
+            const P3 = getPointXBeyondLine(sun.sphere.position, targetPlanet.sphere.position, d)
+            camera.position.copy(new THREE.Vector3(P3.x, 0, P3.z))
+            camera.lookAt(targetPlanet.sphere.position);
+        }
+        else if (isCameraLocked) {
             camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
             camera.lookAt(targetPlanet.sphere.position);
-        } else {
+        }
+        else {
             controls.target.copy(targetPlanet.sphere.position);
             controls.update();
         }
