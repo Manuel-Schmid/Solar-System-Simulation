@@ -450,7 +450,7 @@ const jwstCenterDistance = 0.005
 
 let jwst = null
 const jwstPlane = new THREE.Object3D();
-const jwstOrbit = createCircle(jwstCenterDistance, 0xA2A1A1,64);
+const jwstOrbit = createCircle(jwstCenterDistance, 0xA2A1A1,128);
 gltfLoader.load('models/jwst.glb' , (gltf) =>
 {
     jwst = gltf.scene
