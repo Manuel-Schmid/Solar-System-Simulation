@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createStars, updateTriangles} from "./scripts/design_utils";
+import {createStars, drawConnection} from "./scripts/design_utils";
 import {convertDistance, PlanetRingGeometry} from "./scripts/utils";
 import FakeGlowMaterial from "./scripts/GlowMaterial";
 import {EXRLoader, GLTFLoader} from "three/addons";
@@ -8,7 +8,7 @@ import {EXRLoader, GLTFLoader} from "three/addons";
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.00001, 1000 );
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);
 const exrLoader = new EXRLoader(loadingManager);
@@ -220,13 +220,7 @@ class Planet {
         this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
         this.updateVectorLines(addedXVel, addedZVel)
-        console.log(jwstOrbit.position)
-        if (this.name === "Mars" && jwst)  {
-            const jwstWorldPosition = new THREE.Vector3();
-            jwst.getWorldPosition(jwstWorldPosition);
-            this.orbits.push(new THREE.Vector3(jwstWorldPosition.x, jwstWorldPosition.y, jwstWorldPosition.z ))
-        }
-        else this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
+        this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
 
         if (this.ring) this.ring.ringObj.position.copy(this.sphere.position)
         if (this.glowSphere) this.glowSphere.position.copy(this.sphere.position)
@@ -408,9 +402,12 @@ scene.add(stars);
 // exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
 // {
 //     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+//     // scene.environment = starmapTexture; // Set environment for reflections
 //     scene.background = starmapTexture;
 // });
 
+// renderer.toneMapping = THREE.ACESFilmicToneMapping;
+// renderer.toneMappingExposure = 1;
 
 // add constellation grid sphere
 const constellationSphereGeometry = new THREE.SphereGeometry(5000, 60, 40);
@@ -421,16 +418,11 @@ const constellationMaterial = new THREE.MeshBasicMaterial({
 });
 const constellationSphere = new THREE.Mesh(constellationSphereGeometry, constellationMaterial);
 
-// create triangle 1 between two planets closest to each other and the sun
-const closeTriangleGeo = new THREE.BufferGeometry();
-const closeTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
-const closeTriangleOutline = new THREE.LineLoop(closeTriangleGeo, closeTriangleMat); // Create the line loop
-closeTriangleOutline.frustumCulled = false;
-// create triangle 2 between two planets farthest to each other and the sun
-const farTriangleGeo = new THREE.BufferGeometry();
-const farTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0xfc0341 ) }); // Line material
-const farTriangleOutline = new THREE.LineLoop(farTriangleGeo, farTriangleMat); // Create the line loop
-farTriangleOutline.frustumCulled = false;
+// create triangle between two planets and an object (e.g. the sun, JWST)
+const connectionGeo = new THREE.BufferGeometry();
+const connectionMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
+const connectionOutline = new THREE.LineLoop(connectionGeo, connectionMat); // Create the line loop
+connectionOutline.frustumCulled = false;
 
 // create moon
 const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
@@ -453,22 +445,22 @@ moonOrbit.add(moon); // Add the moon to the parent object
 
 // create James Webb space telescope
 let jwst = null
-const jwstOrbit = new THREE.Object3D();
 let jwst_scale_factor = 0.0001
-gltfLoader.load('models/james_webb_space_telescope.glb' , (gltf) =>
+const jwstOrbit = new THREE.Object3D();
+gltfLoader.load('models/jwst.glb' , (gltf) =>
 {
     jwst = gltf.scene
+    jwst.rotation.x = THREE.MathUtils.degToRad(90)
 
     scene.add(jwstOrbit); // Add the orbit object to the scene
     jwstOrbit.add(jwst)
 
-    jwst.position.set(0.1, 0, 0.1);
+    jwst.position.set(0.005, 0, 0);
     jwst.scale.set(jwst_scale_factor, jwst_scale_factor, jwst_scale_factor);
-    jwst.rotation.z = Math.PI * 1.5;
+    jwstOrbit.rotation.y = THREE.MathUtils.degToRad(90)
 });
 
-
-let jwstCameraOffset = new THREE.Vector3(jwst_scale_factor * 30, jwst_scale_factor * 30, jwst_scale_factor * 30)
+let jwstCameraOffset = new THREE.Vector3(jwst_scale_factor * 3, jwst_scale_factor * 3, jwst_scale_factor * 3)
 
 
 // event listeners
@@ -666,11 +658,9 @@ window.addEventListener('keydown', (event) => {
         SHOW_TRIANGLES = !SHOW_TRIANGLES
         pushTextToLabel(SHOW_TRIANGLES ? 'Show triangles' : 'Hide triangles')
         if (SHOW_TRIANGLES) {
-            scene.add(closeTriangleOutline);
-            scene.add(farTriangleOutline);
+            scene.add(connectionOutline);
         } else {
-            scene.remove(closeTriangleOutline);
-            scene.remove(farTriangleOutline);
+            scene.remove(connectionOutline);
         }
     }
     if (event.key >= '0' && event.key <= '9') {
@@ -698,8 +688,10 @@ window.addEventListener('keydown', (event) => {
 
         isCameraLocked = false
 
-        const targetPosition = new THREE.Vector3(jwstOrbit.position.x, jwstOrbit.position.y, jwstOrbit.position.z)
-        console.log(jwstOrbit)
+        const jwstWorldPosition = new THREE.Vector3();
+        jwst.getWorldPosition(jwstWorldPosition);
+
+        const targetPosition = jwstWorldPosition
         cameraOffset = jwstCameraOffset
         targetPosition.x += jwstCameraOffset.x
         targetPosition.y += jwstCameraOffset.y
@@ -707,17 +699,17 @@ window.addEventListener('keydown', (event) => {
 
         const duration = 1; // Duration the movement in seconds
         const startPosition = camera.position.clone();
-        const startTime = performance.now();
+        const startTime = performance.now()
 
-        function animate() {
+        function animateJWST() {
             const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
             const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
             camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
-            controls.target.copy(jwst.position); // Update the OrbitControls target to the new planet
+            controls.target.copy(jwstWorldPosition); // Update the OrbitControls target to the new planet
             controls.update(); // Update controls to apply the new target
 
             if (t < 1) {
-                requestAnimationFrame(animate); // Continue animation
+                requestAnimationFrame(animateJWST); // Continue animation
             } else { // animation is finished
                 targetPlanet = null;
                 jwst_selected = true
@@ -727,7 +719,7 @@ window.addEventListener('keydown', (event) => {
             }
         }
 
-        animate();
+        animateJWST();
     }
 });
 
@@ -840,51 +832,28 @@ function pushTextToLabel(text) {
     }, 800); // time in ms
 }
 
-let earthPosition = new THREE.Vector3();
-let sunPosition = new THREE.Vector3();
-let directionVector = new THREE.Vector3();
-let perpendicularAxis = new THREE.Vector3();
-let orbitRotationAngle = 0; // Initialize the rotation angle
+function updateJWSTPosition() {
+    const d = 0.010027 * AU * DISTANCE_SCALE
+    const P1 = new THREE.Vector3()
+    const P2 = new THREE.Vector3()
+    sun.sphere.getWorldPosition(P1);
+    earth.sphere.getWorldPosition(P2);
 
-function updateJWSTOrbit() {
-    // Update Earth and Sun positions
-    earth.sphere.getWorldPosition(earthPosition);
-    sun.sphere.getWorldPosition(sunPosition);
+    // update Orbit position
+    const vectorLen = Math.sqrt(((P2.x - P1.x) ** 2) + ((P2.z - P1.z) ** 2))
+    jwstOrbit.position.x = (P2.x + (d * ((P2.x - P1.x) / vectorLen)))
+    jwstOrbit.position.z = (P2.z + (d * ((P2.z - P1.z) / vectorLen)))
 
-    // Compute the direction vector from Earth to Sun
-    directionVector.subVectors(sunPosition, earthPosition).normalize();
+    // update orbit plane horizontal alignment
+    const alpha = Math.atan2((P2.z - P1.z), P2.x - P1.x);
+    jwstOrbit.rotation.y = THREE.MathUtils.degToRad(90) - alpha
 
-    // Compute a perpendicular axis (e.g., using the Z-axis or another up vector)
-    const upVector = new THREE.Vector3(0, 0, 1); // Example up vector
-    perpendicularAxis.crossVectors(directionVector, upVector).normalize();
-
-    // Handle edge case: upVector collinear with directionVector
-    if (perpendicularAxis.length() === 0) {
-        // Choose a different up vector (e.g., X-axis)
-        upVector.set(1, 0, 0);
-        perpendicularAxis.crossVectors(directionVector, upVector).normalize();
-    }
-
-    // Rotate the orbit around the perpendicular axis
-    orbitRotationAngle += 0.01; // Increment the rotation angle
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromAxisAngle(directionVector, orbitRotationAngle); // Rotation around the direction vector
-
-    // Apply the quaternion rotation while maintaining perpendicular orientation
-    jwstOrbit.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), perpendicularAxis); // Align plane
-    jwstOrbit.quaternion.multiply(quaternion); // Add the turning motion
+    // update orbit plane vertical rotation
+    jwstOrbit.rotation.z +=  -0.009
 }
-
 
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
-
-    const d = 0.010027 * AU * DISTANCE_SCALE
-    const eVector = Math.sqrt(((earth.sphere.position.x - sun.sphere.position.x) ** 2) + ((earth.sphere.position.z - sun.sphere.position.z) ** 2))
-    jwstOrbit.position.x = (earth.sphere.position.x + d * (earth.sphere.position.x - sun.sphere.position.x) / eVector)
-    jwstOrbit.position.z = (earth.sphere.position.z + d * (earth.sphere.position.z - sun.sphere.position.z) / eVector)
-    updateJWSTOrbit()
-
     if (targetPlanet && !targetPlanet.isSun) {
          if (targetPlanet === uranus) {
             targetPlanet.sphere.rotation.x += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009;
@@ -906,16 +875,16 @@ function render() { // runs with 60 fps
             planet.updatePosition(planets)
         }
         rotateTargetPlanet()
+        updateJWSTPosition()
 
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
-        if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
+        if (SHOW_TRIANGLES) drawConnection([sun.sphere.position, earth.sphere.position, jwstOrbit.position], connectionGeo);
         if (SHOW_LABEL) updateLabel()
     }
 
     if (jwst_selected) {
         const jwstWorldPosition = new THREE.Vector3();
         jwst.getWorldPosition(jwstWorldPosition);
-        // new THREE.Vector3(jwstWorldPosition.x, jwstWorldPosition.y, jwstWorldPosition.z ))
 
         if (isCameraLocked) {
             camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);

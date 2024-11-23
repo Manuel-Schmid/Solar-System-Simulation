@@ -46,37 +46,12 @@ export function createStars() {
     return new THREE.Points(starGeometry, starMaterial) // returns stars
 }
 
-export function updateTriangles(planets, sunPosition, triangleGeos) {
-    planets = planets.filter(planet => !planet.isSun)
-    const planetVectors = new Float32Array(planets.length * 3); // Allocate space for x, y, z of each planet
-
-    planets.forEach((planet, index) => {
-        planetVectors[index * 3] = planet.sphere.position.x;
-        planetVectors[index * 3 + 1] = planet.sphere.position.y;
-        planetVectors[index * 3 + 2] = planet.sphere.position.z;
-    });
-
-    // first triangle
-    const closestPair = findVectorPair(planetVectors, true);
-
-    const closeTriangleCords = new Float32Array([
-        sunPosition.x, sunPosition.y, sunPosition.z,
-        closestPair[0].x, closestPair[0].y, closestPair[0].z,
-        closestPair[1].x, closestPair[1].y, closestPair[1].z,
-    ])
-
-    triangleGeos[0].setAttribute('position', new THREE.BufferAttribute(closeTriangleCords, 3));
-
-    // second triangle
-    if (triangleGeos.length === 2) {
-        const furthestPair = findVectorPair(planetVectors, false);
-
-        const farTriangleCords = new Float32Array([
-            sunPosition.x, sunPosition.y, sunPosition.z,
-            furthestPair[0].x, furthestPair[0].y, furthestPair[0].z,
-            furthestPair[1].x, furthestPair[1].y, furthestPair[1].z,
-        ])
-
-        triangleGeos[1].setAttribute('position', new THREE.BufferAttribute(farTriangleCords, 3));
+export function drawConnection(positions, connectionGeo) {
+    const connectionPoints = new Float32Array(positions.length * 3);
+    for (let i = 0; i < positions.length; i++) {
+        connectionPoints[i * 3] = positions[i].x;
+        connectionPoints[i * 3 + 1] = positions[i].y;
+        connectionPoints[i * 3 + 2] = positions[i].z;
     }
+    connectionGeo.setAttribute('position', new THREE.BufferAttribute(connectionPoints, 3));
 }
