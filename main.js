@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createStars, updateTriangles} from "./scripts/design_utils";
+import {createCircle, createStars, drawConnection} from "./scripts/design_utils";
 import {convertDistance, PlanetRingGeometry} from "./scripts/utils";
 import FakeGlowMaterial from "./scripts/GlowMaterial";
-import {EXRLoader} from "three/addons";
+import {EXRLoader, GLTFLoader} from "three/addons";
 
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.00001, 1000 );
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({antialias: true});
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);
 const exrLoader = new EXRLoader(loadingManager);
+const gltfLoader = new GLTFLoader(loadingManager);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
@@ -27,14 +28,14 @@ const LM = 1.799e+7 // 1 Light minute in km
 const DISTANCE_SCALE = 0.0000001 // multiply km distances by this
 const PLANET_SCALE = DISTANCE_SCALE * 10 // multiply km distances by this
 const TIME = 60 * 60 * 6   // 6 = one year in 24 Seconds
-let distance_units = ["km", "au", "lm"] // units for distances
-let background_textures = [false, "starmaps/celestial_grid_16k.png", "starmaps/constellation_bounds_8k.png", "starmaps/constellation_figures_8k.png"]
+let distanceUnits = ["km", "au", "lm"] // units for distances
+let backgroundTextures = [false, "starmaps/celestial_grid_16k.png", "starmaps/constellation_bounds_8k.png", "starmaps/constellation_figures_8k.png"]
 
 // setting variables:
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let HIGH_QUALITY_TEXTURES = false;
-let SHOW_TRIANGLES = false;
+let SHOW_CONNECTION = false;
 let SHOW_VECTORS = false;
 let REALISTIC_LIGHTING = true;
 let TRUE_ROTATION_SPEEDS = false;
@@ -42,11 +43,13 @@ let PAUSED = false;
 
 // program variables
 let targetPlanet = null; // Default to the sun
+let jwstSelected = false; // Default to the sun
+let inEarthSystem = false;
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
 let isCameraSunLocked = false; // Flag to indicate if the camera is locked to a planet
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
-let distance_unit = distance_units[0];
-let background_grid = background_textures[0];
+let distanceUnit = distanceUnits[0];
+let backgroundGrid = backgroundTextures[0];
 let birdseye = true;
 
 class Planet {
@@ -401,9 +404,12 @@ scene.add(stars);
 // exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
 // {
 //     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+//     // scene.environment = starmapTexture; // Set environment for reflections
 //     scene.background = starmapTexture;
 // });
 
+// renderer.toneMapping = THREE.ACESFilmicToneMapping;
+// renderer.toneMappingExposure = 1;
 
 // add constellation grid sphere
 const constellationSphereGeometry = new THREE.SphereGeometry(5000, 60, 40);
@@ -414,16 +420,11 @@ const constellationMaterial = new THREE.MeshBasicMaterial({
 });
 const constellationSphere = new THREE.Mesh(constellationSphereGeometry, constellationMaterial);
 
-// create triangle 1 between two planets closest to each other and the sun
-const closeTriangleGeo = new THREE.BufferGeometry();
-const closeTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
-const closeTriangleOutline = new THREE.LineLoop(closeTriangleGeo, closeTriangleMat); // Create the line loop
-closeTriangleOutline.frustumCulled = false;
-// create triangle 2 between two planets farthest to each other and the sun
-const farTriangleGeo = new THREE.BufferGeometry();
-const farTriangleMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0xfc0341 ) }); // Line material
-const farTriangleOutline = new THREE.LineLoop(farTriangleGeo, farTriangleMat); // Create the line loop
-farTriangleOutline.frustumCulled = false;
+// create triangle between two planets and an object (e.g. the sun, JWST)
+const connectionGeo = new THREE.BufferGeometry();
+const connectionMat = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex( 0x00ff08 ) }); // Line material
+const connectionOutline = new THREE.LineLoop(connectionGeo, connectionMat); // Create the line loop
+connectionOutline.frustumCulled = false;
 
 // create moon
 const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
@@ -444,6 +445,30 @@ moonOrbit.add(moon); // Add the moon to the parent object
 // moonOrbit.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
 
 
+// create James Webb space telescope
+const jwstScaleFactor = 0.0001
+const jwstCenterDistance = 0.005
+
+let jwst = null
+const jwstPlane = new THREE.Object3D();
+const jwstOrbit = createCircle(jwstCenterDistance, 0xA2A1A1,128);
+gltfLoader.load('models/jwst.glb' , (gltf) =>
+{
+    jwst = gltf.scene
+    jwst.rotation.x = THREE.MathUtils.degToRad(90)
+
+    scene.add(jwstPlane); // Add the orbit object to the scene
+    jwstPlane.add(jwst)
+    jwstPlane.add(jwstOrbit)
+
+    jwst.position.set(jwstCenterDistance, 0, 0);
+    jwst.scale.set(jwstScaleFactor, jwstScaleFactor, jwstScaleFactor);
+    jwstPlane.rotation.y = THREE.MathUtils.degToRad(90)
+});
+
+let jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
+
+
 // event listeners
 window.addEventListener('keydown', (event) => {
     if (event.code === 'Space') { // un/pause the game
@@ -458,9 +483,9 @@ window.addEventListener('keydown', (event) => {
         return
     }
     if (event.key.toLowerCase() === 'k') {
-        const grid_texture_index = background_textures.indexOf(background_grid)
-        if (grid_texture_index < background_textures.length - 1) background_grid = background_textures[grid_texture_index + 1]
-        else background_grid = background_textures[0]
+        const grid_texture_index = backgroundTextures.indexOf(backgroundGrid)
+        if (grid_texture_index < backgroundTextures.length - 1) backgroundGrid = backgroundTextures[grid_texture_index + 1]
+        else backgroundGrid = backgroundTextures[0]
         updateGridTexture();
         return
     }
@@ -476,15 +501,30 @@ window.addEventListener('keydown', (event) => {
     }
     if (event.key.toLowerCase() === 'd') { // cycle distance unit
         if (SHOW_LABEL && targetPlanet && !targetPlanet.isSun) { // only update if planet is selected
-            const unit_index = distance_units.indexOf(distance_unit)
-            if (unit_index < distance_units.length - 1) distance_unit = distance_units[unit_index + 1]
-            else distance_unit = distance_units[0]
+            const unit_index = distanceUnits.indexOf(distanceUnit)
+            if (unit_index < distanceUnits.length - 1) distanceUnit = distanceUnits[unit_index + 1]
+            else distanceUnit = distanceUnits[0]
             pushTextToLabel('Cycle distance unit')
             updateLabel();
         }
         return
     }
     if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
+        if (jwstSelected) {
+            pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
+            if (isCameraLocked) {
+                isCameraLocked = false
+            } else {
+                isCameraLocked = true;
+                const jwstWorldPosition = new THREE.Vector3();
+                jwst.getWorldPosition(jwstWorldPosition);
+
+                if (PAUSED) jwstCameraOffset = new THREE.Vector3().subVectors(camera.position, jwstWorldPosition);
+                else cameraOffset = jwstCameraOffset
+            }
+            return
+        }
+
         if (!targetPlanet) return
         if (targetPlanet.sphere.position.length() > 0) { // if target planet is not the sun
             pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
@@ -588,6 +628,8 @@ window.addEventListener('keydown', (event) => {
             if (SHOW_ORBITS) scene.add(planet.orbitLine);
             else scene.remove(planet.orbitLine);
         }
+        if (SHOW_ORBITS) jwstPlane.add(jwstOrbit)
+        else jwstPlane.remove(jwstOrbit)
     }
     if (event.key.toLowerCase() === 'q') {
         HIGH_QUALITY_TEXTURES = !HIGH_QUALITY_TEXTURES;
@@ -625,21 +667,20 @@ window.addEventListener('keydown', (event) => {
         }
     }
     if (event.key.toLowerCase() === 't') {
-        SHOW_TRIANGLES = !SHOW_TRIANGLES
-        pushTextToLabel(SHOW_TRIANGLES ? 'Show triangles' : 'Hide triangles')
-        if (SHOW_TRIANGLES) {
-            scene.add(closeTriangleOutline);
-            scene.add(farTriangleOutline);
+        SHOW_CONNECTION = !SHOW_CONNECTION
+        pushTextToLabel(SHOW_CONNECTION ? 'Show connection' : 'Hide connection')
+        if (SHOW_CONNECTION) {
+            scene.add(connectionOutline);
         } else {
-            scene.remove(closeTriangleOutline);
-            scene.remove(farTriangleOutline);
+            scene.remove(connectionOutline);
         }
     }
     if (event.key >= '0' && event.key <= '9') {
         const number = parseInt(event.key);
         if (planets[number]) {
             pushTextToLabel('Move to ' + planets[number].name)
-            if (event.altKey && birdseye) {
+            if (event.altKey) {
+                birdseye = true
                 targetPlanet = planets[number]
                 if (SHOW_LABEL) {
                     updateLabel()
@@ -647,6 +688,55 @@ window.addEventListener('keydown', (event) => {
             }
             else moveToPlanet(planets[number]);
         }
+    }
+    if (event.key.toLowerCase() === 'j') {
+        pushTextToLabel('Move to James Webb Space Telescope')
+        if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
+        let showLabelChanged = false
+        if (SHOW_LABEL) {
+            SHOW_LABEL = false // make label stop updating during transition
+            showLabelChanged = true
+        }
+
+        isCameraLocked = false
+
+        updateJWSTPosition()
+        const jwstWorldPosition = new THREE.Vector3();
+        jwst.getWorldPosition(jwstWorldPosition);
+
+        const targetPosition = jwstWorldPosition
+        jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
+        cameraOffset = jwstCameraOffset
+        targetPosition.x += jwstCameraOffset.x
+        targetPosition.y += jwstCameraOffset.y
+        targetPosition.z += jwstCameraOffset.z
+
+        const duration = 1; // Duration the movement in seconds
+        const startPosition = camera.position.clone();
+        const startTime = performance.now()
+
+        function animateJWST() {
+            const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+            const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
+            camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+            controls.target.copy(jwstWorldPosition); // Update the OrbitControls target to the new planet
+            controls.update(); // Update controls to apply the new target
+
+            if (t < 1) {
+                requestAnimationFrame(animateJWST); // Continue animation
+            } else { // animation is finished
+                targetPlanet = null;
+                scene.add(jwstPlane)
+                if (SHOW_ORBITS) jwstPlane.add(jwstOrbit)
+                jwstSelected = true
+                inEarthSystem = true
+                isCameraLocked = true
+                if (showLabelChanged) SHOW_LABEL = true
+                if (SHOW_LABEL) updateLabel()
+            }
+        }
+
+        animateJWST();
     }
 });
 
@@ -659,7 +749,7 @@ function updateLabel() {
         labelContainer.style.display = 'none';
     } else {
         if (targetPlanet.isSun) distanceLabel.textContent = ""
-        else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distance_unit, AU, LM)
+        else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
 
         const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
         speedLabel.textContent = v.toPrecision(4) + " km/s"
@@ -669,9 +759,9 @@ function updateLabel() {
 }
 
 function updateGridTexture() {
-    if (background_grid) {
+    if (backgroundGrid) {
         document.getElementById('loading-screen').style.display = ''
-        textureLoader.load(background_grid, (constellationTexture) => {
+        textureLoader.load(backgroundGrid, (constellationTexture) => {
             constellationTexture.mapping = THREE.EquirectangularReflectionMapping;
             constellationTexture.colorSpace = THREE.SRGBColorSpace;
             constellationSphere.material.map = constellationTexture;
@@ -683,6 +773,9 @@ function updateGridTexture() {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
+    jwstSelected = false
+    if (SHOW_ORBITS) jwstPlane.remove(jwstOrbit)
+    inEarthSystem = (planet.name === "Earth");
     if (planet === targetPlanet && !planet.isSun) return;
     if(targetPlanet && !planet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
 
@@ -694,6 +787,7 @@ function moveToPlanet(planet, topDown=false) {
 
     isCameraLocked = false
     let targetPosition = null
+    if (inEarthSystem) moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
 
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
     else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius + 0.4, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius + 0.4)
@@ -701,6 +795,9 @@ function moveToPlanet(planet, topDown=false) {
         targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y, planet.sphere.position.z)
     }
     cameraOffset = calcPlanetOffset(planet)
+    targetPosition.x += cameraOffset.x
+    targetPosition.y += cameraOffset.y
+    targetPosition.z += cameraOffset.z
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
@@ -755,8 +852,33 @@ function pushTextToLabel(text) {
     }, 800); // time in ms
 }
 
+function updateJWSTPosition() {
+    const d = 0.010027 * AU * DISTANCE_SCALE
+    const P1 = new THREE.Vector3()
+    const P2 = new THREE.Vector3()
+    sun.sphere.getWorldPosition(P1);
+    earth.sphere.getWorldPosition(P2);
+
+    // update Orbit position
+    const vectorLen = Math.sqrt(((P2.x - P1.x) ** 2) + ((P2.z - P1.z) ** 2))
+    jwstPlane.position.x = (P2.x + (d * ((P2.x - P1.x) / vectorLen)))
+    jwstPlane.position.z = (P2.z + (d * ((P2.z - P1.z) / vectorLen)))
+
+    // update orbit plane horizontal alignment
+    const alpha = Math.atan2((P2.z - P1.z), P2.x - P1.x);
+    jwstPlane.rotation.y = THREE.MathUtils.degToRad(90) - alpha
+
+    // update orbit plane vertical rotation
+    jwstPlane.rotation.z +=  -0.007
+}
+
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
+    if (inEarthSystem) {
+        moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
+        moonOrbit.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
+        earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
+    }
     if (targetPlanet && !targetPlanet.isSun) {
          if (targetPlanet === uranus) {
             targetPlanet.sphere.rotation.x += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009;
@@ -764,11 +886,6 @@ function rotateTargetPlanet() {
         }
         targetPlanet.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009
         if (targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.2;
-        if (targetPlanet === earth) {
-            moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
-            moonOrbit.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
-            earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
-        }
     }
 }
 
@@ -778,13 +895,25 @@ function render() { // runs with 60 fps
             planet.updatePosition(planets)
         }
         rotateTargetPlanet()
+        if (jwstSelected) updateJWSTPosition()
 
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
-        if (SHOW_TRIANGLES) updateTriangles(planets, sun.sphere.position, [closeTriangleGeo, farTriangleGeo]);
+        if (SHOW_CONNECTION) drawConnection([sun.sphere.position, earth.sphere.position, jwstPlane.position], connectionGeo);
         if (SHOW_LABEL) updateLabel()
     }
 
-    if (targetPlanet) {
+    if (jwstSelected) {
+        const jwstWorldPosition = new THREE.Vector3();
+        jwst.getWorldPosition(jwstWorldPosition);
+
+        if (isCameraLocked) {
+            camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
+            camera.lookAt(jwstWorldPosition);
+        } else {
+            controls.target.copy(jwstWorldPosition);
+            controls.update();
+        }
+    } else if (targetPlanet) {
         if (isCameraLocked) {
             if (isCameraSunLocked) {
                 const d = targetPlanet.radius * 20
@@ -806,7 +935,6 @@ function render() { // runs with 60 fps
             camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
             camera.lookAt(targetPlanet.sphere.position);
         } else {
-            // If not locked, allow OrbitControls to manage the camera freely
             controls.target.copy(targetPlanet.sphere.position);
             controls.update();
         }
