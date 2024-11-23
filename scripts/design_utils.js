@@ -46,6 +46,25 @@ export function createStars() {
     return new THREE.Points(starGeometry, starMaterial) // returns stars
 }
 
+export function createCircle(radius, color, segments) {
+    const circleGeometry = new THREE.CircleGeometry(radius, segments);
+
+    // Remove center vertex
+    const itemSize = 3;
+    circleGeometry.setAttribute( 'position',
+        new THREE.BufferAttribute(
+            circleGeometry.attributes.position.array.slice( itemSize,
+                circleGeometry.attributes.position.array.length - itemSize
+            ), itemSize
+        )
+    );
+    circleGeometry.index = null;
+
+    return new THREE.LineLoop(circleGeometry,
+        new THREE.LineBasicMaterial({ color: color }));
+}
+
+
 export function drawConnection(positions, connectionGeo) {
     const connectionPoints = new Float32Array(positions.length * 3);
     for (let i = 0; i < positions.length; i++) {
