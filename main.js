@@ -43,6 +43,7 @@ let PAUSED = false;
 // program variables
 let targetPlanet = null; // Default to the sun
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
+let isCameraSunLocked = false; // Flag to indicate if the camera is locked to a planet
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 let distance_unit = distance_units[0];
 let background_grid = background_textures[0];
@@ -489,8 +490,12 @@ window.addEventListener('keydown', (event) => {
             pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
             if (isCameraLocked) {
                 isCameraLocked = false
+                isCameraSunLocked = false
             } else {
                 isCameraLocked = true;
+                if (event.shiftKey) {
+                    isCameraSunLocked = true
+                }
                 if (PAUSED) cameraOffset = new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position);
                 else cameraOffset = calcPlanetOffset(targetPlanet)
             }
@@ -781,6 +786,23 @@ function render() { // runs with 60 fps
 
     if (targetPlanet) {
         if (isCameraLocked) {
+            if (isCameraSunLocked) {
+                const d = targetPlanet.radius * 20
+
+                // Calculate the unit vector from the planet to the Sun
+                const toSunVector = new THREE.Vector3(
+                    sun.sphere.position.x - targetPlanet.sphere.position.x,
+                    0, // Assuming you're working in the XZ plane
+                    sun.sphere.position.z - targetPlanet.sphere.position.z
+                ).normalize();
+
+                // Calculate the camera offset to ensure the correct distance
+                cameraOffset.set(
+                    -d * toSunVector.x, // Negative to place the camera behind the planet
+                    0,                  // Y-axis offset, adjust if needed for elevation
+                    -d * toSunVector.z
+                );
+            }
             camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
             camera.lookAt(targetPlanet.sphere.position);
         } else {
