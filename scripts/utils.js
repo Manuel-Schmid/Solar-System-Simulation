@@ -30,6 +30,21 @@ export function findVectorPair(vectorList, findClosest = true) {
     return extremePair;
 }
 
+export function getDistanceBetweenPoints(P1, P2) {
+    const dx = P2.x - P1.x;
+    const dy = P2.z - P1.z;
+    return Math.sqrt(dx ** 2 + dy ** 2);
+}
+
+export function getPointXBeyondLine(P1, P2, d) { // two points and distance of P3
+    const P3 = new THREE.Vector3(0,0,0);
+
+    const vectorLen = Math.sqrt(((P2.x - P1.x) ** 2) + ((P2.z - P1.z) ** 2))
+    P3.x = (P2.x + (d * ((P2.x - P1.x) / vectorLen)))
+    P3.z = (P2.z + (d * ((P2.z - P1.z) / vectorLen)))
+    return P3
+}
+
 export function formatDistance(value) { // todo delete
     return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
 }
