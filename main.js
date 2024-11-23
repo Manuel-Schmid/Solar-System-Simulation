@@ -864,7 +864,7 @@ function updateJWSTPosition() {
     jwstPlane.rotation.y = THREE.MathUtils.degToRad(90) - alpha
 
     // update orbit plane vertical rotation
-    jwstPlane.rotation.z +=  -0.009
+    jwstPlane.rotation.z +=  -0.007
 }
 
 function rotateTargetPlanet() {
