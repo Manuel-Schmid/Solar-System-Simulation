@@ -249,8 +249,8 @@ class Planet {
         const lastPoint = this.orbits[this.orbits.length - 1];
         this.addOrbitPoint(lastPoint);
     }
-    updateVectorLines(addedXVel, addedZVel) {
-        if (SHOW_VECTORS) {
+    updateVectorLines(addedXVel, addedZVel, remove=false) {
+        if (SHOW_VECTORS && !remove) {
             const gVectorLinePoints = [
                 new THREE.Vector3(this.sphere.position.x, 0, this.sphere.position.z),
                 new THREE.Vector3(this.sphere.position.x + addedXVel, 0, this.sphere.position.z + addedZVel)
@@ -438,12 +438,17 @@ const moonMaterial = new THREE.MeshStandardMaterial({
     roughness: 0.8, // less rough, more reflective
 });
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-const moonOrbit = new THREE.Object3D();
-scene.add(moonOrbit); // Add the orbit object to the scene
+const moonPlane = new THREE.Object3D();
+const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
+scene.add(moonPlane); // Add the orbit object to the scene
+moonPlane.add(moon)
+moonPlane.add(moonOrbit)
 moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moon.rotation.y = Math.PI;
-moonOrbit.add(moon); // Add the moon to the parent object
-// moonOrbit.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
+moonOrbit.rotation.x = THREE.MathUtils.degToRad(90)
+
+moonPlane.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
+moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
 
 
 // create James Webb space telescope
@@ -591,7 +596,8 @@ window.addEventListener('keydown', (event) => {
                     if (planets[i].ring) scene.remove(planets[i].ring.ringObj)
                     if (planets[i].atmosphere) scene.remove(planets[i].atmosphere)
                     if (planets[i].clouds) scene.remove(planets[i].clouds)
-                    if (targetPlanet.name === "Earth") scene.remove(moonOrbit);
+                    if (targetPlanet.name === "Earth") scene.remove(moonPlane);
+                    planets[i].updateVectorLines(null, null, true)
 
                     planets[i] = newSun
                     targetPlanet = newSun
@@ -796,7 +802,7 @@ function moveToPlanet(planet, topDown=false) {
     isCameraLocked = false
     isCameraSunLocked = false
     let targetPosition = null
-    if (inEarthSystem) moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
+    if (inEarthSystem) moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
 
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
     else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius + 0.4, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius + 0.4)
@@ -885,8 +891,8 @@ function updateJWSTPosition() {
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
     if (inEarthSystem) {
-        moonOrbit.position.copy(earth.sphere.position); // centers moon orbit on earth
-        moonOrbit.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
+        moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
+        moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
     }
     if (targetPlanet && !targetPlanet.isSun) {
