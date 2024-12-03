@@ -439,16 +439,31 @@ const moonMaterial = new THREE.MeshStandardMaterial({
 });
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonPlane = new THREE.Object3D();
-const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
+// const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
 scene.add(moonPlane); // Add the orbit object to the scene
 moonPlane.add(moon)
-moonPlane.add(moonOrbit)
 moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moon.rotation.y = Math.PI;
-moonOrbit.rotation.x = THREE.MathUtils.degToRad(90)
 
-moonPlane.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
+moonPlane.position.copy(moon.position);
 moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
+
+
+class OrbitTrail {
+    constructor(maxLength, color) {
+        this.orbitTrailGeometry = new THREE.BufferGeometry();
+        this.maxPoints = maxLength; // Limit the number of points in the trail
+        this.positions = new Float32Array(this.maxPoints * 3); // Each point has 3 coordinates (x, y, z)
+        this.orbitTrailGeometry.setAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+        this.orbitTrailMaterial = new THREE.LineBasicMaterial({ color: color });
+        this.orbitTrailObj = new THREE.Line(this.orbitTrailGeometry, this.orbitTrailMaterial);
+        this.orbitTrailObj.frustumCulled = false;
+        scene.add(this.orbitTrailObj);
+        this.numPoints = 0;
+    }
+}
+
+const moonOrbitTrail = new OrbitTrail(250, 0xA2A1A1)
 
 
 // create James Webb space telescope
@@ -596,7 +611,7 @@ window.addEventListener('keydown', (event) => {
                     if (planets[i].ring) scene.remove(planets[i].ring.ringObj)
                     if (planets[i].atmosphere) scene.remove(planets[i].atmosphere)
                     if (planets[i].clouds) scene.remove(planets[i].clouds)
-                    if (targetPlanet.name === "Earth") scene.remove(moonPlane);
+                    if (targetPlanet.name === "Earth") updateEarthSystemVisibility(false);
                     planets[i].updateVectorLines(null, null, true)
 
                     planets[i] = newSun
@@ -785,6 +800,17 @@ function updateGridTexture() {
     else scene.remove(constellationSphere);
 }
 
+function updateEarthSystemVisibility(visible) {
+    if (visible) {
+        moonPlane.position.copy(earth.sphere.position)
+        scene.add(moonPlane)
+        scene.add(moonOrbitTrail.orbitTrailObj)
+    } else {
+        scene.remove(moonPlane)
+        scene.remove(moonOrbitTrail.orbitTrailObj)
+    }
+}
+
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
     jwstSelected = false
@@ -802,7 +828,7 @@ function moveToPlanet(planet, topDown=false) {
     isCameraLocked = false
     isCameraSunLocked = false
     let targetPosition = null
-    if (inEarthSystem) moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
+    updateEarthSystemVisibility(inEarthSystem)
 
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
     else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius + 0.4, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius + 0.4)
@@ -888,11 +914,39 @@ function updateJWSTPosition() {
     jwst.rotation.y +=  0.005
 }
 
+function updateOrbitTrail(orbitTrail, satellite, parentBody) {
+    const satelliteWorldPosition = new THREE.Vector3();
+    satellite.getWorldPosition(satelliteWorldPosition);
+
+    const satelliteRelativeToParent = new THREE.Vector3();
+    satelliteRelativeToParent.subVectors(satelliteWorldPosition, parentBody.position);
+
+    if (orbitTrail.numPoints === orbitTrail.maxPoints) {
+        for (let i = 0; i < (orbitTrail.maxPoints - 1) * 3; i++) {
+            orbitTrail.positions[i] = orbitTrail.positions[i + 3]; // Shift the positions array
+        }
+        orbitTrail.numPoints--; // Reduce the number of points temporarily
+    }
+
+    const lastIndex = orbitTrail.numPoints * 3;
+    orbitTrail.positions[lastIndex] = satelliteRelativeToParent.x;
+    orbitTrail.positions[lastIndex + 1] = satelliteRelativeToParent.y;
+    orbitTrail.positions[lastIndex + 2] = satelliteRelativeToParent.z;
+
+    orbitTrail.numPoints = Math.min(orbitTrail.numPoints + 1, orbitTrail.maxPoints);
+
+    orbitTrail.orbitTrailGeometry.setDrawRange(0, orbitTrail.numPoints);
+    orbitTrail.orbitTrailGeometry.attributes.position.needsUpdate = true;
+    orbitTrail.orbitTrailObj.position.copy(earth.sphere.position);
+}
+
+
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
     if (inEarthSystem) {
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
+        updateOrbitTrail(moonOrbitTrail, moon, earth.sphere)
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
     }
     if (targetPlanet && !targetPlanet.isSun) {
