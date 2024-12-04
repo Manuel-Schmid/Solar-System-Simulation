@@ -358,7 +358,7 @@ mercury.zVel = 47.39996051284; // speed in km/s
 const venus = new Planet("Venus", 6051.8 * PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_venus_surface.jpg', 'planet_textures/8k/8k_venus_surface.jpg');
 venus.zVel = 35.019991414096;
 
-const earth = new Planet("Earth", 6371 * PLANET_SCALE, 0 /* todo: 23.5 */, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
+const earth = new Planet("Earth", 6371 * PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
 earth.zVel = 29.78299948;
 
 const mars = new Planet("Mars", 3389.5 * PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mars.jpg', 'planet_textures/8k/8k_mars.jpg');
@@ -484,9 +484,11 @@ gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
     ISS.rotation.y = THREE.MathUtils.degToRad(90);
     ISS.scale.set(issScaleFactor, issScaleFactor, issScaleFactor);
     issPlane.rotation.x = THREE.MathUtils.degToRad(51.6);
+
     issPlane.position.copy(ISS.position);
 
-    issOrbitTrail = new OrbitTrail(1000, 0xFF00A6)
+    issOrbitTrail = new OrbitTrail(3000, 0xFF00A6)
+    issOrbitTrail.orbitTrailObj.rotation.x = THREE.MathUtils.degToRad(23.5);
 });
 
 
@@ -619,23 +621,6 @@ window.addEventListener('keydown', (event) => {
             targetPlanet.mass *= 0.5
         }
     }
-    if (event.key === "ArrowRight") {
-        issPlane.rotation.x += THREE.MathUtils.degToRad(5)
-        console.log(issPlane.rotation)
-    }
-    if (event.key === "ArrowLeft") {
-        issPlane.rotation.x -= THREE.MathUtils.degToRad(5)
-        console.log(issPlane.rotation)
-    }
-    if (event.key === "ArrowUp") {
-        issPlane.rotation.z += THREE.MathUtils.degToRad(5)
-        console.log(issPlane.rotation)
-    }
-    if (event.key === "ArrowDown") {
-        issPlane.rotation.z -= THREE.MathUtils.degToRad(5)
-        console.log(issPlane.rotation)
-    }
-
 
     if (event.key.toLowerCase() === 'c') {
         pushTextToLabel('Move to Sun')
@@ -966,41 +951,6 @@ function updateJWSTPosition() {
     jwst.rotation.y +=  0.005
 }
 
-// function updateOrbitTrail(orbitTrail, satellite, earth) {
-//     const satelliteWorldPosition = new THREE.Vector3();
-//     satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
-//
-//     // Calculate position relative to Earth
-//     const satelliteRelativeToEarth = new THREE.Vector3();
-//     satelliteRelativeToEarth.subVectors(satelliteWorldPosition, earth.position);
-//
-//     // Factor in Earth's rotation: Rotate the ISS's position based on Earth's rotation
-//     const earthRotationMatrix = new THREE.Matrix4().makeRotationY(earth.rotation.y);  // Earth’s rotation matrix
-//     satelliteRelativeToEarth.applyMatrix4(earthRotationMatrix);  // Apply Earth's rotation
-//
-//     // Shift positions in the trail to make room for new points if the max length is reached
-//     if (orbitTrail.numPoints === orbitTrail.maxPoints) {
-//         for (let i = 0; i < (orbitTrail.maxPoints - 1) * 3; i++) {
-//             orbitTrail.positions[i] = orbitTrail.positions[i + 3];
-//         }
-//         orbitTrail.numPoints--;
-//     }
-//
-//     // Add the new point (relative to Earth)
-//     const lastIndex = orbitTrail.numPoints * 3;
-//     orbitTrail.positions[lastIndex] = satelliteRelativeToEarth.x;
-//     orbitTrail.positions[lastIndex + 1] = satelliteRelativeToEarth.y;
-//     orbitTrail.positions[lastIndex + 2] = satelliteRelativeToEarth.z;
-//
-//     orbitTrail.numPoints = Math.min(orbitTrail.numPoints + 1, orbitTrail.maxPoints);
-//
-//     // Update the trail geometry
-//     orbitTrail.orbitTrailGeometry.setDrawRange(0, orbitTrail.numPoints);
-//     orbitTrail.orbitTrailGeometry.attributes.position.needsUpdate = true;
-//
-//     // Update the position of the trail object so it moves with Earth
-//     orbitTrail.orbitTrailObj.position.copy(earth.position);  // Position trail relative to Earth's movement
-// }
 
 function updateOrbitTrail(orbitTrail, satellite, earth, isMoon=false) {
     if (isMoon) { // todo: delete this if
@@ -1011,7 +961,6 @@ function updateOrbitTrail(orbitTrail, satellite, earth, isMoon=false) {
             return
         }
     }
-
 
     const satelliteWorldPosition = new THREE.Vector3();
     satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
