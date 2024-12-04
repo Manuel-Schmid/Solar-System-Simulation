@@ -36,8 +36,8 @@ let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let HIGH_QUALITY_TEXTURES = false;
 let SHOW_CONNECTION = false;
-let SHOW_VECTORS = true; // change back
-let REALISTIC_LIGHTING = false; // change back
+let SHOW_VECTORS = false;
+let REALISTIC_LIGHTING = true;
 let TRUE_ROTATION_SPEEDS = false;
 let PAUSED = false;
 
@@ -463,7 +463,7 @@ moon.rotation.y = Math.PI;
 moonPlane.position.copy(moon.position);
 moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
 
-const moonOrbitTrail = new OrbitTrail(250, 0xA2A1A1)
+const moonOrbitTrail = new OrbitTrail(200, 0xA2A1A1) // 250 for full circle
 
 
 // create ISS
@@ -698,6 +698,10 @@ window.addEventListener('keydown', (event) => {
         for (const planet of planets) {
             if (SHOW_ORBITS) scene.add(planet.orbitLine);
             else scene.remove(planet.orbitLine);
+        }
+        if (inEarthSystem) {
+            updateOrbitTrail(moonOrbitTrail, moon, earth.sphere, true)
+            // updateOrbitTrail(issOrbitTrail, ISS, earth.sphere, false) // todo: uncomment this
         }
         jwstOrbit.visible = SHOW_ORBITS;
     }
@@ -998,7 +1002,17 @@ function updateJWSTPosition() {
 //     orbitTrail.orbitTrailObj.position.copy(earth.position);  // Position trail relative to Earth's movement
 // }
 
-function updateOrbitTrail(orbitTrail, satellite, earth) {
+function updateOrbitTrail(orbitTrail, satellite, earth, isMoon=false) {
+    if (isMoon) { // todo: delete this if
+        if (SHOW_ORBITS) {
+            scene.add(orbitTrail.orbitTrailObj)
+        } else {
+            scene.remove(orbitTrail.orbitTrailObj)
+            return
+        }
+    }
+
+
     const satelliteWorldPosition = new THREE.Vector3();
     satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
 
@@ -1022,23 +1036,25 @@ function updateOrbitTrail(orbitTrail, satellite, earth) {
 
     orbitTrail.numPoints = Math.min(orbitTrail.numPoints + 1, orbitTrail.maxPoints);
 
-    // Apply Earth's rotation only to the latest point (the new point)
-    const earthRotationMatrix = new THREE.Matrix4().makeRotationY(-earth.rotation.y); // Earth’s current rotation matrix around Y-axis
+    if (!isMoon) {
+        // Apply Earth's rotation only to the latest point (the new point)
+        const earthRotationMatrix = new THREE.Matrix4().makeRotationY(-earth.rotation.y); // Earth’s current rotation matrix around Y-axis
 
-    // Rotate only the newly added point (relative to Earth)
-    const latestPosition = new THREE.Vector3(
-        orbitTrail.positions[lastIndex],
-        orbitTrail.positions[lastIndex + 1],
-        orbitTrail.positions[lastIndex + 2]
-    );
+        // Rotate only the newly added point (relative to Earth)
+        const latestPosition = new THREE.Vector3(
+            orbitTrail.positions[lastIndex],
+            orbitTrail.positions[lastIndex + 1],
+            orbitTrail.positions[lastIndex + 2]
+        );
 
-    // Apply the rotation to the latest point
-    latestPosition.applyMatrix4(earthRotationMatrix);
+        // Apply the rotation to the latest point
+        latestPosition.applyMatrix4(earthRotationMatrix);
 
-    // Update the position of the latest point after rotation
-    orbitTrail.positions[lastIndex] = latestPosition.x;
-    orbitTrail.positions[lastIndex + 1] = latestPosition.y;
-    orbitTrail.positions[lastIndex + 2] = latestPosition.z;
+        // Update the position of the latest point after rotation
+        orbitTrail.positions[lastIndex] = latestPosition.x;
+        orbitTrail.positions[lastIndex + 1] = latestPosition.y;
+        orbitTrail.positions[lastIndex + 2] = latestPosition.z;
+    }
 
     // Update the trail geometry
     orbitTrail.orbitTrailGeometry.setDrawRange(0, orbitTrail.numPoints);
@@ -1054,12 +1070,12 @@ function rotateTargetPlanet() {
         // moon
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
-        updateOrbitTrail(moonOrbitTrail, moon, earth.sphere)
+        updateOrbitTrail(moonOrbitTrail, moon, earth.sphere, true)
         // iss
         issPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         issPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.4446 : -0.2; // iss orbit speed (7.6x faster than the moon)
         issOrbitTrail.orbitTrailObj.rotation.y = earth.sphere.rotation.y
-        updateOrbitTrail(issOrbitTrail, ISS, earth.sphere)
+        updateOrbitTrail(issOrbitTrail, ISS, earth.sphere, false)
         // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
     }
