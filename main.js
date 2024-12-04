@@ -36,8 +36,8 @@ let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let HIGH_QUALITY_TEXTURES = false;
 let SHOW_CONNECTION = false;
-let SHOW_VECTORS = false;
-let REALISTIC_LIGHTING = true;
+let SHOW_VECTORS = true; // change back
+let REALISTIC_LIGHTING = false; // change back
 let TRUE_ROTATION_SPEEDS = false;
 let PAUSED = false;
 
@@ -358,7 +358,7 @@ mercury.zVel = 47.39996051284; // speed in km/s
 const venus = new Planet("Venus", 6051.8 * PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_venus_surface.jpg', 'planet_textures/8k/8k_venus_surface.jpg');
 venus.zVel = 35.019991414096;
 
-const earth = new Planet("Earth", 6371 * PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
+const earth = new Planet("Earth", 6371 * PLANET_SCALE, 0 /* todo: 23.5 */, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_earth_daymap.jpg', 'planet_textures/8k/8k_earth_daymap.jpg');
 earth.zVel = 29.78299948;
 
 const mars = new Planet("Mars", 3389.5 * PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mars.jpg', 'planet_textures/8k/8k_mars.jpg');
@@ -427,27 +427,6 @@ const connectionMat = new THREE.LineBasicMaterial({ color: new THREE.Color().set
 const connectionOutline = new THREE.LineLoop(connectionGeo, connectionMat); // Create the line loop
 connectionOutline.frustumCulled = false;
 
-// create moon
-const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
-const moonMapPath = 'planet_textures/2k/2k_moon.jpg'
-const moonTexture = textureLoader.load(moonMapPath);
-moonTexture.colorSpace = THREE.SRGBColorSpace
-const moonMaterial = new THREE.MeshStandardMaterial({
-    // color: 0x8f8f8f,
-    map: moonTexture,
-    roughness: 0.8, // less rough, more reflective
-});
-const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-const moonPlane = new THREE.Object3D();
-// const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
-scene.add(moonPlane); // Add the orbit object to the scene
-moonPlane.add(moon)
-moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
-moon.rotation.y = Math.PI;
-
-moonPlane.position.copy(moon.position);
-moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
-
 
 class OrbitTrail {
     constructor(maxLength, color) {
@@ -463,7 +442,53 @@ class OrbitTrail {
     }
 }
 
+
+// create moon
+const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
+const moonMapPath = 'planet_textures/2k/2k_moon.jpg'
+const moonTexture = textureLoader.load(moonMapPath);
+moonTexture.colorSpace = THREE.SRGBColorSpace
+const moonMaterial = new THREE.MeshStandardMaterial({
+    // color: 0x8f8f8f,
+    map: moonTexture,
+    roughness: 0.8, // less rough, more reflective
+});
+const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+const moonPlane = new THREE.Object3D();
+// const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
+scene.add(moonPlane);
+moonPlane.add(moon)
+moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
+moon.rotation.y = Math.PI;
+moonPlane.position.copy(moon.position);
+moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
+
 const moonOrbitTrail = new OrbitTrail(250, 0xA2A1A1)
+
+
+// create ISS
+const issPlane = new THREE.Object3D();
+let ISS = null
+let issOrbitTrail = null
+const issScaleFactor = 0.00001
+
+gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
+{
+    ISS = gltf.scene
+    // ISS.rotation.x = THREE.MathUtils.degToRad(90)
+
+    // scene.add(issPlane);
+    issPlane.add(ISS)
+
+    ISS.position.set(0.0005 * AU * DISTANCE_SCALE, 0, 0);
+    ISS.rotation.y = THREE.MathUtils.degToRad(90);
+    ISS.scale.set(issScaleFactor, issScaleFactor, issScaleFactor);
+    issPlane.rotation.x = THREE.MathUtils.degToRad(51.6);
+    issPlane.position.copy(ISS.position);
+
+    issOrbitTrail = new OrbitTrail(1000, 0xFF00A6)
+});
+
 
 
 // create James Webb space telescope
@@ -594,6 +619,24 @@ window.addEventListener('keydown', (event) => {
             targetPlanet.mass *= 0.5
         }
     }
+    if (event.key === "ArrowRight") {
+        issPlane.rotation.x += THREE.MathUtils.degToRad(5)
+        console.log(issPlane.rotation)
+    }
+    if (event.key === "ArrowLeft") {
+        issPlane.rotation.x -= THREE.MathUtils.degToRad(5)
+        console.log(issPlane.rotation)
+    }
+    if (event.key === "ArrowUp") {
+        issPlane.rotation.z += THREE.MathUtils.degToRad(5)
+        console.log(issPlane.rotation)
+    }
+    if (event.key === "ArrowDown") {
+        issPlane.rotation.z -= THREE.MathUtils.degToRad(5)
+        console.log(issPlane.rotation)
+    }
+
+
     if (event.key.toLowerCase() === 'c') {
         pushTextToLabel('Move to Sun')
         moveToPlanet(sun, true);
@@ -803,11 +846,16 @@ function updateGridTexture() {
 function updateEarthSystemVisibility(visible) {
     if (visible) {
         moonPlane.position.copy(earth.sphere.position)
+        issPlane.position.copy(earth.sphere.position)
         scene.add(moonPlane)
+        scene.add(issPlane)
         scene.add(moonOrbitTrail.orbitTrailObj)
+        scene.add(issOrbitTrail.orbitTrailObj)
     } else {
         scene.remove(moonPlane)
+        scene.remove(issPlane)
         scene.remove(moonOrbitTrail.orbitTrailObj)
+        scene.remove(issOrbitTrail.orbitTrailObj)
     }
 }
 
@@ -914,39 +962,105 @@ function updateJWSTPosition() {
     jwst.rotation.y +=  0.005
 }
 
-function updateOrbitTrail(orbitTrail, satellite, parentBody) {
+// function updateOrbitTrail(orbitTrail, satellite, earth) {
+//     const satelliteWorldPosition = new THREE.Vector3();
+//     satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
+//
+//     // Calculate position relative to Earth
+//     const satelliteRelativeToEarth = new THREE.Vector3();
+//     satelliteRelativeToEarth.subVectors(satelliteWorldPosition, earth.position);
+//
+//     // Factor in Earth's rotation: Rotate the ISS's position based on Earth's rotation
+//     const earthRotationMatrix = new THREE.Matrix4().makeRotationY(earth.rotation.y);  // Earth’s rotation matrix
+//     satelliteRelativeToEarth.applyMatrix4(earthRotationMatrix);  // Apply Earth's rotation
+//
+//     // Shift positions in the trail to make room for new points if the max length is reached
+//     if (orbitTrail.numPoints === orbitTrail.maxPoints) {
+//         for (let i = 0; i < (orbitTrail.maxPoints - 1) * 3; i++) {
+//             orbitTrail.positions[i] = orbitTrail.positions[i + 3];
+//         }
+//         orbitTrail.numPoints--;
+//     }
+//
+//     // Add the new point (relative to Earth)
+//     const lastIndex = orbitTrail.numPoints * 3;
+//     orbitTrail.positions[lastIndex] = satelliteRelativeToEarth.x;
+//     orbitTrail.positions[lastIndex + 1] = satelliteRelativeToEarth.y;
+//     orbitTrail.positions[lastIndex + 2] = satelliteRelativeToEarth.z;
+//
+//     orbitTrail.numPoints = Math.min(orbitTrail.numPoints + 1, orbitTrail.maxPoints);
+//
+//     // Update the trail geometry
+//     orbitTrail.orbitTrailGeometry.setDrawRange(0, orbitTrail.numPoints);
+//     orbitTrail.orbitTrailGeometry.attributes.position.needsUpdate = true;
+//
+//     // Update the position of the trail object so it moves with Earth
+//     orbitTrail.orbitTrailObj.position.copy(earth.position);  // Position trail relative to Earth's movement
+// }
+
+function updateOrbitTrail(orbitTrail, satellite, earth) {
     const satelliteWorldPosition = new THREE.Vector3();
-    satellite.getWorldPosition(satelliteWorldPosition);
+    satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
 
-    const satelliteRelativeToParent = new THREE.Vector3();
-    satelliteRelativeToParent.subVectors(satelliteWorldPosition, parentBody.position);
+    // Calculate position relative to Earth
+    const satelliteRelativeToEarth = new THREE.Vector3();
+    satelliteRelativeToEarth.subVectors(satelliteWorldPosition, earth.position);
 
+    // Shift positions in the trail to make room for new points if the max length is reached
     if (orbitTrail.numPoints === orbitTrail.maxPoints) {
         for (let i = 0; i < (orbitTrail.maxPoints - 1) * 3; i++) {
-            orbitTrail.positions[i] = orbitTrail.positions[i + 3]; // Shift the positions array
+            orbitTrail.positions[i] = orbitTrail.positions[i + 3]; // Shift positions array
         }
-        orbitTrail.numPoints--; // Reduce the number of points temporarily
+        orbitTrail.numPoints--;
     }
 
+    // Add the new point (relative to Earth)
     const lastIndex = orbitTrail.numPoints * 3;
-    orbitTrail.positions[lastIndex] = satelliteRelativeToParent.x;
-    orbitTrail.positions[lastIndex + 1] = satelliteRelativeToParent.y;
-    orbitTrail.positions[lastIndex + 2] = satelliteRelativeToParent.z;
+    orbitTrail.positions[lastIndex] = satelliteRelativeToEarth.x;
+    orbitTrail.positions[lastIndex + 1] = satelliteRelativeToEarth.y;
+    orbitTrail.positions[lastIndex + 2] = satelliteRelativeToEarth.z;
 
     orbitTrail.numPoints = Math.min(orbitTrail.numPoints + 1, orbitTrail.maxPoints);
 
+    // Apply Earth's rotation only to the latest point (the new point)
+    const earthRotationMatrix = new THREE.Matrix4().makeRotationY(-earth.rotation.y); // Earth’s current rotation matrix around Y-axis
+
+    // Rotate only the newly added point (relative to Earth)
+    const latestPosition = new THREE.Vector3(
+        orbitTrail.positions[lastIndex],
+        orbitTrail.positions[lastIndex + 1],
+        orbitTrail.positions[lastIndex + 2]
+    );
+
+    // Apply the rotation to the latest point
+    latestPosition.applyMatrix4(earthRotationMatrix);
+
+    // Update the position of the latest point after rotation
+    orbitTrail.positions[lastIndex] = latestPosition.x;
+    orbitTrail.positions[lastIndex + 1] = latestPosition.y;
+    orbitTrail.positions[lastIndex + 2] = latestPosition.z;
+
+    // Update the trail geometry
     orbitTrail.orbitTrailGeometry.setDrawRange(0, orbitTrail.numPoints);
     orbitTrail.orbitTrailGeometry.attributes.position.needsUpdate = true;
-    orbitTrail.orbitTrailObj.position.copy(earth.sphere.position);
-}
 
+    // Update the trail's position relative to Earth
+    orbitTrail.orbitTrailObj.position.copy(earth.position);
+}
 
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
     if (inEarthSystem) {
+        // moon
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
         updateOrbitTrail(moonOrbitTrail, moon, earth.sphere)
+        // iss
+        issPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
+        issPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.4446 : -0.2; // iss orbit speed (7.6x faster than the moon)
+        issOrbitTrail.orbitTrailObj.rotation.y = earth.sphere.rotation.y
+        updateOrbitTrail(issOrbitTrail, ISS, earth.sphere)
+        // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
     }
     if (targetPlanet && !targetPlanet.isSun) {
