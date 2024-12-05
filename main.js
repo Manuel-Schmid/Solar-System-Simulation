@@ -694,6 +694,8 @@ function rotateTargetPlanet() {
         updateOrbitTrail(issOrbitTrail, ISS, earth.sphere, false)
         // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
+
+        earth.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? earth.rotationSpeed : -0.009
         return
     }
     if (targetPlanet && !targetPlanet.isSun) {
