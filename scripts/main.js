@@ -121,7 +121,7 @@ moon.rotation.y = Math.PI;
 moonPlane.position.copy(moon.position);
 moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
 
-const moonOrbitTrail = new OrbitTrail(200, 0xA2A1A1) // 250 for full circle
+const moonOrbitTrail = new OrbitTrail(200, 0xA2A1A1, false) // 250 for full circle
 
 
 // create ISS
@@ -145,7 +145,7 @@ gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
 
     issPlane.position.copy(ISS.position);
 
-    issOrbitTrail = new OrbitTrail(3000, 0xFF00A6)
+    issOrbitTrail = new OrbitTrail(3000, 0xFF00A6, true)
     issOrbitTrail.orbitTrailObj.rotation.x = THREE.MathUtils.degToRad(23.5);
 });
 
@@ -183,6 +183,8 @@ loadingManager.onLoad = ()=>{
             earth: earth,
             moon: moon,
             moonOrbitTrail: moonOrbitTrail,
+            ISS: ISS,
+            issOrbitTrail: issOrbitTrail,
             jwst: jwst,
             jwstOrbit: jwstOrbit,
             jwstPlane: jwstPlane,
@@ -296,12 +298,12 @@ function rotateTargetPlanet() {
         // moon
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
-        moonOrbitTrail.updateOrbitTrail(moon, earth.sphere, true)
+        moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
         // iss
         issPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         issPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.4446 : -0.2; // iss orbit speed (7.6x faster than the moon)
         issOrbitTrail.orbitTrailObj.rotation.y = earth.sphere.rotation.y
-        issOrbitTrail.updateOrbitTrail(ISS, earth.sphere, false)
+        issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
         // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
 

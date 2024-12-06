@@ -301,7 +301,8 @@ export class Ring {
 }
 
 export class OrbitTrail {
-    constructor(maxLength, color) {
+    constructor(maxLength, color, rotateWithEarth) {
+        this.rotateWithEarth = rotateWithEarth
         this.orbitTrailGeometry = new THREE.BufferGeometry();
         this.maxPoints = maxLength; // Limit the number of points in the trail
         this.positions = new Float32Array(this.maxPoints * 3); // Each point has 3 coordinates (x, y, z)
@@ -317,14 +318,12 @@ export class OrbitTrail {
         this.numPoints = 0;
         this.orbitTrailGeometry.attributes.position.needsUpdate = true;
     }
-    updateOrbitTrail(satellite, earth, isMoon=false) {
-        if (isMoon) { // todo: delete this if
-            if (SHOW_ORBITS) {
-                scene.add(this.orbitTrailObj)
-            } else {
-                scene.remove(this.orbitTrailObj)
-                return
-            }
+    updateOrbitTrail(satellite, earth) {
+        if (SHOW_ORBITS) scene.add(this.orbitTrailObj)
+        else {
+            scene.remove(this.orbitTrailObj)
+            this.reset()
+            return
         }
 
         const satelliteWorldPosition = new THREE.Vector3();
@@ -350,7 +349,7 @@ export class OrbitTrail {
 
         this.numPoints = Math.min(this.numPoints + 1, this.maxPoints);
 
-        if (!isMoon) {
+        if (this.rotateWithEarth) {
             // Apply Earth's rotation only to the latest point (the new point)
             const earthRotationMatrix = new THREE.Matrix4().makeRotationY(-earth.rotation.y); // Earth’s current rotation matrix around Y-axis
 

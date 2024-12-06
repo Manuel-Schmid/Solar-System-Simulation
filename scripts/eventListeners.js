@@ -13,6 +13,8 @@ export function initEventListeners({
                                        earth,
                                        moon,
                                        moonOrbitTrail,
+                                       ISS,
+                                       issOrbitTrail,
                                        jwst,
                                        jwstOrbit,
                                        jwstPlane,
@@ -189,8 +191,8 @@ export function initEventListeners({
                 else scene.remove(planet.orbitLine);
             }
             if (inEarthSystem) {
-                moonOrbitTrail.updateOrbitTrail(moon, earth.sphere, true)
-                // issOrbitTrail.updateOrbitTrail(ISS, earth.sphere, false) // todo: uncomment this
+                moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
+                issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
             }
             jwstOrbit.visible = SHOW_ORBITS;
         }
