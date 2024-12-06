@@ -26,11 +26,41 @@ export function initEventListeners({
                                        setCameraOffset,
                                        setJwstCameraOffset,
                                    }) {
+    document.addEventListener('keyup', (event) => {
+        if (spacecraftSelected) {
+            if (event.key === 'ArrowUp') {
+                forwardPressed = false;
+            }
+            if (event.key === 'ArrowDown') {
+                backwardPressed = false;
+            }
+            if (event.key === 'ArrowLeft') {
+                portPressed = false;
+            }
+            if (event.key === 'ArrowRight') {
+                starboardPressed = false;
+            }
+        }
+    });
     window.addEventListener('keydown', (event) => {
         if (event.code === 'Space') { // un/pause the game
             PAUSED = !PAUSED;
             pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
             return
+        }
+        if (spacecraftSelected) { // spacecraft controls
+            if (event.key === 'ArrowUp') {
+                forwardPressed = true;
+            }
+            if (event.key === 'ArrowDown') {
+                backwardPressed = true;
+            }
+            if (event.key === 'ArrowLeft') {
+                portPressed = true;
+            }
+            if (event.key === 'ArrowRight') {
+                starboardPressed = true;
+            }
         }
         if (event.key.toLowerCase() === 'l') { // switch lighting
             REALISTIC_LIGHTING = !REALISTIC_LIGHTING;
@@ -65,7 +95,17 @@ export function initEventListeners({
             }
             return
         }
+        if (event.key === 'Enter') { // todo: move camera to spacecraft smoothly
+            jwstSelected = false
+            targetPlanet = null
+            spacecraftSelected = true
+        }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
+            // todo:
+            if (spacecraftSelected) {
+                isCameraLocked = !isCameraLocked
+            }
+
             if (jwstSelected) {
                 pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
                 if (isCameraLocked) {

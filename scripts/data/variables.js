@@ -11,11 +11,20 @@ let PAUSED = false;
 
 // program variables
 let targetPlanet = null; // Default to the sun
-let jwstSelected = false; // Default to the sun
+let spacecraft = null
+let spacecraftSelected = true;
+let jwstSelected = false;
 let inEarthSystem = false;
-let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet
+let isCameraLocked = true; // Flag to indicate if the camera is locked to a planet | todo: change back
 let isCameraSunLocked = false; // Flag to indicate if the camera is locked to a planet
 let sunLockedCameraDistance = 0
 let distanceUnit = distanceUnits[0];
 let backgroundGrid = backgroundTextures[0];
 let birdseye = true;
+
+// keys
+let forwardPressed = false;
+let backwardPressed = false;
+let portPressed = false;
+let starboardPressed = false;
+

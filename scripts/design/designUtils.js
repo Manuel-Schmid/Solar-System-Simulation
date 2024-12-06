@@ -92,15 +92,22 @@ export function updateLabel() {
     const distanceLabel = document.getElementById('distance-label');
     const speedLabel = document.getElementById('speed-label');
     const weightLabel = document.getElementById('weight-label');
-    if (!SHOW_LABEL || !targetPlanet) { // if no target planet or birdseye view: no label
+    if (!SHOW_LABEL || (!targetPlanet && !spacecraftSelected)) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
-        if (targetPlanet.isSun) distanceLabel.textContent = ""
-        else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
+        if (targetPlanet) {
+            if (targetPlanet.isSun) distanceLabel.textContent = ""
+            else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
+            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+            speedLabel.textContent = v.toPrecision(4) + " km/s"
+            weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
+        } else if (spacecraftSelected) {
+            distanceLabel.textContent = convertDistance(spacecraft.distanceToSun, distanceUnit, AU, LM)
+            const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.zVel ** 2)
+            speedLabel.textContent = v.toPrecision(4) + " km/s"
+            weightLabel.textContent = "";
+        }
 
-        const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
-        speedLabel.textContent = v.toPrecision(4) + " km/s"
-        weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
         labelContainer.style.display = '';
     }
 }

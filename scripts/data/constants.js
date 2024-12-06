@@ -8,3 +8,9 @@ let distanceUnits = ["km", "au", "lm"] // units for distances
 let backgroundTextures = [false, "starmaps/celestial_grid_16k.png", "starmaps/constellation_bounds_8k.png", "starmaps/constellation_figures_8k.png"]
 const jwstScaleFactor = 0.0001
 const jwstCenterDistance = 0.005
+const Direction = Object.freeze({
+    FORWARD:   Symbol("forward"),
+    STARBOARD:   Symbol("starboard"),
+    PORT:   Symbol("port"),
+    BACKWARD:   Symbol("backward"),
+});

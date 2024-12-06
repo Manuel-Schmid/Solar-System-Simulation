@@ -4,7 +4,7 @@ import {
     calcPlanetOffset,
     createCircle,
     createStars,
-    drawConnection, pushTextToLabel,
+    drawConnection,
     updateLabel, updateLighting
 } from "./design/designUtils";
 import { getPointXBeyondLine } from "./utils";
@@ -17,13 +17,14 @@ import {
     gltfLoader,
     sunLight, loadingManager
 } from './setup/scene';
-import {OrbitTrail, Planet, Ring} from "./setup/classes";
+import {OrbitTrail, Planet, Ring, Spacecraft} from "./setup/classes";
 import { initEventListeners } from "./eventListeners";
 
 
 // setup
 const controls = new OrbitControls( camera, renderer.domElement );
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
+let spacecraftCameraOffset = new THREE.Vector3(0.1, 0.05, 0);
 let jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
 
 const setCameraOffset = newOffset => { cameraOffset.copy(newOffset)};
@@ -115,17 +116,17 @@ loadingManager.onLoad = ()=>{
 updateLighting()
 
 // create star background
-// const stars = createStars()
-// scene.add(stars);
+const stars = createStars()
+scene.add(stars);
 
 // exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
-exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
+// exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
 // exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
-{
-    starmapTexture.mapping = THREE.EquirectangularReflectionMapping
-    // scene.environment = starmapTexture; // Set environment for reflections
-    scene.background = starmapTexture;
-});
+// {
+//     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+//     // scene.environment = starmapTexture; // Set environment for reflections
+//     scene.background = starmapTexture;
+// });
 
 // renderer.toneMapping = THREE.ACESFilmicToneMapping;
 // renderer.toneMappingExposure = 1;
@@ -234,6 +235,7 @@ function updateEarthSystemVisibility(visible) {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
+    spacecraftSelected = false
     jwstSelected = false
     if (SHOW_ORBITS) jwstOrbit.visible = false;
     inEarthSystem = (planet.name === "Earth");
@@ -307,6 +309,8 @@ function updateJWSTPosition() {
     jwst.rotation.y +=  0.005
 }
 
+spacecraft = new Spacecraft(1000, 0.320 * AU * DISTANCE_SCALE, 0, 0)
+
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
     if (inEarthSystem) {
@@ -340,6 +344,12 @@ function render() { // runs with 60 fps
             planet.updatePosition(planets, SHOW_VECTORS)
         }
         rotateTargetPlanet()
+        if (spacecraftSelected) {
+            spacecraft.updatePosition(sun)
+            if (forwardPressed || backwardPressed || portPressed || starboardPressed) {
+                spacecraft.changeMomentum(spacecraftCameraOffset)
+            }
+        }
         if (jwstSelected) updateJWSTPosition()
 
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
@@ -367,7 +377,16 @@ function render() { // runs with 60 fps
             controls.target.copy(jwstWorldPosition);
             controls.update();
         }
-    } else if (targetPlanet) {
+    } else if (spacecraftSelected) {
+        if (isCameraLocked) {
+            camera.position.copy(spacecraft.obj.position).add(spacecraftCameraOffset);
+            camera.lookAt(spacecraft.obj.position);
+        } else {
+            controls.target.copy(spacecraft.obj.position);
+            controls.update();
+        }
+    }
+    else if (targetPlanet) {
         if (!isCameraSunLocked) sunLockedCameraDistance = 0
         if (isCameraSunLocked) {
             const d = (sunLockedCameraDistance > 0) ? sunLockedCameraDistance : targetPlanet.radius * AU * DISTANCE_SCALE

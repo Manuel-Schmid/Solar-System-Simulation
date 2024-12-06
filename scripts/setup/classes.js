@@ -1,7 +1,106 @@
 import * as THREE from "three";
 import FakeGlowMaterial from "../design/GlowMaterial";
 import {PlanetRingGeometry} from "../utils";
-import {scene, textureLoader} from "./scene";
+import {camera, scene, textureLoader} from "./scene";
+
+export class Spacecraft {
+    constructor(mass, x, y, z) {
+        this.xVel = 0;
+        this.zVel = 0;
+        this.mass = mass;
+        this.distanceTosun = 0;
+
+        const geometry = new THREE.ConeGeometry( 0.01, 0.05, 32 );
+        const material = new THREE.MeshBasicMaterial( {color: 0xC000FF} );
+        this.obj = new THREE.Mesh(geometry, material );
+
+        this.obj.position.set(x, y, z)
+        this.obj.rotation.x = THREE.MathUtils.degToRad(90)
+        this.obj.rotation.z = THREE.MathUtils.degToRad(90)
+        scene.add( this.obj );
+
+        // vectors
+        const xVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xfc0303 } );
+        const xVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.xVectorLine = new THREE.Line( xVectorLineGeometry, xVectorLineMaterial );
+        this.xVectorLine.frustumCulled = false;
+
+        const zVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xfc0303 } );
+        const zVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.zVectorLine = new THREE.Line( zVectorLineGeometry, zVectorLineMaterial );
+        this.zVectorLine.frustumCulled = false;
+
+        const resVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0x0ffc03 } );
+        const resVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
+        this.resVectorLine = new THREE.Line( resVectorLineGeometry, resVectorLineMaterial );
+        this.resVectorLine.frustumCulled = false;
+    }
+    changeMomentum(spacecraftCameraOffset) {
+        const acceleration = 0.1;
+        const turnSpeed = 0.04;
+
+        const angle = this.obj.rotation.z;
+
+        const forwardX = Math.sin(angle);
+        const forwardZ = Math.cos(angle);
+
+        if (forwardPressed) {
+            this.xVel -= forwardX * acceleration;
+            this.zVel += forwardZ * acceleration;
+        }
+        if (backwardPressed) {
+            this.xVel += forwardX * acceleration;
+            this.zVel -= forwardZ * acceleration;
+        }
+        if (portPressed) {
+            this.obj.rotation.z -= turnSpeed;
+            this.updateCameraOffset(spacecraftCameraOffset, turnSpeed)
+        }
+        if (starboardPressed) {
+            this.obj.rotation.z += turnSpeed;
+            this.updateCameraOffset(spacecraftCameraOffset, -turnSpeed)
+        }
+    }
+    updateCameraOffset(spacecraftCameraOffset, rotation) {
+        const rotationMatrix = new THREE.Matrix4();
+        rotationMatrix.makeRotationY(rotation);  // Rotate around the Y-axis (z-rotation)
+        spacecraftCameraOffset.applyMatrix4(rotationMatrix);  // Apply the rotation to the camera offset
+    }
+    updatePosition(sun) {
+        this.obj.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
+        this.obj.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
+
+        const distance_x = ((sun.sphere.position.x - this.obj.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
+        const distance_z = ((sun.sphere.position.z - this.obj.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
+        const distance = (Math.sqrt(distance_x ** 2 + distance_z ** 2)) // distance in km
+        this.distanceToSun = distance / 1000
+
+        console.log("xVel: " + Math.round(this.xVel * 1000) / 1000 + " | zVel: " + Math.round(this.zVel * 1000) / 1000)
+        this.updateVectorLines()
+    }
+    updateVectorLines() {
+        const xVectorLinePoints = [
+            new THREE.Vector3(this.obj.position.x, 0, this.obj.position.z),
+            new THREE.Vector3(this.obj.position.x + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.obj.position.z)
+        ]
+        const zVectorLinePoints = [
+            new THREE.Vector3(this.obj.position.x, 0, this.obj.position.z),
+            new THREE.Vector3(this.obj.position.x, 0, this.obj.position.z + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
+        ]
+
+        const resVectorLinePoints = [
+            new THREE.Vector3(this.obj.position.x, 0, this.obj.position.z),
+            new THREE.Vector3(this.obj.position.x + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.obj.position.z + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
+        ]
+
+        this.xVectorLine.geometry.setFromPoints( xVectorLinePoints );
+        this.zVectorLine.geometry.setFromPoints( zVectorLinePoints );
+        this.resVectorLine.geometry.setFromPoints( resVectorLinePoints );
+        scene.add( this.xVectorLine );
+        scene.add( this.zVectorLine );
+        scene.add( this.resVectorLine );
+    }
+}
 
 export class Planet {
     constructor(name, radius, axialTilt, dayLength, mass, colorHex, x=0, y=0, z=0, isSun=false, lowQMapPath=null, highQMapPath=null) {
