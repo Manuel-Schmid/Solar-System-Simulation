@@ -25,6 +25,7 @@ export function initEventListeners({
                                        updateJWSTPosition,
                                        setCameraOffset,
                                        setJwstCameraOffset,
+                                       setSpacecraftCameraOffset,
                                    }) {
     document.addEventListener('keyup', (event) => {
         if (spacecraftSelected) {
@@ -68,6 +69,11 @@ export function initEventListeners({
             updateLighting()
             return
         }
+        if (event.key.toLowerCase() === 'g') {
+            spacecraftGravity = !spacecraftGravity;
+            pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
+            return
+        }
         if (event.key.toLowerCase() === 'k') {
             const grid_texture_index = backgroundTextures.indexOf(backgroundGrid)
             if (grid_texture_index < backgroundTextures.length - 1) backgroundGrid = backgroundTextures[grid_texture_index + 1]
@@ -86,7 +92,7 @@ export function initEventListeners({
             return
         }
         if (event.key.toLowerCase() === 'd') { // cycle distance unit
-            if (SHOW_LABEL && targetPlanet && !targetPlanet.isSun) { // only update if planet is selected
+            if (SHOW_LABEL && ((targetPlanet && !targetPlanet.isSun) || spacecraftSelected)) { // only update if planet is selected
                 const unit_index = distanceUnits.indexOf(distanceUnit)
                 if (unit_index < distanceUnits.length - 1) distanceUnit = distanceUnits[unit_index + 1]
                 else distanceUnit = distanceUnits[0]
@@ -99,11 +105,23 @@ export function initEventListeners({
             jwstSelected = false
             targetPlanet = null
             spacecraftSelected = true
+            isCameraLocked = true
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
-            // todo:
             if (spacecraftSelected) {
-                isCameraLocked = !isCameraLocked
+                pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
+                if (isCameraLocked) {
+                    isCameraLocked = false
+                    isCameraSunLocked = false
+                } else {
+                    isCameraLocked = true;
+                    const spacecraftWorldPosition = new THREE.Vector3();
+                    spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
+
+                    if (PAUSED) setSpacecraftCameraOffset(new THREE.Vector3().subVectors(camera.position, spacecraftWorldPosition));
+                    else setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
+                }
+                return
             }
 
             if (jwstSelected) {

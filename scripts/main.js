@@ -24,11 +24,12 @@ import { initEventListeners } from "./eventListeners";
 // setup
 const controls = new OrbitControls( camera, renderer.domElement );
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
-let spacecraftCameraOffset = new THREE.Vector3(0.1, 0.05, 0);
+let spacecraftCameraOffset = new THREE.Vector3(0.02, 0.008, 0);
 let jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
 
 const setCameraOffset = newOffset => { cameraOffset.copy(newOffset)};
 const setJwstCameraOffset = newOffset => { jwstCameraOffset.copy(newOffset)};
+const setSpacecraftCameraOffset = newOffset => { spacecraftCameraOffset.copy(newOffset)};
 
 // planets
 const sun = new Planet("Sun", 696340 * PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
@@ -64,6 +65,9 @@ const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 8.32, 16, 1.024 * 10
 neptune.zVel = 5.4299794
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
+
+
+spacecraft = new Spacecraft(1000, 3 * AU * DISTANCE_SCALE, 0, 0,0.04,0.34, 0.001, 0.005)
 
 camera.position.y = 40; // moving out the camera
 controls.update();
@@ -108,6 +112,7 @@ loadingManager.onLoad = ()=>{
             updateJWSTPosition: updateJWSTPosition,
             setCameraOffset: setCameraOffset,
             setJwstCameraOffset: setJwstCameraOffset,
+            setSpacecraftCameraOffset: setSpacecraftCameraOffset,
         })
     }
     firstLoad = false
@@ -120,8 +125,8 @@ const stars = createStars()
 scene.add(stars);
 
 // exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
-// exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
 // exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
+// exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
 // {
 //     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
 //     // scene.environment = starmapTexture; // Set environment for reflections
@@ -309,8 +314,6 @@ function updateJWSTPosition() {
     jwst.rotation.y +=  0.005
 }
 
-spacecraft = new Spacecraft(1000, 0.320 * AU * DISTANCE_SCALE, 0, 0)
-
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
     if (inEarthSystem) {
@@ -345,7 +348,7 @@ function render() { // runs with 60 fps
         }
         rotateTargetPlanet()
         if (spacecraftSelected) {
-            spacecraft.updatePosition(sun)
+            spacecraft.updatePosition(planets, sun.sphere.position)
             if (forwardPressed || backwardPressed || portPressed || starboardPressed) {
                 spacecraft.changeMomentum(spacecraftCameraOffset)
             }

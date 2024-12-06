@@ -4,14 +4,16 @@ import {PlanetRingGeometry} from "../utils";
 import {camera, scene, textureLoader} from "./scene";
 
 export class Spacecraft {
-    constructor(mass, x, y, z) {
+    constructor(mass, x, y, z, angularVelocity, acceleration, radius, height) {
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
+        this.angularVelocity = angularVelocity;
+        this.acceleration = acceleration;
         this.distanceTosun = 0;
 
-        const geometry = new THREE.ConeGeometry( 0.01, 0.05, 32 );
-        const material = new THREE.MeshBasicMaterial( {color: 0xC000FF} );
+        const geometry = new THREE.ConeGeometry( radius, height, 32 );
+        const material = new THREE.MeshBasicMaterial( {color: 0x6203fc} );
         this.obj = new THREE.Mesh(geometry, material );
 
         this.obj.position.set(x, y, z)
@@ -36,29 +38,25 @@ export class Spacecraft {
         this.resVectorLine.frustumCulled = false;
     }
     changeMomentum(spacecraftCameraOffset) {
-        const acceleration = 0.1;
-        const turnSpeed = 0.04;
-
         const angle = this.obj.rotation.z;
-
         const forwardX = Math.sin(angle);
         const forwardZ = Math.cos(angle);
 
         if (forwardPressed) {
-            this.xVel -= forwardX * acceleration;
-            this.zVel += forwardZ * acceleration;
+            this.xVel -= forwardX * this.acceleration;
+            this.zVel += forwardZ * this.acceleration;
         }
         if (backwardPressed) {
-            this.xVel += forwardX * acceleration;
-            this.zVel -= forwardZ * acceleration;
+            this.xVel += forwardX * this.acceleration;
+            this.zVel -= forwardZ * this.acceleration;
         }
         if (portPressed) {
-            this.obj.rotation.z -= turnSpeed;
-            this.updateCameraOffset(spacecraftCameraOffset, turnSpeed)
+            this.obj.rotation.z -= this.angularVelocity;
+            this.updateCameraOffset(spacecraftCameraOffset, this.angularVelocity)
         }
         if (starboardPressed) {
-            this.obj.rotation.z += turnSpeed;
-            this.updateCameraOffset(spacecraftCameraOffset, -turnSpeed)
+            this.obj.rotation.z += this.angularVelocity;
+            this.updateCameraOffset(spacecraftCameraOffset, -this.angularVelocity)
         }
     }
     updateCameraOffset(spacecraftCameraOffset, rotation) {
@@ -66,17 +64,42 @@ export class Spacecraft {
         rotationMatrix.makeRotationY(rotation);  // Rotate around the Y-axis (z-rotation)
         spacecraftCameraOffset.applyMatrix4(rotationMatrix);  // Apply the rotation to the camera offset
     }
-    updatePosition(sun) {
+    updatePosition(planets, sunPosition) {
+        if (spacecraftGravity) {
+            let totalFx = 0;
+            let totalFz = 0;
+            for (const planet of planets) {
+                const forces = this.attraction(planet)
+                totalFx += forces[0].force_x // Force in N
+                totalFz += forces[0].force_z // Force in N
+            }
+
+            const addedXVel = ((totalFx / this.mass)/1000) * TIME
+            const addedZVel = ((totalFz / this.mass)/1000) * TIME
+            this.xVel += addedXVel // in km/s
+            this.zVel += addedZVel // in km/s
+        }
+
         this.obj.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
         this.obj.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
-        const distance_x = ((sun.sphere.position.x - this.obj.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
-        const distance_z = ((sun.sphere.position.z - this.obj.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
+        const distance_x = ((sunPosition.x - this.obj.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
+        const distance_z = ((sunPosition.z - this.obj.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
         const distance = (Math.sqrt(distance_x ** 2 + distance_z ** 2)) // distance in km
         this.distanceToSun = distance / 1000
 
         console.log("xVel: " + Math.round(this.xVel * 1000) / 1000 + " | zVel: " + Math.round(this.zVel * 1000) / 1000)
         this.updateVectorLines()
+    }
+    attraction(planet) {
+        const distance_x = ((planet.sphere.position.x - this.obj.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
+        const distance_z = ((planet.sphere.position.z - this.obj.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
+        const distance = (Math.sqrt(distance_x ** 2 + distance_z ** 2)) // distance in km
+        const force = G * this.mass * planet.mass / distance ** 2 // law of attraction
+        const theta = Math.atan2(distance_z, distance_x)
+        const force_x = Math.cos(theta) * force
+        const force_z = Math.sin(theta) * force
+        return [{force_x: force_x, force_z: force_z}]
     }
     updateVectorLines() {
         const xVectorLinePoints = [
@@ -99,6 +122,14 @@ export class Spacecraft {
         scene.add( this.xVectorLine );
         scene.add( this.zVectorLine );
         scene.add( this.resVectorLine );
+    }
+    calcSpacecraftCameraOffset() { // offset behind spacecraft
+        const angle = -this.obj.rotation.z;
+        const offsetDistance = 0.02; // Distance behind the spacecraft
+        const verticalOffset = 0.008; // Vertical offset
+        const xOffset = -offsetDistance * Math.sin(angle); // Negative Z direction in local space
+        const zOffset = -offsetDistance * Math.cos(angle);
+        return new THREE.Vector3(xOffset, verticalOffset, zOffset);
     }
 }
 
