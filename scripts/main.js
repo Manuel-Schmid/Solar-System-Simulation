@@ -67,20 +67,55 @@ const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, nept
 camera.position.y = 40; // moving out the camera
 controls.update();
 
+let firstLoad = true
+loadingManager.onProgress = ( item, loaded, total ) =>  {
+    document.getElementById('loading-progress').innerHTML = loaded + "/" + total + "<br>" + item
+    document.getElementById('loaded-elements-left').innerHTML += item + "<br>"
+    document.getElementById('loaded-elements-right').innerHTML += item + "<br>"
+}
+loadingManager.onLoad = ()=>{
+    // document.getElementById('loading-screen').style.display = 'none'
+    if (firstLoad) {
+        initEventListeners({
+            controls: controls,
+            cameraOffset: cameraOffset,
+            jwstCameraOffset: jwstCameraOffset,
+            planets: planets,
+            sun: sun,
+            earth: earth,
+            moon: moon,
+            moonOrbitTrail: moonOrbitTrail,
+            ISS: ISS,
+            issOrbitTrail: issOrbitTrail,
+            jwst: jwst,
+            jwstOrbit: jwstOrbit,
+            jwstPlane: jwstPlane,
+            constellationSphere: constellationSphere,
+            connectionOutline: connectionOutline,
+            moveToPlanet: moveToPlanet,
+            updateEarthSystemVisibility: updateEarthSystemVisibility,
+            updateJWSTPosition: updateJWSTPosition,
+            setCameraOffset: setCameraOffset,
+            setJwstCameraOffset: setJwstCameraOffset,
+        })
+    }
+    firstLoad = false
+}
+
 updateLighting()
 
 // create star background
-const stars = createStars()
-scene.add(stars);
+// const stars = createStars()
+// scene.add(stars);
 
 // exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
 // exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
-// exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
-// {
-//     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
-//     // scene.environment = starmapTexture; // Set environment for reflections
-//     scene.f = starmapTexture;
-// });
+exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
+{
+    starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+    // scene.environment = starmapTexture; // Set environment for reflections
+    scene.background = starmapTexture;
+});
 
 // renderer.toneMapping = THREE.ACESFilmicToneMapping;
 // renderer.toneMappingExposure = 1;
@@ -128,7 +163,7 @@ const moonOrbitTrail = new OrbitTrail(200, 0xA2A1A1, false) // 250 for full circ
 const issPlane = new THREE.Object3D();
 let ISS = null
 let issOrbitTrail = null
-const issScaleFactor = 0.00001
+const issScaleFactor = 0.000001
 
 gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
 {
@@ -169,36 +204,6 @@ gltfLoader.load('models/jwst.glb' , (gltf) =>
     jwstPlane.rotation.y = THREE.MathUtils.degToRad(90)
 });
 
-let firstLoad = true
-loadingManager.onProgress = ( item, loaded, total ) =>  {document.getElementById('loading-progress').textContent = loaded + "/" + total }
-loadingManager.onLoad = ()=>{
-    document.getElementById('loading-screen').style.display = 'none'
-    if (firstLoad) {
-        initEventListeners({
-            controls: controls,
-            cameraOffset: cameraOffset,
-            jwstCameraOffset: jwstCameraOffset,
-            planets: planets,
-            sun: sun,
-            earth: earth,
-            moon: moon,
-            moonOrbitTrail: moonOrbitTrail,
-            ISS: ISS,
-            issOrbitTrail: issOrbitTrail,
-            jwst: jwst,
-            jwstOrbit: jwstOrbit,
-            jwstPlane: jwstPlane,
-            constellationSphere: constellationSphere,
-            connectionOutline: connectionOutline,
-            moveToPlanet: moveToPlanet,
-            updateEarthSystemVisibility: updateEarthSystemVisibility,
-            updateJWSTPosition: updateJWSTPosition,
-            setCameraOffset: setCameraOffset,
-            setJwstCameraOffset: setJwstCameraOffset,
-        })
-    }
-    firstLoad = false
-}
 
 function updateEarthSystemVisibility(visible) {
     if (visible) {

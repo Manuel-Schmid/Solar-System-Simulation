@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {convertDistance, findVectorPair} from "../utils";
+import {convertDistance} from "../utils";
 import {brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
 
 export function createStars() {
