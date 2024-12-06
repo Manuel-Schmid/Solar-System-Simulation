@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import {findVectorPair} from "./utils";
+import {convertDistance, findVectorPair} from "../utils";
+import {brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();
@@ -73,4 +74,63 @@ export function drawConnection(positions, connectionGeo) {
         connectionPoints[i * 3 + 2] = positions[i].z;
     }
     connectionGeo.setAttribute('position', new THREE.BufferAttribute(connectionPoints, 3));
+}
+
+export function pushTextToLabel(text) {
+    const actionLabelContainer = document.getElementById('action-label-container')
+    const actionLabel = document.getElementById('action-label')
+    actionLabel.textContent = text
+    actionLabelContainer.style.display = ""
+    window.setTimeout(function() {
+        actionLabelContainer.classList.remove('center-label-show')
+        actionLabelContainer.style.display = "none"
+    }, 800); // time in ms
+}
+
+export function updateLabel() {
+    const labelContainer = document.getElementById('label-container');
+    const distanceLabel = document.getElementById('distance-label');
+    const speedLabel = document.getElementById('speed-label');
+    const weightLabel = document.getElementById('weight-label');
+    if (!SHOW_LABEL || !targetPlanet) { // if no target planet or birdseye view: no label
+        labelContainer.style.display = 'none';
+    } else {
+        if (targetPlanet.isSun) distanceLabel.textContent = ""
+        else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
+
+        const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+        speedLabel.textContent = v.toPrecision(4) + " km/s"
+        weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
+        labelContainer.style.display = '';
+    }
+}
+
+export function updateLighting() {
+    if (REALISTIC_LIGHTING) {
+        scene.add(sunLight)
+        scene.add(softAmbientLight);
+        scene.remove(brightAmbientLight);
+
+    } else {
+        scene.remove(sunLight)
+        scene.remove(softAmbientLight);
+        scene.add(brightAmbientLight);
+    }
+}
+
+export function updateGridTexture(constellationSphere) {
+    if (backgroundGrid) {
+        document.getElementById('loading-screen').style.display = ''
+        textureLoader.load(backgroundGrid, (constellationTexture) => {
+            constellationTexture.mapping = THREE.EquirectangularReflectionMapping;
+            constellationTexture.colorSpace = THREE.SRGBColorSpace;
+            constellationSphere.material.map = constellationTexture;
+            scene.add(constellationSphere);
+        });
+    }
+    else scene.remove(constellationSphere);
+}
+
+export function calcPlanetOffset(planet) {
+    return new THREE.Vector3(((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 4), planet.radius, ((0 - planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 4))
 }

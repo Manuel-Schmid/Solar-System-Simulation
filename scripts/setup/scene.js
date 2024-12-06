@@ -11,8 +11,12 @@ const gltfLoader = new GLTFLoader(loadingManager);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-loadingManager.onLoad = ()=>{ document.getElementById('loading-screen').style.display = 'none' }
-loadingManager.onProgress = ( item, loaded, total ) =>  {document.getElementById('loading-progress').textContent = loaded + "/" + total }
+// lighting
+const sunLight = new THREE.PointLight(0xffffff, 3, 1000);
+sunLight.position.set(0, 0, 0);
+sunLight.decay = 0;
+const softAmbientLight = new THREE.AmbientLight(0x404040, 0.7); // Soft white ambient light
+const brightAmbientLight = new THREE.AmbientLight(0xffffff, 2.5);
 
 export {
     scene,
@@ -21,5 +25,8 @@ export {
     loadingManager,
     textureLoader,
     exrLoader,
-    gltfLoader
+    gltfLoader,
+    sunLight,
+    softAmbientLight,
+    brightAmbientLight
 };

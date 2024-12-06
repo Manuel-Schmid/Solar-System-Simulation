@@ -6,3 +6,5 @@ const PLANET_SCALE = DISTANCE_SCALE * 10 // multiply km distances by this
 const TIME = 60 * 60 * 6   // 6 = one year in 24 Seconds
 let distanceUnits = ["km", "au", "lm"] // units for distances
 let backgroundTextures = [false, "starmaps/celestial_grid_16k.png", "starmaps/constellation_bounds_8k.png", "starmaps/constellation_figures_8k.png"]
+const jwstScaleFactor = 0.0001
+const jwstCenterDistance = 0.005

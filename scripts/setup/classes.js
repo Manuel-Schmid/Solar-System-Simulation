@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import FakeGlowMaterial from "./GlowMaterial";
-import {PlanetRingGeometry} from "./utils";
+import FakeGlowMaterial from "../design/GlowMaterial";
+import {PlanetRingGeometry} from "../utils";
 import {scene, textureLoader} from "./scene";
 
 export class Planet {
@@ -316,5 +316,65 @@ export class OrbitTrail {
         this.positions.fill(0);
         this.numPoints = 0;
         this.orbitTrailGeometry.attributes.position.needsUpdate = true;
+    }
+    updateOrbitTrail(satellite, earth, isMoon=false) {
+        if (isMoon) { // todo: delete this if
+            if (SHOW_ORBITS) {
+                scene.add(this.orbitTrailObj)
+            } else {
+                scene.remove(this.orbitTrailObj)
+                return
+            }
+        }
+
+        const satelliteWorldPosition = new THREE.Vector3();
+        satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
+
+        // Calculate position relative to Earth
+        const satelliteRelativeToEarth = new THREE.Vector3();
+        satelliteRelativeToEarth.subVectors(satelliteWorldPosition, earth.position);
+
+        // Shift positions in the trail to make room for new points if the max length is reached
+        if (this.numPoints === this.maxPoints) {
+            for (let i = 0; i < (this.maxPoints - 1) * 3; i++) {
+                this.positions[i] = this.positions[i + 3]; // Shift positions array
+            }
+            this.numPoints--;
+        }
+
+        // Add the new point (relative to Earth)
+        const lastIndex = this.numPoints * 3;
+        this.positions[lastIndex] = satelliteRelativeToEarth.x;
+        this.positions[lastIndex + 1] = satelliteRelativeToEarth.y;
+        this.positions[lastIndex + 2] = satelliteRelativeToEarth.z;
+
+        this.numPoints = Math.min(this.numPoints + 1, this.maxPoints);
+
+        if (!isMoon) {
+            // Apply Earth's rotation only to the latest point (the new point)
+            const earthRotationMatrix = new THREE.Matrix4().makeRotationY(-earth.rotation.y); // Earth’s current rotation matrix around Y-axis
+
+            // Rotate only the newly added point (relative to Earth)
+            const latestPosition = new THREE.Vector3(
+                this.positions[lastIndex],
+                this.positions[lastIndex + 1],
+                this.positions[lastIndex + 2]
+            );
+
+            // Apply the rotation to the latest point
+            latestPosition.applyMatrix4(earthRotationMatrix);
+
+            // Update the position of the latest point after rotation
+            this.positions[lastIndex] = latestPosition.x;
+            this.positions[lastIndex + 1] = latestPosition.y;
+            this.positions[lastIndex + 2] = latestPosition.z;
+        }
+
+        // Update the trail geometry
+        this.orbitTrailGeometry.setDrawRange(0, this.numPoints);
+        this.orbitTrailGeometry.attributes.position.needsUpdate = true;
+
+        // Update the trail's position relative to Earth
+        this.orbitTrailObj.position.copy(earth.position);
     }
 }
