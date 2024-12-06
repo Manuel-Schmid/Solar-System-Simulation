@@ -295,6 +295,7 @@ function updateJWSTPosition() {
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
     if (inEarthSystem) {
+        earth.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? earth.rotationSpeed : -0.009
         // moon
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
@@ -306,8 +307,6 @@ function rotateTargetPlanet() {
         issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
         // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
-
-        earth.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? earth.rotationSpeed : -0.009
         return
     }
     if (targetPlanet && !targetPlanet.isSun) {
