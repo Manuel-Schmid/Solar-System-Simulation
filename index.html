@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar System</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <script src="scripts/data/constants.js"></script>
 <script src="scripts/data/variables.js"></script>
 <script type="module" src="scripts/main.js"></script>
+
 <div id="loading-screen">
     <span>[ Loading ... ]</span>
     <span id="loading-progress"></span>
@@ -18,13 +20,15 @@
         <span id="loaded-elements-right"></span>
     </div>
 </div>
-<div id="label-container" style="display: none">
+
+<div id="label-container" style="display: none;">
     <div id="distance-label" class="label"></div>
     <div id="speed-label" class="label"></div>
     <div id="weight-label" class="label"></div>
 </div>
+
 <div class="center-content">
-    <div id="action-label-container" class="center-label" style="display: none">
+    <div id="action-label-container" class="center-label" style="display: none;">
         [ <span id="action-label"></span> ]
     </div>
 </div>

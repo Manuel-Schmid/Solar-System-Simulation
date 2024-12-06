@@ -67,14 +67,24 @@ const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, nept
 camera.position.y = 40; // moving out the camera
 controls.update();
 
+// loading
 let firstLoad = true
+const leftElement = document.getElementById('loaded-elements-left');
+const rightElement = document.getElementById('loaded-elements-right');
+function addLoadedItem(item) {
+    leftElement.innerHTML += item + "<br>";
+    if (leftElement.scrollHeight > leftElement.offsetHeight) {
+        leftElement.innerHTML = leftElement.innerHTML.replace(item + "<br>", '');
+        rightElement.innerHTML += item + "<br>";
+    }
+}
+
 loadingManager.onProgress = ( item, loaded, total ) =>  {
     document.getElementById('loading-progress').innerHTML = loaded + "/" + total + "<br>" + item
-    document.getElementById('loaded-elements-left').innerHTML += item + "<br>"
-    document.getElementById('loaded-elements-right').innerHTML += item + "<br>"
+    addLoadedItem(item)
 }
 loadingManager.onLoad = ()=>{
-    // document.getElementById('loading-screen').style.display = 'none'
+    document.getElementById('loading-screen').style.display = 'none'
     if (firstLoad) {
         initEventListeners({
             controls: controls,
@@ -109,8 +119,8 @@ updateLighting()
 // scene.add(stars);
 
 // exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
-// exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
-exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
+exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
+// exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
 {
     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
     // scene.environment = starmapTexture; // Set environment for reflections

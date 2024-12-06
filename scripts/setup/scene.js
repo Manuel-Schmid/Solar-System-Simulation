@@ -1,6 +1,12 @@
 import * as THREE from "three";
 import {EXRLoader, GLTFLoader} from "three/addons";
 
+const originalWarn = console.warn;
+console.warn = function (message) {
+    if (message.includes('THREE.Material')) return; // Ignore specific warnings
+    originalWarn.apply(console, arguments); // Call original console.warn if message doesn't match
+};
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.00001, 1000 );
 const renderer = new THREE.WebGLRenderer({antialias: true});
