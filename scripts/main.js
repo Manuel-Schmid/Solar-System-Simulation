@@ -15,7 +15,7 @@ import {
     textureLoader,
     exrLoader,
     gltfLoader,
-    sunLight, loadingManager
+    sunLight, loadingManager, adjustFOV
 } from './setup/scene';
 import {OrbitTrail, Planet, Ring, Spacecraft} from "./setup/classes";
 import { initEventListeners } from "./eventListeners";
@@ -67,7 +67,14 @@ neptune.zVel = 5.4299794
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 
 
-spacecraft = new Spacecraft(1000, 3 * AU * DISTANCE_SCALE, 0, 0,0.04,0.34, 0.001, 0.005)
+spacecraft = new Spacecraft(
+    1000,
+    3 * AU * DISTANCE_SCALE, 0, 0,
+    0.04,
+    0.25,
+    0.001,
+    0.005
+);
 
 camera.position.y = 40; // moving out the camera
 controls.update();
@@ -349,7 +356,14 @@ function render() { // runs with 60 fps
         rotateTargetPlanet()
         if (spacecraftSelected) {
             spacecraft.updatePosition(planets, sun.sphere.position)
-            if (forwardPressed || backwardPressed || portPressed || starboardPressed) {
+            if (!portPressed && !starboardPressed) {
+                spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.obj.rotation.x, 0, 0.1);
+            }
+            if (!forwardPressed && !backwardPressed && (Math.round(camera.fov) !== STANDARD_FOV)) {
+                adjustFOV(STANDARD_FOV)
+            }
+            // Smoothly reset to no tilt
+            if (forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed) {
                 spacecraft.changeMomentum(spacecraftCameraOffset)
             }
         }

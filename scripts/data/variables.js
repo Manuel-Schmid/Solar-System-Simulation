@@ -8,12 +8,13 @@ let SHOW_VECTORS = false;
 let REALISTIC_LIGHTING = true;
 let TRUE_ROTATION_SPEEDS = false;
 let PAUSED = false;
+let STANDARD_FOV = 75
 
 // program variables
 let targetPlanet = null; // Default to the sun
 let spacecraft = null
 let spacecraftSelected = false;
-let spacecraftGravity = true;
+let spacecraftGravity = false;
 let jwstSelected = false;
 let inEarthSystem = false;
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet | todo: change back
@@ -28,4 +29,6 @@ let forwardPressed = false;
 let backwardPressed = false;
 let portPressed = false;
 let starboardPressed = false;
+let rotatePortPressed = false;
+let rotateStarboardPressed = false;
 

@@ -41,6 +41,12 @@ export function initEventListeners({
             if (event.key === 'ArrowRight') {
                 starboardPressed = false;
             }
+            if (event.key.toLowerCase() === 'a') {
+                rotatePortPressed = false;
+            }
+            if (event.key.toLowerCase() === 'd') {
+                rotateStarboardPressed = false;
+            }
         }
     });
     window.addEventListener('keydown', (event) => {
@@ -61,6 +67,12 @@ export function initEventListeners({
             }
             if (event.key === 'ArrowRight') {
                 starboardPressed = true;
+            }
+            if (event.key.toLowerCase() === 'a') {
+                rotatePortPressed = true;
+            }
+            if (event.key.toLowerCase() === 'd') {
+                rotateStarboardPressed = true;
             }
         }
         if (event.key.toLowerCase() === 'l') { // switch lighting
@@ -91,7 +103,7 @@ export function initEventListeners({
             updateLabel()
             return
         }
-        if (event.key.toLowerCase() === 'd') { // cycle distance unit
+        if (event.key.toLowerCase() === 'u') { // cycle distance unit
             if (SHOW_LABEL && ((targetPlanet && !targetPlanet.isSun) || spacecraftSelected)) { // only update if planet is selected
                 const unit_index = distanceUnits.indexOf(distanceUnit)
                 if (unit_index < distanceUnits.length - 1) distanceUnit = distanceUnits[unit_index + 1]
@@ -216,6 +228,8 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === 'x') {
             isCameraLocked = false;
+            jwstSelected = false;
+            spacecraftSelected = false;
             isCameraSunLocked = false
             pushTextToLabel('Topdown view')
 
@@ -280,6 +294,7 @@ export function initEventListeners({
             for (const planet of planets) {
                 planet.resetOrbit()
             }
+            spacecraft.resetOrbit()
         }
         if (event.key.toLowerCase() === 'v') {
             SHOW_VECTORS = !SHOW_VECTORS;
