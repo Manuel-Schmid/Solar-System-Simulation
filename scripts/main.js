@@ -365,11 +365,14 @@ function render() { // runs with 60 fps
             } else {
                 spacecraft.flameMaterial.uniforms.time.value += 0.25;
             }
-            if (!forwardPressed && !backwardPressed && (Math.round(camera.fov) !== STANDARD_FOV)) {
+            console.log(handbrakePressed)
+            if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== STANDARD_FOV)) {
+                console.log("released handbrake")
+                spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.obj.rotation.x, 0, 0.1);
                 adjustFOV(STANDARD_FOV)
             }
             // Smoothly reset to no tilt
-            if (forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed) {
+            if (forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed || handbrakePressed) {
                 spacecraft.changeMomentum(spacecraftCameraOffset)
             }
         }
@@ -401,7 +404,6 @@ function render() { // runs with 60 fps
             controls.update();
         }
     } else if (spacecraftSelected) {
-        console.log(spacecraft.obj.rotation)
         if (isCameraLocked) {
             if (!targetPlanet) {
                 camera.position.copy(spacecraft.obj.position).add(spacecraftCameraOffset);

@@ -31,4 +31,5 @@ let portPressed = false;
 let starboardPressed = false;
 let rotatePortPressed = false;
 let rotateStarboardPressed = false;
+let handbrakePressed = false;
 

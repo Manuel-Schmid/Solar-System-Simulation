@@ -2,6 +2,7 @@ import * as THREE from "three";
 import FakeGlowMaterial from "../design/GlowMaterial";
 import {PlanetRingGeometry} from "../utils";
 import {adjustFOV, camera, gltfLoader, scene, textureLoader} from "./scene";
+import {updateLabel} from "../design/designUtils";
 
 export class Spacecraft {
     constructor(mass, x, y, z, angularVelocity, acceleration, radius, height) {
@@ -167,6 +168,13 @@ export class Spacecraft {
 
             adjustFOV(STANDARD_FOV * 0.85)
         }
+        if (handbrakePressed) {
+            this.xVel = 0
+            this.zVel = 0
+            adjustFOV(STANDARD_FOV * 0.85)
+            updateLabel()
+            this.obj.rotation.x = THREE.MathUtils.lerp(this.obj.rotation.x, tiltAngle, 0.1);
+        }
         if (portPressed) {
             this.xVel += leftX * lateralAcceleration;
             this.zVel += leftZ * lateralAcceleration;
@@ -218,6 +226,7 @@ export class Spacecraft {
             this.zVel += addedZVel // in km/s
         }
 
+        // console.log(this.obj.position)
         this.obj.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
         this.obj.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 

@@ -50,6 +50,9 @@ export function initEventListeners({
             if (event.key.toLowerCase() === 'd') {
                 rotateStarboardPressed = false;
             }
+            if (event.key === 'Shift') {
+                handbrakePressed = false;
+            }
         }
     });
     window.addEventListener('keydown', (event) => {
@@ -76,6 +79,9 @@ export function initEventListeners({
             }
             if (event.key.toLowerCase() === 'd') {
                 rotateStarboardPressed = true;
+            }
+            if (event.key === 'Shift') {
+                handbrakePressed = true;
             }
         }
         if (event.key.toLowerCase() === 'l') { // switch lighting
@@ -121,6 +127,8 @@ export function initEventListeners({
             targetPlanet = null
             spacecraftSelected = true
             isCameraLocked = true
+            setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
+            spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5);
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
             if (spacecraftSelected) {
@@ -168,7 +176,7 @@ export function initEventListeners({
             }
             return
         }
-        if (event.shiftKey && !spacecraftSelected) {
+        if ((event.key === 'Shift') && !spacecraftSelected) {
             if (targetPlanet || jwstSelected) {
                 isCameraSunLocked = !isCameraSunLocked
                 pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
