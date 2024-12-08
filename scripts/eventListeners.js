@@ -84,6 +84,13 @@ export function initEventListeners({
                 handbrakePressed = true;
             }
         }
+        if (spacecraftSelected && targetPlanet) {
+            if (event.key.toLowerCase() === 'z') {
+                spacecraftMatchVelocity = !spacecraftMatchVelocity;
+                pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
+                return
+            }
+        }
         if (event.key.toLowerCase() === 'l') { // switch lighting
             REALISTIC_LIGHTING = !REALISTIC_LIGHTING;
             pushTextToLabel(REALISTIC_LIGHTING ? 'Enable realistic lighting' : 'Disable realistic lighting');

@@ -15,6 +15,7 @@ let targetPlanet = null; // Default to the sun
 let spacecraft = null
 let spacecraftSelected = false;
 let spacecraftGravity = false;
+let spacecraftMatchVelocity = false;
 let jwstSelected = false;
 let inEarthSystem = false;
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet | todo: change back

@@ -19,8 +19,10 @@ export class Spacecraft {
         this.flameMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 }, // For animation
-                color1: { value: new THREE.Color(0xCE4F00) }, // Base color (red)  0x00A8CE
-                color2: { value: new THREE.Color(0xCE8D00) }, // Tip color (orange)  0x00A8CE
+                // color1: { value: new THREE.Color(0xCE4F00) }, // Base color (red)  0x00A8CE
+                // color2: { value: new THREE.Color(0xCE8D00) }, // Tip color (orange)  0x00A8CE
+                color1: { value: new THREE.Color(0x0030ce) }, // Base color (red)  0x00A8CE
+                color2: { value: new THREE.Color( 0x00A8CE) }, // Tip color (orange)  0x00A8CE
             },
             vertexShader: `
         varying vec3 vPosition;
@@ -66,7 +68,7 @@ export class Spacecraft {
         });
 
 
-        const shipLight = new THREE.PointLight(0xFF4D00, 0.1, 10); // 0x500505 0x7A1515
+        const shipLight = new THREE.PointLight(0xFF4D00, 0.03, 10); // 0x500505 0x7A1515
         shipLight.position.set(0, 0, 0); // Centered relative to the spaceship
 
         const flameGeometry = new THREE.ConeGeometry(0.5, 2, 32); // Radius, height, segments
@@ -92,6 +94,12 @@ export class Spacecraft {
             this.obj.position.set(x, y, z)
 
             this.obj.add(shipLight);
+            // Set the lightGroup on all materials of the spaceship
+            this.obj.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.lightGroup = 2; // Match the light's lightGroup
+                }
+            });
 
             this.obj.add(flame1)
             this.obj.flame1 = flame1;
@@ -187,11 +195,11 @@ export class Spacecraft {
 
             this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, tiltAngle, 0.1);
         }
-        if (rotatePortPressed) {
+        if (rotatePortPressed && !targetPlanet) {
             this.obj.rotation.y += this.angularVelocity;
             this.updateCameraOffsetRelative(spacecraftCameraOffset, this.angularVelocity)
         }
-        if (rotateStarboardPressed) {
+        if (rotateStarboardPressed && !targetPlanet) {
             this.obj.rotation.y -= this.angularVelocity;
             this.updateCameraOffsetRelative(spacecraftCameraOffset, -this.angularVelocity)
         }
@@ -204,19 +212,26 @@ export class Spacecraft {
     updatePosition(planets, sunPosition) {
         let addedXVel = 0;
         let addedZVel = 0;
-        if (spacecraftGravity) {
-            let totalFx = 0;
-            let totalFz = 0;
-            for (const planet of planets) {
-                const forces = this.attraction(planet)
-                totalFx += forces[0].force_x // Force in N
-                totalFz += forces[0].force_z // Force in N
-            }
 
-            addedXVel = ((totalFx / this.mass)/1000) * TIME
-            addedZVel = ((totalFz / this.mass)/1000) * TIME
-            this.xVel += addedXVel // in km/s
-            this.zVel += addedZVel // in km/s
+        if (!targetPlanet) spacecraftMatchVelocity = false
+        if (spacecraftMatchVelocity) {
+            this.xVel = targetPlanet.xVel
+            this.zVel = targetPlanet.zVel
+        } else {
+            if (spacecraftGravity) {
+                let totalFx = 0;
+                let totalFz = 0;
+                for (const planet of planets) {
+                    const forces = this.attraction(planet)
+                    totalFx += forces[0].force_x // Force in N
+                    totalFz += forces[0].force_z // Force in N
+                }
+
+                addedXVel = ((totalFx / this.mass)/1000) * TIME
+                addedZVel = ((totalFz / this.mass)/1000) * TIME
+                this.xVel += addedXVel // in km/s
+                this.zVel += addedZVel // in km/s
+            }
         }
 
         this.obj.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)

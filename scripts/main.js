@@ -370,7 +370,7 @@ function render() { // runs with 60 fps
                 adjustFOV(STANDARD_FOV)
             }
             // Smoothly reset to no tilt
-            if (forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed || handbrakePressed) {
+            if ((forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed || handbrakePressed) && !spacecraftMatchVelocity) {
                 spacecraft.changeMomentum(spacecraftCameraOffset)
             }
         }
@@ -411,7 +411,8 @@ function render() { // runs with 60 fps
                 const direction = new THREE.Vector3();
                 direction.subVectors(targetPlanet.sphere.position, spacecraft.obj.position);
                 const yaw = Math.atan2(direction.x, direction.z); // Use atan2 to get the angle in the horizontal plane
-                spacecraft.obj.rotation.set(0, yaw, 0); // Keep x and z rotations at 0
+                spacecraft.obj.rotation.y = THREE.MathUtils.lerp(spacecraft.obj.rotation.y, yaw, 0.2);
+                // spacecraft.obj.rotation.set(0, yaw, 0); // Keep x and z rotations at 0
 
                 const globalCameraPosition = new THREE.Vector3();
                 spacecraft.obj.cameraHelper.getWorldPosition(globalCameraPosition);
