@@ -201,13 +201,6 @@ export class Spacecraft {
         rotationMatrix.makeRotationY(rotation);  // Rotate around the Y-axis (z-rotation)
         spacecraftCameraOffset.applyMatrix4(rotationMatrix);  // Apply the rotation to the camera offset
     }
-    updateCameraOffsetAbsolute(spacecraftCameraOffset, rotation) { // rotate *to* this degree
-        const rotationMatrix = new THREE.Matrix4();
-        rotationMatrix.makeRotationY(rotation);
-
-        spacecraftCameraOffset.set(0, 0.008, -0.02);
-        spacecraftCameraOffset.applyMatrix4(rotationMatrix);
-    }
     updatePosition(planets, sunPosition) {
         let addedXVel = 0;
         let addedZVel = 0;
@@ -226,7 +219,6 @@ export class Spacecraft {
             this.zVel += addedZVel // in km/s
         }
 
-        // console.log(this.obj.position)
         this.obj.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
         this.obj.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
@@ -296,10 +288,6 @@ export class Spacecraft {
         const verticalOffset = 0.008; // Vertical offset
         const xOffset = -offsetDistance * Math.sin(angle);  // Negative for "behind" effect
         const zOffset = -offsetDistance * Math.cos(angle);   // Positive for staying behind the spacecraft
-
-        // console.log('xOffset:', xOffset, 'zOffset:', zOffset);
-        // console.log('Rotation (y):', this.obj.rotation.y);
-
         return new THREE.Vector3(xOffset, verticalOffset, zOffset);
     }
     drawOrbits() {

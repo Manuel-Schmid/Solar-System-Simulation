@@ -102,10 +102,20 @@ export function updateLabel() {
             speedLabel.textContent = v.toPrecision(4) + " km/s"
             weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
         } else if (spacecraftSelected) {
-            distanceLabel.textContent = convertDistance(spacecraft.distanceToSun, distanceUnit, AU, LM)
+            if (targetPlanet) {
+                const distance_x = ((targetPlanet.sphere.position.x - spacecraft.obj.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
+                const distance_z = ((targetPlanet.sphere.position.z - spacecraft.obj.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
+                const distance = (Math.sqrt(distance_x ** 2 + distance_z ** 2)) // distance in km
+
+                distanceLabel.textContent = convertDistance(distance / 1000, distanceUnit, AU, LM)
+                weightLabel.textContent = targetPlanet.name;
+            }
+            else {
+                distanceLabel.textContent = convertDistance(spacecraft.distanceToSun, distanceUnit, AU, LM)
+                weightLabel.textContent = "";
+            }
             const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.zVel ** 2)
             speedLabel.textContent = v.toPrecision(4) + " km/s"
-            weightLabel.textContent = "";
         }
 
         labelContainer.style.display = '';

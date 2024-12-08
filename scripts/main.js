@@ -365,9 +365,7 @@ function render() { // runs with 60 fps
             } else {
                 spacecraft.flameMaterial.uniforms.time.value += 0.25;
             }
-            console.log(handbrakePressed)
             if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== STANDARD_FOV)) {
-                console.log("released handbrake")
                 spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.obj.rotation.x, 0, 0.1);
                 adjustFOV(STANDARD_FOV)
             }
@@ -418,12 +416,8 @@ function render() { // runs with 60 fps
                 const globalCameraPosition = new THREE.Vector3();
                 spacecraft.obj.cameraHelper.getWorldPosition(globalCameraPosition);
 
-                console.log(globalCameraPosition)
-                console.log(spacecraft.obj.position)
-
                 camera.position.copy(globalCameraPosition);
-
-                camera.lookAt(spacecraft.obj.position);
+                camera.lookAt(targetPlanet.sphere.position); // spacecraft.obj.position
             }
         } else {
             controls.target.copy(spacecraft.obj.position);
