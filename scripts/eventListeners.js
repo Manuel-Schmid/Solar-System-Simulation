@@ -47,6 +47,9 @@ export function initEventListeners({
             if (event.key.toLowerCase() === 'd') {
                 rotateStarboardPressed = false;
             }
+            if (event.key.toLowerCase() === 'd') {
+                rotateStarboardPressed = false;
+            }
         }
     });
     window.addEventListener('keydown', (event) => {
@@ -165,7 +168,7 @@ export function initEventListeners({
             }
             return
         }
-        if (event.shiftKey) {
+        if (event.shiftKey && !spacecraftSelected) {
             if (targetPlanet || jwstSelected) {
                 isCameraSunLocked = !isCameraSunLocked
                 pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
@@ -262,6 +265,8 @@ export function initEventListeners({
                 if (SHOW_ORBITS) scene.add(planet.orbitLine);
                 else scene.remove(planet.orbitLine);
             }
+            if (SHOW_ORBITS) scene.add(spacecraft.orbitLine)
+            else scene.remove(spacecraft.orbitLine);
             if (inEarthSystem) {
                 moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
                 issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)

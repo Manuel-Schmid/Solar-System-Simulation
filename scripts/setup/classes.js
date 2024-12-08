@@ -15,13 +15,98 @@ export class Spacecraft {
         this.distanceTosun = 0;
         this.tiltAngle = 0
 
+        this.flameMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 }, // For animation
+                color1: { value: new THREE.Color(0xCE4F00) }, // Base color (red)  0x00A8CE
+                color2: { value: new THREE.Color(0xCE8D00) }, // Tip color (orange)  0x00A8CE
+            },
+            vertexShader: `
+        varying vec3 vPosition;
+        void main() {
+            vPosition = position; // Pass position to fragment shader
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+            fragmentShader: `
+        uniform float time;
+        uniform vec3 color1; // Base color
+        uniform vec3 color2; // Tip color
+        varying vec3 vPosition;
+
+        // 2D noise function
+        float noise(vec2 uv) {
+            return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+            // Dynamic sine wave intensity for flickering
+            float flicker = sin(vPosition.y * 10.0 - time * 5.0) * 0.5 + 0.75; // Stronger base value
+
+            // Add procedural noise for texture
+            float flameNoise = noise(vec2(vPosition.y * 5.0, time * 0.5)) * 0.5 + 0.5;
+
+            // Blend base color and tip color based on height
+            float heightFactor = smoothstep(0.0, 1.0, vPosition.y + 0.5); // Adjust range if necessary
+            vec3 flameColor = mix(color1, color2, heightFactor);
+
+            // Combine flicker, noise, and height factor for final intensity
+            float intensity = flicker * flameNoise + 0.1; // Boost the intensity slightly
+
+            // Add some fading transparency toward the edges
+            float alpha = smoothstep(0.0, 1.0, intensity) * 0.8; // Make less transparent
+
+            // Output the flame color with transparency
+            gl_FragColor = vec4(flameColor * intensity, alpha);
+        }
+    `,
+            transparent: true, // Allows blending with the background
+            blending: THREE.AdditiveBlending, // Glow effect
+        });
+
+
+        const shipLight = new THREE.PointLight(0xFF4D00, 0.1, 10); // 0x500505 0x7A1515
+        shipLight.position.set(0, 0, 0); // Centered relative to the spaceship
+
+        const flameGeometry = new THREE.ConeGeometry(0.5, 2, 32); // Radius, height, segments
+        const flame1 = new THREE.Mesh(flameGeometry, this.flameMaterial);
+        const flame2 = new THREE.Mesh(flameGeometry, this.flameMaterial);
+
+        flame1.position.set(1, -1.2, -2.3)
+        flame1.scale.set(1.1,1,1);
+        flame1.rotation.x = THREE.MathUtils.degToRad(-90)
+
+        flame2.position.set(-1, -1.2, -2.3)
+        flame2.scale.set(1.1,1,1);
+        flame2.rotation.x = THREE.MathUtils.degToRad(-90)
+
+        const cameraHelper = new THREE.Object3D();
+        cameraHelper.position.set(0, 3, -10);
+
         // model
         gltfLoader.load('models/spacecraft.glb' , (gltf) =>
         {
             this.obj = gltf.scene
-            this.obj.rotation.y = THREE.MathUtils.degToRad(180)
             this.obj.scale.set(radius, radius, radius);
             this.obj.position.set(x, y, z)
+
+            this.obj.add(shipLight);
+
+            this.obj.add(flame1)
+            this.obj.flame1 = flame1;
+            this.obj.add(flame2)
+            this.obj.flame2 = flame2;
+
+            this.obj.flame1.visible = false;
+            this.obj.flame2.visible = false;
+
+            this.obj.add(cameraHelper);
+            this.obj.cameraHelper = cameraHelper;
+
+            // todo:
+            // const axesHelper = new THREE.AxesHelper(10);
+            // this.obj.add(axesHelper);
+
             scene.add(this.obj)
         });
 
@@ -58,11 +143,12 @@ export class Spacecraft {
         scene.add(this.orbitLine);
     }
     changeMomentum(spacecraftCameraOffset) {
+        // const angle = (targetPlanet) ? this.obj.rotation.y + THREE.MathUtils.degToRad(180) : this.obj.rotation.y;
         const angle = this.obj.rotation.y;
-        const forwardX = Math.sin(angle + Math.PI / 2);
-        const forwardZ = Math.cos(angle + Math.PI / 2);
-        const leftX = Math.sin(angle); // X component of left direction
-        const leftZ = Math.cos(angle); // Z component of left direction
+        const forwardX = Math.sin(angle);
+        const forwardZ = Math.cos(angle);
+        const leftX = Math.sin(angle + Math.PI / 2);
+        const leftZ = Math.cos(angle + Math.PI / 2);
 
         const lateralAcceleration = this.acceleration * 0.6; // left/right acceleration is slower
         const tiltAngle = 0.2; // Maximum tilt angle
@@ -71,6 +157,8 @@ export class Spacecraft {
             this.xVel += forwardX * this.acceleration;
             this.zVel += forwardZ * this.acceleration;
 
+            this.obj.flame1.visible = true;
+            this.obj.flame2.visible = true;
             adjustFOV(STANDARD_FOV * 1.2)
         }
         if (backwardPressed) {
@@ -80,30 +168,37 @@ export class Spacecraft {
             adjustFOV(STANDARD_FOV * 0.85)
         }
         if (portPressed) {
-            this.xVel -= leftX * lateralAcceleration;
-            this.zVel -= leftZ * lateralAcceleration;
-
-            this.obj.rotation.x = THREE.MathUtils.lerp(this.obj.rotation.x, tiltAngle, 0.1);
-        }
-        if (starboardPressed) {
             this.xVel += leftX * lateralAcceleration;
             this.zVel += leftZ * lateralAcceleration;
 
-            this.obj.rotation.x = THREE.MathUtils.lerp(this.obj.rotation.x, -tiltAngle, 0.1);
+            this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, -tiltAngle, 0.1);
+        }
+        if (starboardPressed) {
+            this.xVel -= leftX * lateralAcceleration;
+            this.zVel -= leftZ * lateralAcceleration;
+
+            this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, tiltAngle, 0.1);
         }
         if (rotatePortPressed) {
             this.obj.rotation.y += this.angularVelocity;
-            this.updateCameraOffset(spacecraftCameraOffset, this.angularVelocity)
+            this.updateCameraOffsetRelative(spacecraftCameraOffset, this.angularVelocity)
         }
         if (rotateStarboardPressed) {
             this.obj.rotation.y -= this.angularVelocity;
-            this.updateCameraOffset(spacecraftCameraOffset, -this.angularVelocity)
+            this.updateCameraOffsetRelative(spacecraftCameraOffset, -this.angularVelocity)
         }
     }
-    updateCameraOffset(spacecraftCameraOffset, rotation) {
+    updateCameraOffsetRelative(spacecraftCameraOffset, rotation) { // rotate *by* this degree
         const rotationMatrix = new THREE.Matrix4();
         rotationMatrix.makeRotationY(rotation);  // Rotate around the Y-axis (z-rotation)
         spacecraftCameraOffset.applyMatrix4(rotationMatrix);  // Apply the rotation to the camera offset
+    }
+    updateCameraOffsetAbsolute(spacecraftCameraOffset, rotation) { // rotate *to* this degree
+        const rotationMatrix = new THREE.Matrix4();
+        rotationMatrix.makeRotationY(rotation);
+
+        spacecraftCameraOffset.set(0, 0.008, -0.02);
+        spacecraftCameraOffset.applyMatrix4(rotationMatrix);
     }
     updatePosition(planets, sunPosition) {
         let addedXVel = 0;
@@ -187,11 +282,15 @@ export class Spacecraft {
         }
     }
     calcSpacecraftCameraOffset() { // offset behind spacecraft
-        const angle = this.obj.rotation.y + THREE.MathUtils.degToRad(90);
+        const angle = this.obj.rotation.y;
         const offsetDistance = 0.02; // Distance behind the spacecraft
         const verticalOffset = 0.008; // Vertical offset
-        const xOffset = -offsetDistance * Math.sin(angle);
-        const zOffset = -offsetDistance * Math.cos(angle);
+        const xOffset = -offsetDistance * Math.sin(angle);  // Negative for "behind" effect
+        const zOffset = -offsetDistance * Math.cos(angle);   // Positive for staying behind the spacecraft
+
+        // console.log('xOffset:', xOffset, 'zOffset:', zOffset);
+        // console.log('Rotation (y):', this.obj.rotation.y);
+
         return new THREE.Vector3(xOffset, verticalOffset, zOffset);
     }
     drawOrbits() {

@@ -95,7 +95,7 @@ export function updateLabel() {
     if (!SHOW_LABEL || (!targetPlanet && !spacecraftSelected)) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
-        if (targetPlanet) {
+        if (targetPlanet && !spacecraft) {
             if (targetPlanet.isSun) distanceLabel.textContent = ""
             else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
             const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
