@@ -72,9 +72,10 @@ spacecraft = new Spacecraft(
     0, 0, -3 * AU * DISTANCE_SCALE,
     0.04,
     0.25,
-    0.001,
-    0.005
+    0.0001
 );
+spacecraftCameraOffset = new THREE.Vector3(0, 8 * spacecraft.scale, 20 * spacecraft.scale);
+
 
 camera.position.y = 40; // moving out the camera
 controls.update();
@@ -363,7 +364,7 @@ function render() { // runs with 60 fps
                 spacecraft.obj.flame1.visible = false;
                 spacecraft.obj.flame2.visible = false;
             } else {
-                spacecraft.flameMaterial.uniforms.time.value += 0.25;
+                spacecraft.flameMaterial.uniforms.time.value += 2500 * spacecraft.scale;
             }
             if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== STANDARD_FOV)) {
                 spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.obj.rotation.x, 0, 0.1);

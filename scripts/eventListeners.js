@@ -135,7 +135,7 @@ export function initEventListeners({
             spacecraftSelected = true
             isCameraLocked = true
             setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
-            spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5);
+            if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
             if (spacecraftSelected) {

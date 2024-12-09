@@ -5,7 +5,7 @@ import {adjustFOV, camera, gltfLoader, scene, textureLoader} from "./scene";
 import {updateLabel} from "../design/designUtils";
 
 export class Spacecraft {
-    constructor(mass, x, y, z, angularVelocity, acceleration, radius, height) {
+    constructor(mass, x, y, z, angularVelocity, acceleration, scale) {
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
@@ -13,74 +13,82 @@ export class Spacecraft {
         this.acceleration = acceleration;
         this.obj = null;
         this.orbits = [];
+        this.scale = scale
         this.distanceTosun = 0;
         this.tiltAngle = 0
 
         this.flameMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 time: { value: 0 }, // For animation
-                // color1: { value: new THREE.Color(0xCE4F00) }, // Base color (red)  0x00A8CE
-                // color2: { value: new THREE.Color(0xCE8D00) }, // Tip color (orange)  0x00A8CE
-                color1: { value: new THREE.Color(0x0030ce) }, // Base color (red)  0x00A8CE
-                color2: { value: new THREE.Color( 0x00A8CE) }, // Tip color (orange)  0x00A8CE
+                scale: { value: scale },
+                originalScale: { value: 0.001 },
+                // color1: { value: new THREE.Color(0xCE4F00) }, // Base color  0x00A8CE
+                // color2: { value: new THREE.Color(0xCE8D00) }, // Tip color  0x00A8CE
+                color1: { value: new THREE.Color(0x0030ce) }, // Base color  0x00A8CE
+                color2: { value: new THREE.Color( 0x00A8CE) }, // Tip color  0x00A8CE
             },
             vertexShader: `
-        varying vec3 vPosition;
-        void main() {
-            vPosition = position; // Pass position to fragment shader
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
+    varying vec3 vPosition;
+    void main() {
+        vPosition = position; // Pass position to fragment shader
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
     `,
             fragmentShader: `
-        uniform float time;
-        uniform vec3 color1; // Base color
-        uniform vec3 color2; // Tip color
-        varying vec3 vPosition;
+    uniform float time;
+    uniform float scale; // Current scale
+    uniform float originalScale; // Reference scale (0.001)
+    uniform vec3 color1; // Base color
+    uniform vec3 color2; // Tip color
+    varying vec3 vPosition;
 
-        // 2D noise function
-        float noise(vec2 uv) {
-            return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
-        }
+    // 2D noise function
+    float noise(vec2 uv) {
+        return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+    }
 
-        void main() {
-            // Dynamic sine wave intensity for flickering
-            float flicker = sin(vPosition.y * 10.0 - time * 5.0) * 0.5 + 0.75; // Stronger base value
+    void main() {
+        // Compute the normalized position based on the scale ratio
+        float scaleRatio = scale / originalScale;
+        float normalizedY = vPosition.y * scaleRatio;
 
-            // Add procedural noise for texture
-            float flameNoise = noise(vec2(vPosition.y * 5.0, time * 0.5)) * 0.5 + 0.5;
+        // Add procedural noise for texture, adjusted for scale ratio
+        float flameNoise = noise(vec2(normalizedY * 5.0, time * 0.5)) * 0.5 + 0.5;
 
-            // Blend base color and tip color based on height
-            float heightFactor = smoothstep(0.0, 1.0, vPosition.y + 0.5); // Adjust range if necessary
-            vec3 flameColor = mix(color1, color2, heightFactor);
+        // Blend base color and tip color based on height, adjusted for scale ratio
+        float heightFactor = smoothstep(0.0, 1.0, normalizedY + 0.5);
+        vec3 flameColor = mix(color1, color2, heightFactor);
 
-            // Combine flicker, noise, and height factor for final intensity
-            float intensity = flicker * flameNoise + 0.1; // Boost the intensity slightly
+        // Combine noise and height factor for final intensity
+        float intensity = flameNoise;
 
-            // Add some fading transparency toward the edges
-            float alpha = smoothstep(0.0, 1.0, intensity) * 0.8; // Make less transparent
+        // Normalize intensity for additive blending consistency
+        intensity = clamp(intensity, 0.0, 1.0); // Prevent oversaturation
 
-            // Output the flame color with transparency
-            gl_FragColor = vec4(flameColor * intensity, alpha);
-        }
+        // Add fading transparency toward the edges
+        float alpha = smoothstep(0.0, 1.0, intensity) * 2.8;
+
+        // Output the flame color with transparency
+        gl_FragColor = vec4(flameColor * intensity, alpha);
+    }
     `,
             transparent: true, // Allows blending with the background
             blending: THREE.AdditiveBlending, // Glow effect
         });
 
-
         const shipLight = new THREE.PointLight(0xFF4D00, 0.03, 10); // 0x500505 0x7A1515
         shipLight.position.set(0, 0, 0); // Centered relative to the spaceship
 
-        const flameGeometry = new THREE.ConeGeometry(0.5, 2, 32); // Radius, height, segments
+        const flameGeometry = new THREE.ConeGeometry(500 * scale, 2000 * scale, 32); //
         const flame1 = new THREE.Mesh(flameGeometry, this.flameMaterial);
         const flame2 = new THREE.Mesh(flameGeometry, this.flameMaterial);
 
         flame1.position.set(1, -1.2, -2.3)
-        flame1.scale.set(1.1,1,1);
+        flame1.scale.set(1.1 * 0.001 / scale,0.001 / scale,0.001 / scale);
         flame1.rotation.x = THREE.MathUtils.degToRad(-90)
 
         flame2.position.set(-1, -1.2, -2.3)
-        flame2.scale.set(1.1,1,1);
+        flame2.scale.set(1.1 * 0.001 / scale,0.001 / scale,0.001 / scale);
         flame2.rotation.x = THREE.MathUtils.degToRad(-90)
 
         const cameraHelper = new THREE.Object3D();
@@ -90,16 +98,10 @@ export class Spacecraft {
         gltfLoader.load('models/spacecraft.glb' , (gltf) =>
         {
             this.obj = gltf.scene
-            this.obj.scale.set(radius, radius, radius);
+            this.obj.scale.set(scale, scale, scale);
             this.obj.position.set(x, y, z)
 
             this.obj.add(shipLight);
-            // Set the lightGroup on all materials of the spaceship
-            this.obj.traverse((child) => {
-                if (child.isMesh) {
-                    child.material.lightGroup = 2; // Match the light's lightGroup
-                }
-            });
 
             this.obj.add(flame1)
             this.obj.flame1 = flame1;
@@ -299,8 +301,8 @@ export class Spacecraft {
     }
     calcSpacecraftCameraOffset() { // offset behind spacecraft
         const angle = this.obj.rotation.y;
-        const offsetDistance = 0.02; // Distance behind the spacecraft
-        const verticalOffset = 0.008; // Vertical offset
+        const offsetDistance = 20 * this.scale; // Distance behind the spacecraft
+        const verticalOffset = 8 * this.scale; // Vertical offset
         const xOffset = -offsetDistance * Math.sin(angle);  // Negative for "behind" effect
         const zOffset = -offsetDistance * Math.cos(angle);   // Positive for staying behind the spacecraft
         return new THREE.Vector3(xOffset, verticalOffset, zOffset);
