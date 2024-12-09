@@ -83,12 +83,12 @@ export class Spacecraft {
         const flame1 = new THREE.Mesh(flameGeometry, this.flameMaterial);
         const flame2 = new THREE.Mesh(flameGeometry, this.flameMaterial);
 
-        flame1.position.set(1, -1.2, -2.3)
-        flame1.scale.set(1.1 * 0.001 / scale,0.001 / scale,0.001 / scale);
+        flame1.position.set(1.04, -1.2, -2.3)
+        flame1.scale.set(0.001 / scale,0.001 / scale,0.0007 / scale);
         flame1.rotation.x = THREE.MathUtils.degToRad(-90)
 
-        flame2.position.set(-1, -1.2, -2.3)
-        flame2.scale.set(1.1 * 0.001 / scale,0.001 / scale,0.001 / scale);
+        flame2.position.set(-1.04, -1.2, -2.3)
+        flame2.scale.set(0.001 / scale,0.001 / scale,0.0007 / scale);
         flame2.rotation.x = THREE.MathUtils.degToRad(-90)
 
         const cameraHelper = new THREE.Object3D();

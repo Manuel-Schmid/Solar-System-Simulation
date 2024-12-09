@@ -406,14 +406,15 @@ function render() { // runs with 60 fps
         if (isCameraLocked) {
             if (!targetPlanet) {
                 camera.position.copy(spacecraft.obj.position).add(spacecraftCameraOffset);
-                camera.lookAt(spacecraft.obj.position);
+                const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(spacecraft.obj.quaternion);
+                camera.lookAt(spacecraft.obj.position.clone().add(forward.multiplyScalar(10)));
             }
             else {
                 const direction = new THREE.Vector3();
                 direction.subVectors(targetPlanet.sphere.position, spacecraft.obj.position);
                 const yaw = Math.atan2(direction.x, direction.z); // Use atan2 to get the angle in the horizontal plane
-                spacecraft.obj.rotation.y = THREE.MathUtils.lerp(spacecraft.obj.rotation.y, yaw, 0.2);
-                // spacecraft.obj.rotation.set(0, yaw, 0); // Keep x and z rotations at 0
+                spacecraft.obj.rotation.y = THREE.MathUtils.lerp(spacecraft.obj.rotation.y, yaw, 0.1);
+                // spacecraft.obj.rotation.y = yaw; // no rotate animation
 
                 const globalCameraPosition = new THREE.Vector3();
                 spacecraft.obj.cameraHelper.getWorldPosition(globalCameraPosition);
