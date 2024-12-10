@@ -72,7 +72,7 @@ spacecraft = new Spacecraft(
     0, 0, -3 * AU * DISTANCE_SCALE,
     0.04,
     0.25,
-    0.0001,
+    0.0001, // 0.000001 (causes vector-line-bugs)
     0.2,
 );
 spacecraftCameraOffset = new THREE.Vector3(0, 8 * spacecraft.scale, 20 * spacecraft.scale);

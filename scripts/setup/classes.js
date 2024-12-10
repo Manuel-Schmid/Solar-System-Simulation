@@ -96,7 +96,7 @@ export class Spacecraft {
         cameraHelper.position.set(0, 3, -10);
 
         const firstPersonCameraHelper = new THREE.Object3D();
-        firstPersonCameraHelper.position.set(0, scale * 10000, 0);
+        firstPersonCameraHelper.position.set(0, 1, 0);
 
         // model
         gltfLoader.load('models/spacecraft.glb' , (gltf) =>

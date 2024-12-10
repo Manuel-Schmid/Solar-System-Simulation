@@ -8,7 +8,7 @@ console.warn = function (message) {
 };
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(STANDARD_FOV, window.innerWidth / window.innerHeight, 0.00001, 1000 );
+const camera = new THREE.PerspectiveCamera(STANDARD_FOV, window.innerWidth / window.innerHeight, 0.000001, 1000 );
 const renderer = new THREE.WebGLRenderer({antialias: true});
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);
