@@ -5,7 +5,7 @@ import {adjustFOV, camera, gltfLoader, scene, textureLoader} from "./scene";
 import {updateLabel} from "../design/designUtils";
 
 export class Spacecraft {
-    constructor(mass, x, y, z, angularVelocity, acceleration, scale) {
+    constructor(mass, x, y, z, angularVelocity, acceleration, scale, tiltAngle) {
         this.xVel = 0;
         this.zVel = 0;
         this.mass = mass;
@@ -15,7 +15,7 @@ export class Spacecraft {
         this.orbits = [];
         this.scale = scale
         this.distanceTosun = 0;
-        this.tiltAngle = 0
+        this.tiltAngle = tiltAngle
 
         this.flameMaterial = new THREE.ShaderMaterial({
             uniforms: {
@@ -94,6 +94,9 @@ export class Spacecraft {
         const cameraHelper = new THREE.Object3D();
         cameraHelper.position.set(0, 3, -10);
 
+        const firstPersonCameraHelper = new THREE.Object3D();
+        firstPersonCameraHelper.position.set(0, scale * 10000, 0);
+
         // model
         gltfLoader.load('models/spacecraft.glb' , (gltf) =>
         {
@@ -102,6 +105,7 @@ export class Spacecraft {
             this.obj.position.set(x, y, z)
 
             this.obj.add(shipLight);
+            this.obj.shipLight = shipLight;
 
             this.obj.add(flame1)
             this.obj.flame1 = flame1;
@@ -113,6 +117,9 @@ export class Spacecraft {
 
             this.obj.add(cameraHelper);
             this.obj.cameraHelper = cameraHelper;
+
+            this.obj.add(firstPersonCameraHelper);
+            this.obj.firstPersonCameraHelper = firstPersonCameraHelper;
 
             // todo:
             // const axesHelper = new THREE.AxesHelper(10);
@@ -162,7 +169,6 @@ export class Spacecraft {
         const leftZ = Math.cos(angle + Math.PI / 2);
 
         const lateralAcceleration = this.acceleration * 0.6; // left/right acceleration is slower
-        const tiltAngle = 0.2; // Maximum tilt angle
 
         if (forwardPressed) {
             this.xVel += forwardX * this.acceleration;
@@ -183,19 +189,19 @@ export class Spacecraft {
             this.zVel = 0
             adjustFOV(STANDARD_FOV * 0.85)
             updateLabel()
-            this.obj.rotation.x = THREE.MathUtils.lerp(this.obj.rotation.x, tiltAngle, 0.1);
+            this.obj.rotation.x = THREE.MathUtils.lerp(this.obj.rotation.x, this.tiltAngle, 0.1);
         }
         if (portPressed) {
             this.xVel += leftX * lateralAcceleration;
             this.zVel += leftZ * lateralAcceleration;
 
-            this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, -tiltAngle, 0.1);
+            this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, -this.tiltAngle, 0.08);
         }
         if (starboardPressed) {
             this.xVel -= leftX * lateralAcceleration;
             this.zVel -= leftZ * lateralAcceleration;
 
-            this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, tiltAngle, 0.1);
+            this.obj.rotation.z = THREE.MathUtils.lerp(this.obj.rotation.z, this.tiltAngle, 0.08);
         }
         if (rotatePortPressed && !targetPlanet) {
             this.obj.rotation.y += this.angularVelocity;

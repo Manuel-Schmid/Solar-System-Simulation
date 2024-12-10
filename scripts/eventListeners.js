@@ -83,6 +83,15 @@ export function initEventListeners({
             if (event.key === 'Shift') {
                 handbrakePressed = true;
             }
+            if (event.key.toLowerCase() === 'b') {
+                spacecraftFirstPerson = !spacecraftFirstPerson
+                pushTextToLabel(spacecraftFirstPerson ? 'Enable cockpit view' : 'Disable cockpit view');
+            }
+            if (event.key.toLowerCase() === 'h') {
+                spacecraftLight = !spacecraftLight
+                pushTextToLabel(spacecraftLight ? 'Enable spacecraft light' : 'Disable spacecraft light');
+                spacecraft.obj.shipLight.visible = spacecraftLight
+            }
         }
         if (spacecraftSelected && targetPlanet) {
             if (event.key.toLowerCase() === 'z') {
@@ -135,7 +144,7 @@ export function initEventListeners({
             spacecraftSelected = true
             isCameraLocked = true
             setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
-            if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
+            // if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
             if (spacecraftSelected) {
