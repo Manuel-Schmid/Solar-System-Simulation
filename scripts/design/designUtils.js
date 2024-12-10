@@ -115,7 +115,9 @@ export function updateLabel() {
                 weightLabel.textContent = "";
             }
             const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.zVel ** 2)
-            speedLabel.textContent = v.toPrecision(4) + " km/s"
+            const vInLightspeed = v / c
+            const cPercentageText = (vInLightspeed >= 0.001) ? ' | ' + vInLightspeed.toPrecision(2) + 'c' : ''
+            speedLabel.textContent = v.toPrecision(4) + " km/s" + cPercentageText
         }
 
         labelContainer.style.display = '';
