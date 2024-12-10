@@ -78,6 +78,7 @@ export class Spacecraft {
 
         const shipLight = new THREE.PointLight(0xFF4D00, 0.03, 10); // 0x500505 0x7A1515
         shipLight.position.set(0, 0, 0); // Centered relative to the spaceship
+        shipLight.visible = spacecraftLight
 
         const flameGeometry = new THREE.ConeGeometry(500 * scale, 2000 * scale, 32); //
         const flame1 = new THREE.Mesh(flameGeometry, this.flameMaterial);
@@ -127,17 +128,6 @@ export class Spacecraft {
 
             scene.add(this.obj)
         });
-
-        // vectors
-        const xVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff} );
-        const xVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
-        this.xVectorLine = new THREE.Line( xVectorLineGeometry, xVectorLineMaterial );
-        this.xVectorLine.frustumCulled = false;
-
-        const zVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
-        const zVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
-        this.zVectorLine = new THREE.Line( zVectorLineGeometry, zVectorLineMaterial );
-        this.zVectorLine.frustumCulled = false;
 
         const gVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xfc0303 } );
         const gVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
@@ -292,16 +282,10 @@ export class Spacecraft {
                 new THREE.Vector3(this.obj.position.x + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.obj.position.z + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
             ]
 
-            this.xVectorLine.geometry.setFromPoints( xVectorLinePoints );
-            this.zVectorLine.geometry.setFromPoints( zVectorLinePoints );
             this.resVectorLine.geometry.setFromPoints( resVectorLinePoints );
-            scene.add( this.xVectorLine );
-            scene.add( this.zVectorLine );
             scene.add( this.resVectorLine );
         } else {
             scene.remove(this.gVectorLine)
-            scene.remove( this.xVectorLine );
-            scene.remove( this.zVectorLine );
             scene.remove( this.resVectorLine );
         }
     }
