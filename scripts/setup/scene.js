@@ -17,6 +17,9 @@ const gltfLoader = new GLTFLoader(loadingManager);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+const canvas = document.querySelector('canvas');
+canvas.style.cursor = 'none';
+
 // lighting
 const sunLight = new THREE.PointLight(0xffffff, 3, 1000);
 sunLight.position.set(0, 0, 0);

@@ -26,6 +26,32 @@ export function initEventListeners({
                                        setCameraOffset,
                                        setJwstCameraOffset,
                                    }) {
+    window.addEventListener('mousedown', (event) => {
+        if (!spacecraftSelected) return
+        isMouseDown = true;
+        lastMousePosition.x = event.clientX; // Initialize last position
+        lastMousePosition.y = event.clientY;
+    });
+
+    window.addEventListener('mousemove', (event) => {
+        if (!spacecraftSelected || !isMouseDown) return; // Only track movement while mouse button is pressed
+
+        let deltaX = event.clientX - lastMousePosition.x;
+        let deltaY = event.clientY - lastMousePosition.y;
+
+        deltaX = 100 * deltaX / window.innerWidth;
+        deltaY = 100 * deltaY / window.innerHeight;
+
+        spacecraft.rotateSpacecraft(deltaY * spacecraft.angularVelocity, deltaX * spacecraft.angularVelocity)
+
+        lastMousePosition.x = event.clientX;
+        lastMousePosition.y = event.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (!spacecraftSelected) return
+        isMouseDown = false;
+    });
     document.addEventListener('keyup', (event) => {
         if (spacecraftSelected) {
             if (event.key === 'ArrowUp') {
@@ -58,7 +84,6 @@ export function initEventListeners({
         if (event.code === 'Space') { // un/pause the game
             PAUSED = !PAUSED;
             pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
-            return
         }
         if (spacecraftSelected) { // spacecraft controls
             if (event.key === 'ArrowUp') {
@@ -154,6 +179,7 @@ export function initEventListeners({
                     isCameraLocked = true;
                     const spacecraftWorldPosition = new THREE.Vector3();
                     spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
+                    // todo???
                 }
                 return
             }

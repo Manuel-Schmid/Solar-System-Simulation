@@ -35,4 +35,6 @@ let starboardPressed = false;
 let rotatePortPressed = false;
 let rotateStarboardPressed = false;
 let handbrakePressed = false;
+let isMouseDown = false; // Flag to track if the mouse button is pressed
+let lastMousePosition = { x: 0, y: 0 };
 
