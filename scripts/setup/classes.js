@@ -424,12 +424,14 @@ export class Planet {
                 glowSharpness: 0.7,
             });
             this.glowSphere = new THREE.Mesh( new THREE.SphereGeometry( radius * 2, 64, 32 ), fakeGlowMaterial);
+            this.glowSphere.renderOrder = 2;
             scene.add(this.glowSphere);
         }
 
         this.sphere = new THREE.Mesh(this.geometry, this.material);
         this.sphere.rotation.x = THREE.MathUtils.degToRad(axialTilt); // axis tilt
         this.sphere.position.set(x, y, z)
+        this.sphere.renderOrder = 1;
         scene.add( this.sphere );
 
         // orbits
@@ -441,6 +443,9 @@ export class Planet {
         this.orbitLine = new THREE.Line(this.orbitGeometry, orbitMaterial);
         this.currentOrbitPointCount = 0;
         this.orbitLine.frustumCulled = false;
+        this.orbitLine.renderOrder = 0;
+        this.orbitLine.material.depthTest = true;
+        this.orbitLine.material.depthWrite = false;
         scene.add(this.orbitLine);
 
         // vectors

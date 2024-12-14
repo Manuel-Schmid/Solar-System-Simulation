@@ -71,7 +71,7 @@ spacecraft = new Spacecraft(
     1000,
     0, 0, -3 * AU * DISTANCE_SCALE,
     0.04,
-    0.25,
+    0.15,
     0.0001, // 0.000001 (causes vector-line-bugs)
     0.2,
 );
