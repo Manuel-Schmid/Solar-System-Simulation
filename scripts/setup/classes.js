@@ -92,8 +92,11 @@ export class Spacecraft {
         flame2.scale.set(0.001 / scale,0.001 / scale,0.0007 / scale);
         flame2.rotation.x = THREE.MathUtils.degToRad(-90)
 
-        const cameraHelper = new THREE.Object3D();
-        cameraHelper.position.set(0, 3, -10);
+        const cameraHelperFar = new THREE.Object3D();
+        cameraHelperFar.position.set(0, 8, -20);
+
+        const cameraHelperClose = new THREE.Object3D();
+        cameraHelperClose.position.set(0, 3, -10);
 
         const firstPersonCameraHelper = new THREE.Object3D();
         firstPersonCameraHelper.position.set(0, 1, 0);
@@ -116,13 +119,15 @@ export class Spacecraft {
             this.obj.flame1.visible = false;
             this.obj.flame2.visible = false;
 
-            this.obj.add(cameraHelper);
-            this.obj.cameraHelper = cameraHelper;
+            this.obj.add(cameraHelperFar);
+            this.obj.cameraHelperFar = cameraHelperFar;
+
+            this.obj.add(cameraHelperClose);
+            this.obj.cameraHelperClose = cameraHelperClose;
 
             this.obj.add(firstPersonCameraHelper);
             this.obj.firstPersonCameraHelper = firstPersonCameraHelper;
 
-            // todo:
             // const axesHelper = new THREE.AxesHelper(10);
             // this.obj.add(axesHelper);
 
@@ -150,7 +155,7 @@ export class Spacecraft {
         this.orbitLine.frustumCulled = false;
         scene.add(this.orbitLine);
     }
-    changeMomentum(spacecraftCameraOffset) {
+    changeMomentum() {
         // const angle = (targetPlanet) ? this.obj.rotation.y + THREE.MathUtils.degToRad(180) : this.obj.rotation.y;
         const angle = this.obj.rotation.y;
         const forwardX = Math.sin(angle);
@@ -195,17 +200,10 @@ export class Spacecraft {
         }
         if (rotatePortPressed && !targetPlanet) {
             this.obj.rotation.y += this.angularVelocity;
-            this.updateCameraOffsetRelative(spacecraftCameraOffset, this.angularVelocity)
         }
         if (rotateStarboardPressed && !targetPlanet) {
             this.obj.rotation.y -= this.angularVelocity;
-            this.updateCameraOffsetRelative(spacecraftCameraOffset, -this.angularVelocity)
         }
-    }
-    updateCameraOffsetRelative(spacecraftCameraOffset, rotation) { // rotate *by* this degree
-        const rotationMatrix = new THREE.Matrix4();
-        rotationMatrix.makeRotationY(rotation);  // Rotate around the Y-axis (z-rotation)
-        spacecraftCameraOffset.applyMatrix4(rotationMatrix);  // Apply the rotation to the camera offset
     }
     updatePosition(planets, sunPosition) {
         let addedXVel = 0;
@@ -288,14 +286,6 @@ export class Spacecraft {
             scene.remove(this.gVectorLine)
             scene.remove( this.resVectorLine );
         }
-    }
-    calcSpacecraftCameraOffset() { // offset behind spacecraft
-        const angle = this.obj.rotation.y;
-        const offsetDistance = 20 * this.scale; // Distance behind the spacecraft
-        const verticalOffset = 8 * this.scale; // Vertical offset
-        const xOffset = -offsetDistance * Math.sin(angle);  // Negative for "behind" effect
-        const zOffset = -offsetDistance * Math.cos(angle);   // Positive for staying behind the spacecraft
-        return new THREE.Vector3(xOffset, verticalOffset, zOffset);
     }
     drawOrbits() {
         if (this.orbits.length < 2) return;

@@ -25,7 +25,6 @@ export function initEventListeners({
                                        updateJWSTPosition,
                                        setCameraOffset,
                                        setJwstCameraOffset,
-                                       setSpacecraftCameraOffset,
                                    }) {
     document.addEventListener('keyup', (event) => {
         if (spacecraftSelected) {
@@ -143,7 +142,6 @@ export function initEventListeners({
             targetPlanet = null
             spacecraftSelected = true
             isCameraLocked = true
-            setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
             // if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
@@ -156,9 +154,6 @@ export function initEventListeners({
                     isCameraLocked = true;
                     const spacecraftWorldPosition = new THREE.Vector3();
                     spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
-
-                    if (PAUSED) setSpacecraftCameraOffset(new THREE.Vector3().subVectors(camera.position, spacecraftWorldPosition));
-                    else setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
                 }
                 return
             }
