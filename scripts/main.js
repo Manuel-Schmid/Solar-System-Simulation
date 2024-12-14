@@ -198,7 +198,7 @@ gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
     // scene.add(issPlane);
     issPlane.add(ISS)
 
-    ISS.position.set(0.0005 * AU * DISTANCE_SCALE, 0, 0);
+    ISS.position.set(earth.radius * 1.1, 0, 0);
     ISS.rotation.y = THREE.MathUtils.degToRad(90);
     ISS.scale.set(issScaleFactor, issScaleFactor, issScaleFactor);
     issPlane.rotation.x = THREE.MathUtils.degToRad(51.6);
