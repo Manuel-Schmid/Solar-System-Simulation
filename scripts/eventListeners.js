@@ -6,7 +6,6 @@ import {Planet} from "./setup/classes";
 
 export function initEventListeners({
                                        controls,
-                                       cameraOffset,
                                        jwstCameraOffset,
                                        planets,
                                        sun,
@@ -29,6 +28,7 @@ export function initEventListeners({
     window.addEventListener('mousedown', (event) => {
         if (!spacecraftSelected) return
         isMouseDown = true;
+        document.querySelector('canvas').style.cursor = 'none'
         lastMousePosition.x = event.clientX; // Initialize last position
         lastMousePosition.y = event.clientY;
     });
@@ -49,30 +49,28 @@ export function initEventListeners({
     });
 
     window.addEventListener('mouseup', () => {
+        document.querySelector('canvas').style.cursor = ''
         if (!spacecraftSelected) return
         isMouseDown = false;
     });
     document.addEventListener('keyup', (event) => {
         if (spacecraftSelected) {
-            if (event.key === 'ArrowUp') {
+            if (event.key.toLowerCase() === 'w') {
                 forwardPressed = false;
             }
-            if (event.key === 'ArrowDown') {
-                backwardPressed = false;
-            }
-            if (event.key === 'ArrowLeft') {
+            if (event.key.toLowerCase() === 'a') {
                 portPressed = false;
             }
-            if (event.key === 'ArrowRight') {
+            if (event.key.toLowerCase() === 's') {
+                backwardPressed = false;
+            }
+            if (event.key.toLowerCase() === 'd') {
                 starboardPressed = false;
             }
-            if (event.key.toLowerCase() === 'a') {
+            if (event.key === 'ArrowLeft') {
                 rotatePortPressed = false;
             }
-            if (event.key.toLowerCase() === 'd') {
-                rotateStarboardPressed = false;
-            }
-            if (event.key.toLowerCase() === 'd') {
+            if (event.key === 'ArrowRight') {
                 rotateStarboardPressed = false;
             }
             if (event.key === 'Shift') {
@@ -86,22 +84,22 @@ export function initEventListeners({
             pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
         }
         if (spacecraftSelected) { // spacecraft controls
-            if (event.key === 'ArrowUp') {
+            if (event.key.toLowerCase() === 'w') {
                 forwardPressed = true;
             }
-            if (event.key === 'ArrowDown') {
-                backwardPressed = true;
-            }
-            if (event.key === 'ArrowLeft') {
+            if (event.key.toLowerCase() === 'a') {
                 portPressed = true;
             }
-            if (event.key === 'ArrowRight') {
-                starboardPressed = true;
-            }
-            if (event.key.toLowerCase() === 'a') {
-                rotatePortPressed = true;
+            if (event.key.toLowerCase() === 's') {
+                backwardPressed = true;
             }
             if (event.key.toLowerCase() === 'd') {
+                starboardPressed = true;
+            }
+            if (event.key === 'ArrowLeft') {
+                rotatePortPressed = true;
+            }
+            if (event.key === 'ArrowRight') {
                 rotateStarboardPressed = true;
             }
             if (event.key === 'Shift') {
@@ -220,10 +218,11 @@ export function initEventListeners({
                 if (isCameraSunLocked && !isCameraLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
             }
         }
-        if (event.key.toLowerCase() === 's') {
+        if (event.key.toLowerCase() === 's' && !spacecraftSelected) {
             pushTextToLabel('Decrease planet speed')
             if (targetPlanet) {
                 targetPlanet.xVel *= 0.8
+                targetPlanet.yVel *= 0.8
                 targetPlanet.zVel *= 0.8
             }
         }
@@ -231,6 +230,7 @@ export function initEventListeners({
             pushTextToLabel('Increase planet speed')
             if (targetPlanet) {
                 targetPlanet.xVel *= 1.2
+                targetPlanet.yVel *= 1.2
                 targetPlanet.zVel *= 1.2
             }
         }
@@ -255,6 +255,7 @@ export function initEventListeners({
                 pushTextToLabel('Evolve planet into a star')
                 const newSun = new Planet(targetPlanet.name + "Sun", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
                 newSun.xVel = targetPlanet.xVel;
+                newSun.yVel = targetPlanet.yVel;
                 newSun.zVel = targetPlanet.zVel;
                 newSun.orbits = targetPlanet.orbits;
                 for (let i = 0; i < planets.length - 1; i++) {

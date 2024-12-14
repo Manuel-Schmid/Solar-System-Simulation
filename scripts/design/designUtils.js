@@ -98,14 +98,15 @@ export function updateLabel() {
         if (targetPlanet && !spacecraft) {
             if (targetPlanet.isSun) distanceLabel.textContent = ""
             else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
-            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.zVel ** 2)
+            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.yVel ** 2 + targetPlanet.zVel ** 2);
             speedLabel.textContent = v.toPrecision(4) + " km/s"
             weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
         } else if (spacecraftSelected) {
             if (targetPlanet) {
-                const distance_x = ((targetPlanet.sphere.position.x - spacecraft.obj.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
-                const distance_z = ((targetPlanet.sphere.position.z - spacecraft.obj.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
-                const distance = (Math.sqrt(distance_x ** 2 + distance_z ** 2)) // distance in km
+                const distance_x = ((targetPlanet.sphere.position.x - spacecraft.container.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
+                const distance_y = ((targetPlanet.sphere.position.y - spacecraft.container.position.y) / DISTANCE_SCALE) * 1000; // distance in meters
+                const distance_z = ((targetPlanet.sphere.position.z - spacecraft.container.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
+                const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // Total distance in km
 
                 distanceLabel.textContent = convertDistance(distance / 1000, distanceUnit, AU, LM)
                 weightLabel.textContent = targetPlanet.name;
@@ -114,7 +115,7 @@ export function updateLabel() {
                 distanceLabel.textContent = convertDistance(spacecraft.distanceToSun, distanceUnit, AU, LM)
                 weightLabel.textContent = "";
             }
-            const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.zVel ** 2)
+            const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.yVel ** 2 + spacecraft.zVel ** 2);
             const vInLightspeed = v / c
             const cPercentageText = (vInLightspeed >= 0.001) ? ' | ' + vInLightspeed.toPrecision(2) + 'c' : ''
             speedLabel.textContent = v.toPrecision(4) + " km/s" + cPercentageText
