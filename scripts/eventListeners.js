@@ -123,6 +123,7 @@ export function initEventListeners({
         if (spacecraftSelected && targetPlanet) {
             if (event.key.toLowerCase() === 'r') {
                 spacecraftMatchVelocity = !spacecraftMatchVelocity;
+                spacecraftGravity = false
                 pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
                 return
             }
@@ -135,6 +136,7 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === 'g') {
             spacecraftGravity = !spacecraftGravity;
+            spacecraftMatchVelocity = false
             pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
             return
         }

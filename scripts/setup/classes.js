@@ -186,13 +186,14 @@ export class Spacecraft {
 
         // scaling velocities (smooth arrival)
         let accelScale = 1
-        if (targetPlanet && !spacecraftMatchVelocity) {
+        if (targetPlanet && !spacecraftMatchVelocity && !spacecraftGravity) {
             const CLOSE_DISTANCE = targetPlanet.radius * 200 / PLANET_SCALE; // start of downscaling
             const MIN_ACCEL_SCALE = 0.001; // Minimum scaling factor for acceleration
             const distanceToTarget = this.distanceToTarget;
 
             if (distanceToTarget < CLOSE_DISTANCE) {
                 accelScale = Math.max(MIN_ACCEL_SCALE, distanceToTarget / CLOSE_DISTANCE);
+                // console.log("acceleration scaling factor: " + accelScale);
             }
         }
 

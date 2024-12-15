@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {convertDistance} from "../utils";
+import {convertDistance, convertHexToRGB} from "../utils";
 import {brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
 
 export function createStars() {
@@ -89,13 +89,17 @@ export function pushTextToLabel(text) {
 
 export function updateLabel() {
     const labelContainer = document.getElementById('label-container');
+    const targetLabel = document.getElementById('target-label');
     const distanceLabel = document.getElementById('distance-label');
     const speedLabel = document.getElementById('speed-label');
     const weightLabel = document.getElementById('weight-label');
     if (!SHOW_LABEL || (!targetPlanet && !spacecraftSelected)) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
+        if (targetPlanet) targetLabel.textContent = targetPlanet.name
         if (targetPlanet && !spacecraftSelected) {
+            targetLabel.style.color = ''
+            labelContainer.style.color = convertHexToRGB(targetPlanet.colorHex)
             if (targetPlanet.isSun) distanceLabel.textContent = ""
             else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
             const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.yVel ** 2 + targetPlanet.zVel ** 2);
@@ -103,17 +107,23 @@ export function updateLabel() {
             weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
         } else if (spacecraftSelected) {
             if (targetPlanet) {
+                targetLabel.style.color = convertHexToRGB(targetPlanet.colorHex)
                 distanceLabel.textContent = convertDistance(spacecraft.distanceToTarget, distanceUnit, AU, LM)
-                weightLabel.textContent = targetPlanet.name;
+                if (spacecraftMatchVelocity) labelContainer.style.color = convertHexToRGB(targetPlanet.colorHex)
+                else labelContainer.style.color = '#ffffff'
             }
             else {
+                labelContainer.style.color = "#ffffff"
+                targetLabel.textContent = ""
                 distanceLabel.textContent = convertDistance(spacecraft.distanceToSun, distanceUnit, AU, LM)
                 weightLabel.textContent = "";
             }
             const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.yVel ** 2 + spacecraft.zVel ** 2);
             const vInLightspeed = v / c
             const cPercentageText = (vInLightspeed >= 0.001) ? ' | ' + vInLightspeed.toPrecision(2) + 'c' : ''
-            speedLabel.textContent = v.toPrecision(4) + " km/s" + cPercentageText
+            let speedText = v.toPrecision(4) + " km/s" + cPercentageText
+            if (spacecraftMatchVelocity) speedText = "[ " + speedText + " ]"
+            speedLabel.textContent = speedText
         }
 
         labelContainer.style.display = '';
