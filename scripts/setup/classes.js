@@ -229,20 +229,10 @@ export class Spacecraft {
     }
     rotateSpacecraft(xAngle, yAngle) {
         this.container.rotation.y -= yAngle;
-        // const pitchQuaternion = new THREE.Quaternion();
-        // const localX = new THREE.Vector3(1, 0, 0); // Local X-axis for pitch rotation
-        // pitchQuaternion.setFromAxisAngle(localX, xAngle);  // Apply rotation to the local X-axis
-        // this.obj.quaternion.multiply(pitchQuaternion);  // Apply to the spacecraft object
-        // this.obj.rotation.x += xAngle;
-
-        // no flipping
-        let newPitch = this.obj.rotation.x + xAngle;
-        newPitch = Math.max(Math.min(newPitch, Math.PI / 3), -Math.PI / 3);
         const pitchQuaternion = new THREE.Quaternion();
         const localX = new THREE.Vector3(1, 0, 0); // Local X-axis for pitch rotation
-        pitchQuaternion.setFromAxisAngle(localX, newPitch - this.obj.rotation.x);  // Apply the pitch change
-        this.obj.quaternion.multiply(pitchQuaternion); // Apply the rotation to the spacecraft object
-        this.obj.rotation.x = newPitch;
+        pitchQuaternion.setFromAxisAngle(localX, xAngle);  // Apply rotation to the local X-axis
+        this.obj.quaternion.multiply(pitchQuaternion);  // Apply to the spacecraft object
     }
     updatePosition(planets, sunPosition) {
         let addedXVel = 0;

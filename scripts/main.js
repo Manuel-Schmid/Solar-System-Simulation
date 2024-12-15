@@ -415,6 +415,13 @@ function render() { // runs with 60 fps
                 const objQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(spacecraft.obj.rotation.x, 0, 0));
                 const globalForward = localForward.applyQuaternion(containerQuat.multiply(objQuat));
                 camera.lookAt(spacecraft.container.position.clone().add(globalForward.multiplyScalar(10)));
+
+                // axis flip fix
+                if (spacecraft.obj.rotation.x >= THREE.MathUtils.degToRad(90)) {
+                    camera.rotation.z += THREE.MathUtils.degToRad(180)
+                } else if (spacecraft.obj.rotation.x <= THREE.MathUtils.degToRad(-90)) {
+                    camera.rotation.z -= THREE.MathUtils.degToRad(180)
+                }
             }
             else { // spacecraft locked to planet
                 const direction = new THREE.Vector3();

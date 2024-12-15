@@ -34,13 +34,18 @@ export function initEventListeners({
     });
 
     window.addEventListener('mousemove', (event) => {
-        if (!spacecraftSelected || !isMouseDown) return; // Only track movement while mouse button is pressed
+        if (!spacecraftSelected || !isMouseDown || PAUSED) return; // Only track movement while mouse button is pressed
 
         let deltaX = event.clientX - lastMousePosition.x;
         let deltaY = event.clientY - lastMousePosition.y;
 
         deltaX = 100 * deltaX / window.innerWidth;
         deltaY = 100 * deltaY / window.innerHeight;
+
+        // axis flip fix
+        if ((spacecraft.obj.rotation.x >= THREE.MathUtils.degToRad(90)) || (spacecraft.obj.rotation.x <= THREE.MathUtils.degToRad(-90))) {
+            deltaX *= -1
+        }
 
         spacecraft.rotateSpacecraft(deltaY * spacecraft.angularVelocity, deltaX * spacecraft.angularVelocity)
 
