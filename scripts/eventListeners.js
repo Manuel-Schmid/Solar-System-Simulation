@@ -121,7 +121,7 @@ export function initEventListeners({
             }
         }
         if (spacecraftSelected && targetPlanet) {
-            if (event.key.toLowerCase() === 'z') {
+            if (event.key.toLowerCase() === 'r') {
                 spacecraftMatchVelocity = !spacecraftMatchVelocity;
                 pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
                 return
@@ -145,7 +145,7 @@ export function initEventListeners({
             updateGridTexture(constellationSphere);
             return
         }
-        if (event.key.toLowerCase() === 'r') {
+        if (event.key.toLowerCase() === 'z') {
             TRUE_ROTATION_SPEEDS = !TRUE_ROTATION_SPEEDS;
             pushTextToLabel(TRUE_ROTATION_SPEEDS ? 'Enable accurate rotation speeds' : 'Disable accurate rotation speeds')
         }

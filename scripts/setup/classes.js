@@ -184,21 +184,46 @@ export class Spacecraft {
 
         const lateralAcceleration = this.acceleration * 0.6; // Reduce lateral acceleration
 
+        // scaling velocities (smooth arrival)
+        let accelScale = 1
+        if (targetPlanet && !spacecraftMatchVelocity) {
+            const CLOSE_DISTANCE = targetPlanet.radius * 200 / PLANET_SCALE; // start of downscaling
+            const MIN_ACCEL_SCALE = 0.001; // Minimum scaling factor for acceleration
+            const distanceToTarget = this.distanceToTarget;
+
+            if (distanceToTarget < CLOSE_DISTANCE) {
+                accelScale = Math.max(MIN_ACCEL_SCALE, distanceToTarget / CLOSE_DISTANCE);
+            }
+        }
+
+
         if (forwardPressed) {
-            this.xVel += forwardX * this.acceleration;
-            this.yVel += forwardY * this.acceleration;
-            this.zVel += forwardZ * this.acceleration;
+            this.xVel += forwardX * this.acceleration * accelScale;
+            this.yVel += forwardY * this.acceleration * accelScale;
+            this.zVel += forwardZ * this.acceleration * accelScale;
 
             this.obj.flame1.visible = true;
             this.obj.flame2.visible = true;
             adjustFOV(STANDARD_FOV * 1.2);
         }
         if (backwardPressed) {
-            this.xVel -= forwardX * this.acceleration;
-            this.yVel -= forwardY * this.acceleration;
-            this.zVel -= forwardZ * this.acceleration;
+            this.xVel -= forwardX * this.acceleration * accelScale;
+            this.yVel -= forwardY * this.acceleration * accelScale;
+            this.zVel -= forwardZ * this.acceleration * accelScale;
 
             adjustFOV(STANDARD_FOV * 0.85);
+        }
+        if (portPressed) {
+            this.xVel += leftX * lateralAcceleration * accelScale;
+            this.zVel += leftZ * lateralAcceleration * accelScale;
+
+            this.container.rotation.z = THREE.MathUtils.lerp(this.container.rotation.z, -this.tiltAngle, 0.08);
+        }
+        if (starboardPressed) {
+            this.xVel -= leftX * lateralAcceleration * accelScale;
+            this.zVel -= leftZ * lateralAcceleration * accelScale;
+
+            this.container.rotation.z = THREE.MathUtils.lerp(this.container.rotation.z, this.tiltAngle, 0.08);
         }
         if (handbrakePressed) {
             this.xVel = 0;
@@ -208,18 +233,6 @@ export class Spacecraft {
             updateLabel()
             // this.container.rotation.x = THREE.MathUtils.lerp(this.container.rotation.x, this.tiltAngle, 0.1);
             // if (this.obj.rotation.x < 0.2) this.rotateSpacecraft(this.tiltAngle * 0.1, 0)
-        }
-        if (portPressed) {
-            this.xVel += leftX * lateralAcceleration;
-            this.zVel += leftZ * lateralAcceleration;
-
-            this.container.rotation.z = THREE.MathUtils.lerp(this.container.rotation.z, -this.tiltAngle, 0.08);
-        }
-        if (starboardPressed) {
-            this.xVel -= leftX * lateralAcceleration;
-            this.zVel -= leftZ * lateralAcceleration;
-
-            this.container.rotation.z = THREE.MathUtils.lerp(this.container.rotation.z, this.tiltAngle, 0.08);
         }
         if (rotatePortPressed && !targetPlanet) {
             this.container.rotation.y += this.angularVelocity;
@@ -319,14 +332,14 @@ export class Spacecraft {
             //     )
             // ];
 
-            const yVectorLinePoints = [
-                new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
-                new THREE.Vector3(
-                    this.container.position.x,
-                    this.container.position.y + ((this.yVel * DISTANCE_SCALE) * TIME * 10),
-                    this.container.position.z
-                )
-            ];
+            // const yVectorLinePoints = [
+            //     new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
+            //     new THREE.Vector3(
+            //         this.container.position.x,
+            //         this.container.position.y + ((this.yVel * DISTANCE_SCALE) * TIME * 10),
+            //         this.container.position.z
+            //     )
+            // ];
 
             // const zVectorLinePoints = [
             //     new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
@@ -346,13 +359,10 @@ export class Spacecraft {
                 )
             ];
 
-            this.yVectorLine.geometry.setFromPoints( yVectorLinePoints );
             this.resVectorLine.geometry.setFromPoints( resVectorLinePoints );
-            scene.add( this.yVectorLine );
             scene.add( this.resVectorLine );
         } else {
             scene.remove(this.gVectorLine)
-            scene.remove(this.yVectorLine)
             scene.remove( this.resVectorLine );
         }
     }
