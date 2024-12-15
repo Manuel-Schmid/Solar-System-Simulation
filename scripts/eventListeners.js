@@ -78,7 +78,7 @@ export function initEventListeners({
             if (event.key === 'ArrowRight') {
                 rotateStarboardPressed = false;
             }
-            if (event.key === 'Shift') {
+            if (event.key === 'Shift' || event.key.toLowerCase() === 'ü') {
                 handbrakePressed = false;
             }
         }
@@ -118,6 +118,12 @@ export function initEventListeners({
                 spacecraftLight = !spacecraftLight
                 pushTextToLabel(spacecraftLight ? 'Enable spacecraft light' : 'Disable spacecraft light');
                 spacecraft.obj.shipLight.visible = spacecraftLight
+            }
+            if (event.key.toLowerCase() === 'ü') {
+                spacecraft.container.position.y = 0;
+                spacecraft.obj.rotation.x = 0;
+                handbrakePressed = true;
+                pushTextToLabel('Place spacecraft on xz-plane')
             }
         }
         if (spacecraftSelected && targetPlanet) {
@@ -313,8 +319,14 @@ export function initEventListeners({
             animate();
         }
         if (event.key.toLowerCase() === 'o') {
+            if (event.altKey) {
+                if (spacecraft.orbitLine.parent) scene.remove(spacecraft.orbitLine)
+                else scene.add(spacecraft.orbitLine);
+                pushTextToLabel(SHOW_ORBITS ? 'Show spacecraft orbit' : 'Hide spacecraft orbits')
+                return
+            }
             SHOW_ORBITS = !SHOW_ORBITS;
-            pushTextToLabel(SHOW_ORBITS ? 'Show Orbits' : 'Hide Orbits')
+            pushTextToLabel(SHOW_ORBITS ? 'Show orbits' : 'Hide orbits')
             for (const planet of planets) {
                 if (SHOW_ORBITS) scene.add(planet.orbitLine);
                 else scene.remove(planet.orbitLine);
