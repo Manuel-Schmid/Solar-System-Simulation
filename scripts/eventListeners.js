@@ -170,6 +170,7 @@ export function initEventListeners({
             targetPlanet = null
             spacecraftSelected = true
             isCameraLocked = true
+            updateLabel()
             // if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
@@ -385,6 +386,7 @@ export function initEventListeners({
             }
         }
         if (event.key.toLowerCase() === 'j') {
+            spacecraftSelected = false
             pushTextToLabel('Move to James Webb Space Telescope')
             if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
             let showLabelChanged = false

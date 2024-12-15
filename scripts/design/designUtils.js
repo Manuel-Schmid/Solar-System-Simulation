@@ -95,7 +95,7 @@ export function updateLabel() {
     if (!SHOW_LABEL || (!targetPlanet && !spacecraftSelected)) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
-        if (targetPlanet && !spacecraft) {
+        if (targetPlanet && !spacecraftSelected) {
             if (targetPlanet.isSun) distanceLabel.textContent = ""
             else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
             const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.yVel ** 2 + targetPlanet.zVel ** 2);
@@ -103,12 +103,7 @@ export function updateLabel() {
             weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
         } else if (spacecraftSelected) {
             if (targetPlanet) {
-                const distance_x = ((targetPlanet.sphere.position.x - spacecraft.container.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
-                const distance_y = ((targetPlanet.sphere.position.y - spacecraft.container.position.y) / DISTANCE_SCALE) * 1000; // distance in meters
-                const distance_z = ((targetPlanet.sphere.position.z - spacecraft.container.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
-                const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // Total distance in km
-
-                distanceLabel.textContent = convertDistance(distance / 1000, distanceUnit, AU, LM)
+                distanceLabel.textContent = convertDistance(spacecraft.distanceToTarget, distanceUnit, AU, LM)
                 weightLabel.textContent = targetPlanet.name;
             }
             else {

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import FakeGlowMaterial from "../design/GlowMaterial";
-import {PlanetRingGeometry} from "../utils";
+import {getPositionDistance, PlanetRingGeometry} from "../utils";
 import {adjustFOV, camera, gltfLoader, scene, textureLoader} from "./scene";
 import {updateLabel} from "../design/designUtils";
 
@@ -16,6 +16,7 @@ export class Spacecraft {
         this.orbits = [];
         this.scale = scale
         this.distanceTosun = 0;
+        this.distanceToTarget = 0;
         this.tiltAngle = tiltAngle
         this.container = new THREE.Object3D();
         this.container.scale.set(scale, scale, scale);
@@ -270,11 +271,8 @@ export class Spacecraft {
         this.container.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
 
         if (!spacecraftGravity) {
-            const distance_x = ((sunPosition.x - this.container.position.x) / DISTANCE_SCALE) * 1000 // distance in meters;
-            const distance_y = ((sunPosition.y - this.container.position.y) / DISTANCE_SCALE) * 1000;
-            const distance_z = ((sunPosition.z - this.container.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
-            const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // distance in km
-            this.distanceToSun = distance / 1000
+            this.distanceToSun = getPositionDistance(sunPosition, this.container.position) / 1000
+            if (targetPlanet) this.distanceToTarget = getPositionDistance(targetPlanet.sphere.position, this.container.position) / 1000
         }
 
         // console.log("xVel: " + Math.round(this.xVel * 1000) / 1000 + " | zVel: " + Math.round(this.zVel * 1000) / 1000)
@@ -288,6 +286,7 @@ export class Spacecraft {
         const distance_z = ((planet.sphere.position.z - this.container.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
         const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // Total distance in km
         if (planet.isSun) this.distanceToSun = distance / 1000
+        if (planet === targetPlanet) this.distanceToTarget = distance / 1000
 
         const force = G * this.mass * planet.mass / distance ** 2; // Law of attraction
         const theta = Math.atan2(distance_z, distance_x); // Horizontal angle
