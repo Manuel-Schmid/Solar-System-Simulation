@@ -424,9 +424,9 @@ export class Planet {
             roughness: 0.8, // less rough, more reflective
             // metalness: 0.1, // metallic, reflective effect
         });
-        if (lowQMapPath) {
+        if (lowQMapPath || highQMapPath) {
             this.material.color = null;
-            const texture = textureLoader.load(lowQMapPath);
+            const texture = textureLoader.load(HIGH_QUALITY_TEXTURES ? highQMapPath : lowQMapPath);
             texture.colorSpace = THREE.SRGBColorSpace
             this.material.map = texture;
 

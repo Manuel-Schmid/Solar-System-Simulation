@@ -63,6 +63,7 @@ const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 8.32, 16, 1.024 * 10
 neptune.zVel = 5.4299794
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
+const discardedPlanets = [];
 
 
 spacecraft = new Spacecraft(
@@ -101,6 +102,7 @@ loadingManager.onLoad = ()=>{
             controls: controls,
             jwstCameraOffset: jwstCameraOffset,
             planets: planets,
+            discardedPlanets: discardedPlanets,
             sun: sun,
             earth: earth,
             moon: moon,
@@ -119,10 +121,11 @@ loadingManager.onLoad = ()=>{
             setJwstCameraOffset: setJwstCameraOffset,
         })
     }
+    if (firstLoad) { // todo: only temp
+        spacecraftSelected = true
+        isCameraLocked = true
+    }
     firstLoad = false
-    // todo: only temp
-    spacecraftSelected = true
-    isCameraLocked = true
 }
 
 updateLighting()
@@ -265,10 +268,8 @@ function moveToPlanet(planet, topDown=false) {
     updateEarthSystemVisibility(inEarthSystem)
 
     if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
-    else if (planet.isSun) targetPosition = new THREE.Vector3(planet.sphere.position.x + planet.radius + 0.4, planet.sphere.position.y + planet.radius, planet.sphere.position.z + planet.radius + 0.4)
-    else {
-        targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y, planet.sphere.position.z)
-    }
+    else targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y, planet.sphere.position.z)
+
     cameraOffset = calcPlanetOffset(planet)
     targetPosition.x += cameraOffset.x
     targetPosition.y += cameraOffset.y
@@ -290,7 +291,7 @@ function moveToPlanet(planet, topDown=false) {
         } else { // animation is finished
             targetPlanet = planet;
             birdseye = topDown
-            if (!topDown && !targetPlanet.isSun) isCameraLocked = true
+            if (!topDown) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
         }
@@ -464,7 +465,6 @@ function render() { // runs with 60 fps
             controls.update();
         }
     }
-
     renderer.render( scene, camera );
 }
 renderer.setAnimationLoop( render );

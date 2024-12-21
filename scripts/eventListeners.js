@@ -8,6 +8,7 @@ export function initEventListeners({
                                        controls,
                                        jwstCameraOffset,
                                        planets,
+                                       discardedPlanets,
                                        sun,
                                        earth,
                                        moon,
@@ -125,6 +126,12 @@ export function initEventListeners({
                 handbrakePressed = true;
                 pushTextToLabel('Place spacecraft on xz-plane')
             }
+            if (event.key.toLowerCase() === 'g') {
+                spacecraftGravity = !spacecraftGravity;
+                spacecraftMatchVelocity = false
+                pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
+                return
+            }
         }
         if (spacecraftSelected && targetPlanet) {
             if (event.key.toLowerCase() === 'r') {
@@ -138,12 +145,6 @@ export function initEventListeners({
             REALISTIC_LIGHTING = !REALISTIC_LIGHTING;
             pushTextToLabel(REALISTIC_LIGHTING ? 'Enable realistic lighting' : 'Disable realistic lighting');
             updateLighting()
-            return
-        }
-        if (event.key.toLowerCase() === 'g') {
-            spacecraftGravity = !spacecraftGravity;
-            spacecraftMatchVelocity = false
-            pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
             return
         }
         if (event.key.toLowerCase() === 'k') {
@@ -267,23 +268,30 @@ export function initEventListeners({
         if (event.key.toLowerCase() === '.') {
             if (targetPlanet && !targetPlanet.isSun) {
                 pushTextToLabel('Evolve planet into a star')
-                const newSun = new Planet(targetPlanet.name + "Sun", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+                const newSun = new Planet(targetPlanet.name + " (Star)", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
                 newSun.xVel = targetPlanet.xVel;
                 newSun.yVel = targetPlanet.yVel;
                 newSun.zVel = targetPlanet.zVel;
-                newSun.orbits = targetPlanet.orbits;
-                for (let i = 0; i < planets.length - 1; i++) {
+                newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 2]);
+                newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 1]);
+                newSun.drawOrbits()
+                for (let i = 0; i <= planets.length - 1; i++) {
                     if (planets[i] === targetPlanet) {
                         scene.remove(planets[i].sphere)
                         if (planets[i].ring) scene.remove(planets[i].ring.ringObj)
                         if (planets[i].atmosphere) scene.remove(planets[i].atmosphere)
                         if (planets[i].clouds) scene.remove(planets[i].clouds)
-                        if (targetPlanet.name === "Earth") updateEarthSystemVisibility(false);
+                        if (targetPlanet.name === "Earth") {
+                            inEarthSystem = false;
+                            updateEarthSystemVisibility(false);
+                        }
                         planets[i].updateVectorLines(null, null, SHOW_VECTORS, true)
 
                         planets[i] = newSun
+                        discardedPlanets.push(targetPlanet)
                         targetPlanet = newSun
-                        if (isCameraLocked) moveToPlanet(targetPlanet)
+                        isCameraLocked = false
+                        if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
                         return
                     }
                 }
@@ -327,7 +335,7 @@ export function initEventListeners({
             }
             SHOW_ORBITS = !SHOW_ORBITS;
             pushTextToLabel(SHOW_ORBITS ? 'Show orbits' : 'Hide orbits')
-            for (const planet of planets) {
+            for (const planet of [...planets, ...discardedPlanets]) {
                 if (SHOW_ORBITS) scene.add(planet.orbitLine);
                 else scene.remove(planet.orbitLine);
             }
@@ -362,9 +370,10 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === 'p') {
             pushTextToLabel('Reset orbits')
-            for (const planet of planets) {
+            for (const planet of [...planets, ...discardedPlanets]) {
                 planet.resetOrbit()
             }
+            discardedPlanets.length = 0 // clear discarded planets array
             spacecraft.resetOrbit()
         }
         if (event.key.toLowerCase() === 'v') {
