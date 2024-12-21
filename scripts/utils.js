@@ -36,6 +36,13 @@ export function getDistanceBetweenPoints(P1, P2) {
     return Math.sqrt(dx ** 2 + dy ** 2);
 }
 
+export function getPositionDistance(position1, position2) {
+    const distance_x = ((position1.x - position2.x) / DISTANCE_SCALE) * 1000 // distance in meters;
+    const distance_y = ((position1.y - position2.y) / DISTANCE_SCALE) * 1000; // distance in meters
+    const distance_z = ((position1.z - position2.z) / DISTANCE_SCALE) * 1000 // distance in meters;
+    return Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // Total distance in km
+}
+
 export function getPointXBeyondLine(P1, P2, d) { // two points and distance of P3
     const P3 = new THREE.Vector3(0,0,0);
 
@@ -43,6 +50,10 @@ export function getPointXBeyondLine(P1, P2, d) { // two points and distance of P
     P3.x = (P2.x + (d * ((P2.x - P1.x) / vectorLen)))
     P3.z = (P2.z + (d * ((P2.z - P1.z) / vectorLen)))
     return P3
+}
+
+export function convertHexToRGB(colorHex) {
+    return `#${colorHex.toString(16).padStart(6, '0')}`;
 }
 
 export function formatDistance(value) { // todo delete

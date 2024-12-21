@@ -6,7 +6,6 @@ import {Planet} from "./setup/classes";
 
 export function initEventListeners({
                                        controls,
-                                       cameraOffset,
                                        jwstCameraOffset,
                                        planets,
                                        sun,
@@ -25,32 +24,61 @@ export function initEventListeners({
                                        updateJWSTPosition,
                                        setCameraOffset,
                                        setJwstCameraOffset,
-                                       setSpacecraftCameraOffset,
                                    }) {
+    window.addEventListener('mousedown', (event) => {
+        if (!spacecraftSelected) return
+        isMouseDown = true;
+        document.querySelector('canvas').style.cursor = 'none'
+        lastMousePosition.x = event.clientX; // Initialize last position
+        lastMousePosition.y = event.clientY;
+    });
+
+    window.addEventListener('mousemove', (event) => {
+        if (!spacecraftSelected || !isMouseDown || PAUSED) return; // Only track movement while mouse button is pressed
+
+        let deltaX = event.clientX - lastMousePosition.x;
+        let deltaY = event.clientY - lastMousePosition.y;
+
+        deltaX = 100 * deltaX / window.innerWidth;
+        deltaY = 100 * deltaY / window.innerHeight;
+
+        // axis flip fix
+        if ((spacecraft.obj.rotation.x >= THREE.MathUtils.degToRad(90)) || (spacecraft.obj.rotation.x <= THREE.MathUtils.degToRad(-90))) {
+            deltaX *= -1
+        }
+
+        spacecraft.rotateSpacecraft(deltaY * spacecraft.angularVelocity, deltaX * spacecraft.angularVelocity)
+
+        lastMousePosition.x = event.clientX;
+        lastMousePosition.y = event.clientY;
+    });
+
+    window.addEventListener('mouseup', () => {
+        document.querySelector('canvas').style.cursor = ''
+        if (!spacecraftSelected) return
+        isMouseDown = false;
+    });
     document.addEventListener('keyup', (event) => {
         if (spacecraftSelected) {
-            if (event.key === 'ArrowUp') {
+            if (event.key.toLowerCase() === 'w') {
                 forwardPressed = false;
             }
-            if (event.key === 'ArrowDown') {
-                backwardPressed = false;
-            }
-            if (event.key === 'ArrowLeft') {
+            if (event.key.toLowerCase() === 'a') {
                 portPressed = false;
             }
-            if (event.key === 'ArrowRight') {
+            if (event.key.toLowerCase() === 's') {
+                backwardPressed = false;
+            }
+            if (event.key.toLowerCase() === 'd') {
                 starboardPressed = false;
             }
-            if (event.key.toLowerCase() === 'a') {
+            if (event.key === 'ArrowLeft') {
                 rotatePortPressed = false;
             }
-            if (event.key.toLowerCase() === 'd') {
+            if (event.key === 'ArrowRight') {
                 rotateStarboardPressed = false;
             }
-            if (event.key.toLowerCase() === 'd') {
-                rotateStarboardPressed = false;
-            }
-            if (event.key === 'Shift') {
+            if (event.key === 'Shift' || event.key.toLowerCase() === 'ü') {
                 handbrakePressed = false;
             }
         }
@@ -59,25 +87,24 @@ export function initEventListeners({
         if (event.code === 'Space') { // un/pause the game
             PAUSED = !PAUSED;
             pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
-            return
         }
         if (spacecraftSelected) { // spacecraft controls
-            if (event.key === 'ArrowUp') {
+            if (event.key.toLowerCase() === 'w') {
                 forwardPressed = true;
             }
-            if (event.key === 'ArrowDown') {
-                backwardPressed = true;
-            }
-            if (event.key === 'ArrowLeft') {
+            if (event.key.toLowerCase() === 'a') {
                 portPressed = true;
             }
-            if (event.key === 'ArrowRight') {
-                starboardPressed = true;
-            }
-            if (event.key.toLowerCase() === 'a') {
-                rotatePortPressed = true;
+            if (event.key.toLowerCase() === 's') {
+                backwardPressed = true;
             }
             if (event.key.toLowerCase() === 'd') {
+                starboardPressed = true;
+            }
+            if (event.key === 'ArrowLeft') {
+                rotatePortPressed = true;
+            }
+            if (event.key === 'ArrowRight') {
                 rotateStarboardPressed = true;
             }
             if (event.key === 'Shift') {
@@ -92,10 +119,17 @@ export function initEventListeners({
                 pushTextToLabel(spacecraftLight ? 'Enable spacecraft light' : 'Disable spacecraft light');
                 spacecraft.obj.shipLight.visible = spacecraftLight
             }
+            if (event.key.toLowerCase() === 'ü') {
+                spacecraft.container.position.y = 0;
+                spacecraft.obj.rotation.x = 0;
+                handbrakePressed = true;
+                pushTextToLabel('Place spacecraft on xz-plane')
+            }
         }
         if (spacecraftSelected && targetPlanet) {
-            if (event.key.toLowerCase() === 'z') {
+            if (event.key.toLowerCase() === 'r') {
                 spacecraftMatchVelocity = !spacecraftMatchVelocity;
+                spacecraftGravity = false
                 pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
                 return
             }
@@ -108,6 +142,7 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === 'g') {
             spacecraftGravity = !spacecraftGravity;
+            spacecraftMatchVelocity = false
             pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
             return
         }
@@ -118,7 +153,7 @@ export function initEventListeners({
             updateGridTexture(constellationSphere);
             return
         }
-        if (event.key.toLowerCase() === 'r') {
+        if (event.key.toLowerCase() === 'z') {
             TRUE_ROTATION_SPEEDS = !TRUE_ROTATION_SPEEDS;
             pushTextToLabel(TRUE_ROTATION_SPEEDS ? 'Enable accurate rotation speeds' : 'Disable accurate rotation speeds')
         }
@@ -143,7 +178,7 @@ export function initEventListeners({
             targetPlanet = null
             spacecraftSelected = true
             isCameraLocked = true
-            setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
+            updateLabel()
             // if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
@@ -156,9 +191,7 @@ export function initEventListeners({
                     isCameraLocked = true;
                     const spacecraftWorldPosition = new THREE.Vector3();
                     spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
-
-                    if (PAUSED) setSpacecraftCameraOffset(new THREE.Vector3().subVectors(camera.position, spacecraftWorldPosition));
-                    else setSpacecraftCameraOffset(spacecraft.calcSpacecraftCameraOffset())
+                    // todo???
                 }
                 return
             }
@@ -199,10 +232,11 @@ export function initEventListeners({
                 if (isCameraSunLocked && !isCameraLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
             }
         }
-        if (event.key.toLowerCase() === 's') {
+        if (event.key.toLowerCase() === 's' && !spacecraftSelected) {
             pushTextToLabel('Decrease planet speed')
             if (targetPlanet) {
                 targetPlanet.xVel *= 0.8
+                targetPlanet.yVel *= 0.8
                 targetPlanet.zVel *= 0.8
             }
         }
@@ -210,6 +244,7 @@ export function initEventListeners({
             pushTextToLabel('Increase planet speed')
             if (targetPlanet) {
                 targetPlanet.xVel *= 1.2
+                targetPlanet.yVel *= 1.2
                 targetPlanet.zVel *= 1.2
             }
         }
@@ -234,6 +269,7 @@ export function initEventListeners({
                 pushTextToLabel('Evolve planet into a star')
                 const newSun = new Planet(targetPlanet.name + "Sun", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
                 newSun.xVel = targetPlanet.xVel;
+                newSun.yVel = targetPlanet.yVel;
                 newSun.zVel = targetPlanet.zVel;
                 newSun.orbits = targetPlanet.orbits;
                 for (let i = 0; i < planets.length - 1; i++) {
@@ -283,8 +319,14 @@ export function initEventListeners({
             animate();
         }
         if (event.key.toLowerCase() === 'o') {
+            if (event.altKey) {
+                if (spacecraft.orbitLine.parent) scene.remove(spacecraft.orbitLine)
+                else scene.add(spacecraft.orbitLine);
+                pushTextToLabel(SHOW_ORBITS ? 'Show spacecraft orbit' : 'Hide spacecraft orbits')
+                return
+            }
             SHOW_ORBITS = !SHOW_ORBITS;
-            pushTextToLabel(SHOW_ORBITS ? 'Show Orbits' : 'Hide Orbits')
+            pushTextToLabel(SHOW_ORBITS ? 'Show orbits' : 'Hide orbits')
             for (const planet of planets) {
                 if (SHOW_ORBITS) scene.add(planet.orbitLine);
                 else scene.remove(planet.orbitLine);
@@ -358,6 +400,7 @@ export function initEventListeners({
             }
         }
         if (event.key.toLowerCase() === 'j') {
+            spacecraftSelected = false
             pushTextToLabel('Move to James Webb Space Telescope')
             if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
             let showLabelChanged = false

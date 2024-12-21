@@ -24,17 +24,15 @@ import { initEventListeners } from "./eventListeners";
 // setup
 const controls = new OrbitControls( camera, renderer.domElement );
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
-let spacecraftCameraOffset = new THREE.Vector3(0, 0.008, -0.02);
 let jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
 
 const setCameraOffset = newOffset => { cameraOffset.copy(newOffset)};
 const setJwstCameraOffset = newOffset => { jwstCameraOffset.copy(newOffset)};
-const setSpacecraftCameraOffset = newOffset => { spacecraftCameraOffset.copy(newOffset)};
 
 // planets
 const sun = new Planet("Sun", 696340 * PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
 
-const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 0,  58*24, 	0.33010* 10 ** 24, 0x777676,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
+const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 0,  58*24, 	0.33010* 10 ** 24, 0x949494,0.387 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mercury.jpg', 'planet_textures/8k/8k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
 
 const venus = new Planet("Venus", 6051.8 * PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_venus_surface.jpg', 'planet_textures/8k/8k_venus_surface.jpg');
@@ -51,7 +49,7 @@ jupiter.zVel = 13.06000369219;
 const jupiterRing = new Ring(jupiter, 1.4, 1.5, 0xC0B09E,0.9)
 jupiter.ring = jupiterRing
 
-const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0x8d8549,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
+const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd3cc81,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
 saturn.zVel = 9.679981775672;
 const saturnRing = new Ring(saturn, 1.6, 2.7, 0xdcc49d, 1, 'planet_textures/2k/2k_saturn_ring_alpha.png') // todo
 saturn.ring = saturnRing
@@ -71,11 +69,10 @@ spacecraft = new Spacecraft(
     1000,
     0, 0, -3 * AU * DISTANCE_SCALE,
     0.04,
-    0.15,
+    0.25,
     0.0001, // 0.000001 (causes vector-line-bugs)
     0.2,
 );
-spacecraftCameraOffset = new THREE.Vector3(0, 8 * spacecraft.scale, 20 * spacecraft.scale);
 
 
 camera.position.y = 40; // moving out the camera
@@ -102,7 +99,6 @@ loadingManager.onLoad = ()=>{
     if (firstLoad) {
         initEventListeners({
             controls: controls,
-            cameraOffset: cameraOffset,
             jwstCameraOffset: jwstCameraOffset,
             planets: planets,
             sun: sun,
@@ -121,10 +117,12 @@ loadingManager.onLoad = ()=>{
             updateJWSTPosition: updateJWSTPosition,
             setCameraOffset: setCameraOffset,
             setJwstCameraOffset: setJwstCameraOffset,
-            setSpacecraftCameraOffset: setSpacecraftCameraOffset,
         })
     }
     firstLoad = false
+    // todo: only temp
+    spacecraftSelected = true
+    isCameraLocked = true
 }
 
 updateLighting()
@@ -174,7 +172,6 @@ const moonMaterial = new THREE.MeshStandardMaterial({
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonPlane = new THREE.Object3D();
 // const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
-scene.add(moonPlane);
 moonPlane.add(moon)
 moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moon.rotation.y = Math.PI;
@@ -195,7 +192,6 @@ gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
     ISS = gltf.scene
     // ISS.rotation.x = THREE.MathUtils.degToRad(90)
 
-    // scene.add(issPlane);
     issPlane.add(ISS)
 
     ISS.position.set(earth.radius * 1.1, 0, 0);
@@ -220,7 +216,6 @@ gltfLoader.load('models/jwst.glb' , (gltf) =>
     jwst = gltf.scene
     jwst.rotation.x = THREE.MathUtils.degToRad(90)
 
-    scene.add(jwstPlane); // Add the orbit object to the scene
     jwstPlane.add(jwst)
     jwstPlane.add(jwstOrbit)
 
@@ -234,11 +229,13 @@ function updateEarthSystemVisibility(visible) {
     if (visible) {
         moonPlane.position.copy(earth.sphere.position)
         issPlane.position.copy(earth.sphere.position)
+        scene.add(jwstPlane)
         scene.add(moonPlane)
         scene.add(issPlane)
         scene.add(moonOrbitTrail.orbitTrailObj)
         scene.add(issOrbitTrail.orbitTrailObj)
     } else {
+        scene.remove(jwstPlane);
         scene.remove(moonPlane)
         scene.remove(issPlane)
         scene.remove(moonOrbitTrail.orbitTrailObj)
@@ -359,7 +356,7 @@ function render() { // runs with 60 fps
         if (spacecraftSelected) {
             spacecraft.updatePosition(planets, sun.sphere.position)
             if (!portPressed && !starboardPressed) {
-                spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, 0, 0.08);
+                spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, 0, 0.08);
             }
             if (!forwardPressed) {
                 spacecraft.obj.flame1.visible = false;
@@ -368,12 +365,12 @@ function render() { // runs with 60 fps
                 spacecraft.flameMaterial.uniforms.time.value += 2500 * spacecraft.scale;
             }
             if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== STANDARD_FOV)) {
-                spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.obj.rotation.x, 0, 0.1);
+                // spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.container.rotation.x, 0, 0.1);
                 adjustFOV(STANDARD_FOV)
             }
             // Smoothly reset to no tilt
             if ((forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed || handbrakePressed) && !spacecraftMatchVelocity) {
-                spacecraft.changeMomentum(spacecraftCameraOffset)
+                spacecraft.changeMomentum()
             }
         }
         if (jwstSelected) updateJWSTPosition()
@@ -406,38 +403,47 @@ function render() { // runs with 60 fps
     } else if (spacecraftSelected) {
         if (isCameraLocked) {
             if (!targetPlanet) { // free flight
-                if (spacecraftFirstPerson) {
-                    const firstPersonCameraPosition = spacecraft.obj.firstPersonCameraHelper.getWorldPosition(new THREE.Vector3());
-                    camera.position.copy(firstPersonCameraPosition);
-                }
-                else camera.position.copy(spacecraft.obj.position).add(spacecraftCameraOffset);
+                const globalCameraPosition = new THREE.Vector3();
+                if (spacecraftFirstPerson) spacecraft.obj.firstPersonCameraHelper.getWorldPosition(globalCameraPosition);
+                else spacecraft.obj.cameraHelperFar.getWorldPosition(globalCameraPosition);
+                camera.position.copy(globalCameraPosition);
 
-                const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(spacecraft.obj.quaternion);
-                camera.lookAt(spacecraft.obj.position.clone().add(forward.multiplyScalar(10)));
+                // camera look forward
+                const localForward = new THREE.Vector3(0, 0, 1);
+                const containerQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, spacecraft.container.rotation.y, 0));
+                const objQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(spacecraft.obj.rotation.x, 0, 0));
+                const globalForward = localForward.applyQuaternion(containerQuat.multiply(objQuat));
+                camera.lookAt(spacecraft.container.position.clone().add(globalForward.multiplyScalar(10)));
+
+                // axis flip fix
+                if (spacecraft.obj.rotation.x >= THREE.MathUtils.degToRad(90)) {
+                    camera.rotation.z += THREE.MathUtils.degToRad(180)
+                } else if (spacecraft.obj.rotation.x <= THREE.MathUtils.degToRad(-90)) {
+                    camera.rotation.z -= THREE.MathUtils.degToRad(180)
+                }
             }
             else { // spacecraft locked to planet
                 const direction = new THREE.Vector3();
-                direction.subVectors(targetPlanet.sphere.position, spacecraft.obj.position);
+                direction.subVectors(targetPlanet.sphere.position, spacecraft.container.position);
                 const yaw = Math.atan2(direction.x, direction.z); // Use atan2 to get the angle in the horizontal plane
-                // spacecraft.obj.rotation.y = THREE.MathUtils.lerp(spacecraft.obj.rotation.y, yaw, 0.1);
-                spacecraft.obj.rotation.y = yaw; // no rotate animation
+                spacecraft.container.rotation.y = yaw; // no rotate animation
 
                 const globalCameraPosition = new THREE.Vector3();
                 if (spacecraftFirstPerson) spacecraft.obj.firstPersonCameraHelper.getWorldPosition(globalCameraPosition);
-                else spacecraft.obj.cameraHelper.getWorldPosition(globalCameraPosition);
+                else spacecraft.obj.cameraHelperClose.getWorldPosition(globalCameraPosition);
 
                 camera.position.copy(globalCameraPosition);
                 camera.lookAt(targetPlanet.sphere.position);
             }
             // first person camera tilt (only if first person and only while the tilt is still being lerped)
-            if (spacecraftFirstPerson) { // optimization (causes lags sometimes):  && (portPressed || starboardPressed || (Math.abs(spacecraft.obj.rotation.z) > 0.0000005 && Math.abs(spacecraft.obj.rotation.z) <= spacecraft.tiltAngle))
-                const spacecraftQuaternion = new THREE.Quaternion();
-                spacecraftQuaternion.setFromEuler(spacecraft.obj.rotation);
-                camera.rotation.setFromQuaternion(spacecraftQuaternion);
-                camera.rotation.y += Math.PI
-            }
+            // if (spacecraftFirstPerson) { // optimization (causes lags sometimes):  && (portPressed || starboardPressed || (Math.abs(spacecraft.container.rotation.z) > 0.0000005 && Math.abs(spacecraft.container.rotation.z) <= spacecraft.tiltAngle))
+                // const spacecraftQuaternion = new THREE.Quaternion();
+                // spacecraftQuaternion.setFromEuler(spacecraft.container.rotation);
+                // camera.rotation.setFromQuaternion(spacecraftQuaternion);
+                // camera.rotation.y += Math.PI
+            // }
         } else {
-            controls.target.copy(spacecraft.obj.position);
+            controls.target.copy(spacecraft.container.position);
             controls.update();
         }
     }
