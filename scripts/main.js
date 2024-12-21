@@ -172,7 +172,6 @@ const moonMaterial = new THREE.MeshStandardMaterial({
 const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonPlane = new THREE.Object3D();
 // const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
-scene.add(moonPlane);
 moonPlane.add(moon)
 moon.position.set(0.002606 * AU * DISTANCE_SCALE, 0, 0); // Position of moon relative to planet
 moon.rotation.y = Math.PI;
@@ -193,7 +192,6 @@ gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
     ISS = gltf.scene
     // ISS.rotation.x = THREE.MathUtils.degToRad(90)
 
-    // scene.add(issPlane);
     issPlane.add(ISS)
 
     ISS.position.set(earth.radius * 1.1, 0, 0);
@@ -218,7 +216,6 @@ gltfLoader.load('models/jwst.glb' , (gltf) =>
     jwst = gltf.scene
     jwst.rotation.x = THREE.MathUtils.degToRad(90)
 
-    scene.add(jwstPlane); // Add the orbit object to the scene
     jwstPlane.add(jwst)
     jwstPlane.add(jwstOrbit)
 
@@ -232,11 +229,13 @@ function updateEarthSystemVisibility(visible) {
     if (visible) {
         moonPlane.position.copy(earth.sphere.position)
         issPlane.position.copy(earth.sphere.position)
+        scene.add(jwstPlane)
         scene.add(moonPlane)
         scene.add(issPlane)
         scene.add(moonOrbitTrail.orbitTrailObj)
         scene.add(issOrbitTrail.orbitTrailObj)
     } else {
+        scene.remove(jwstPlane);
         scene.remove(moonPlane)
         scene.remove(issPlane)
         scene.remove(moonOrbitTrail.orbitTrailObj)
