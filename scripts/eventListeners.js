@@ -125,6 +125,9 @@ export function initEventListeners({
                 handbrakePressed = true;
                 pushTextToLabel('Place spacecraft on xz-plane')
             }
+            if (event.key === 'Control') {
+                spacecraft.shoot()
+            }
         }
         if (spacecraftSelected && targetPlanet) {
             if (event.key.toLowerCase() === 'r') {
