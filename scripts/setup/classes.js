@@ -14,6 +14,7 @@ export class Spacecraft {
         this.acceleration = acceleration;
         this.obj = null;
         this.orbits = [];
+        this.bolts = [];
         this.scale = scale
         this.distanceTosun = 0;
         this.distanceToTarget = 0;
@@ -413,6 +414,89 @@ export class Spacecraft {
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
     }
+    shoot() {
+        console.log("shoot");
+
+        const forward = new THREE.Vector3(0, 0, 1); // Default forward direction
+        forward.applyEuler(new THREE.Euler(
+            this.obj.rotation.x, // X-axis rotation
+            this.container.rotation.y, // Y-axis rotation
+            this.container.rotation.z // Z-axis rotation
+        ))
+
+        const laserSpeed = 0.007; // Define a constant speed for the bolts
+        const xVel = this.xVel + forward.x * laserSpeed;
+        const yVel = this.yVel + forward.y * laserSpeed;
+        const zVel = this.zVel + forward.z * laserSpeed
+        console.log(xVel, yVel, zVel)
+
+        const boltStartPosition = this.container.position.clone();
+
+        const bolt = new Bolt(
+            this.scale, // Replace with your `spacecraftScale` if necessary
+            xVel, // x velocity
+            yVel, // y velocity
+            zVel, // z velocity
+            boltStartPosition.x, // Initial X position
+            boltStartPosition.y, // Initial Y position
+            boltStartPosition.z  // Initial Z position
+        );
+
+        // bolt.boltContainer.rotation.set(this.obj.rotation.x, this.container.rotation.y, this.container.rotation.z)
+        console.log(this.obj.rotation)
+        console.log(this.container.rotation)
+        // bolt.boltContainer.rotation.x = this.obj.rotation.x
+        bolt.boltContainer.rotation.y = this.container.rotation.y
+        // bolt.boltContainer.rotation.z = this.obj.rotation.z
+
+        console.log("Bolt fired!");
+    }
+
+}
+
+export class Bolt {
+    constructor(spacecraftScale, xVel, yVel, zVel, x=0, y=0, z=0 /*, rotation */) {
+        this.xVel = xVel;
+        this.yVel = yVel;
+        this.zVel = zVel;
+        this.lifetime = 0;
+        this.boltContainer = new THREE.Object3D();
+
+        // const axesHelper = new THREE.AxesHelper(10);
+        // this.boltContainer.add(axesHelper);
+
+        const geometry = new THREE.CylinderGeometry( 2 * spacecraftScale, 2 * spacecraftScale, 40 * spacecraftScale, 32 );
+        const material = new THREE.MeshBasicMaterial( {color: 0x3cff00} );
+        this.bolt1 = new THREE.Mesh( geometry, material );
+        this.bolt2 = new THREE.Mesh( geometry, material );
+        this.bolt1.scale.set(0.00001 / spacecraftScale,0.00001 / spacecraftScale,0.00001 / spacecraftScale);
+        this.bolt2.scale.set(0.00001 / spacecraftScale,0.00001 / spacecraftScale,0.00001 / spacecraftScale);
+
+        this.boltContainer.position.set(x, y, z)
+
+        this.bolt1.position.set(spacecraftScale * 5, 0, spacecraftScale * 10)
+        this.bolt2.position.set(-spacecraftScale * 5, 0, spacecraftScale * 10)
+
+        this.bolt1.rotation.x = THREE.MathUtils.degToRad(90)
+        this.bolt2.rotation.x = THREE.MathUtils.degToRad(90)
+
+        this.boltContainer.add(this.bolt1);
+        this.boltContainer.add(this.bolt2);
+        // this.container.rotation.set(rotation)
+        spacecraft.bolts.push(this);
+        scene.add( this.boltContainer );
+    }
+    updatePosition() {
+        this.boltContainer.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
+        this.boltContainer.position.y += ((this.yVel * DISTANCE_SCALE) * TIME);
+        this.boltContainer.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
+
+        this.lifetime += 1
+        if (this.lifetime > 200) {
+            spacecraft.bolts.shift();
+            scene.remove( this.boltContainer );
+        }
+    }
 }
 
 export class Planet {
@@ -732,7 +816,6 @@ export class OrbitTrail {
         this.orbitTrailMaterial = new THREE.LineBasicMaterial({ color: color });
         this.orbitTrailObj = new THREE.Line(this.orbitTrailGeometry, this.orbitTrailMaterial);
         this.orbitTrailObj.frustumCulled = false;
-        scene.add(this.orbitTrailObj);
         this.numPoints = 0;
     }
     reset() {
