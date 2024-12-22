@@ -14,6 +14,7 @@ export class Spacecraft {
         this.acceleration = acceleration;
         this.obj = null;
         this.orbits = [];
+        this.bolts = [];
         this.scale = scale
         this.distanceTosun = 0;
         this.distanceToTarget = 0;
@@ -258,7 +259,6 @@ export class Spacecraft {
         if (rotateStarboardPressed && !targetPlanet) {
             this.container.rotation.y -= this.angularVelocity;
         }
-        console.log(this.yVel)
     }
     rotateSpacecraft(xAngle, yAngle) {
         this.container.rotation.y -= yAngle;
@@ -412,6 +412,61 @@ export class Spacecraft {
         this.currentOrbitPointCount = 0;
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
+    }
+    shoot() {
+        const bolt = new Bolt(this.scale);
+        this.bolts.push(bolt);
+    }
+    updateBolts() {
+        for (const bolt of this.bolts) {
+            bolt.lifetime += 1
+            if (bolt.lifetime < 200) {
+                bolt.boltContainer.position.copy(this.container.position)
+                bolt.boltContainer.bolt1.position.z += 2;
+                bolt.boltContainer.bolt2.position.z += 2;
+            } else {
+                this.bolts.shift();
+                scene.remove(bolt.boltContainer);
+            }
+        }
+    }
+}
+
+export class Bolt {
+    constructor(spacecraftScale) {
+        this.lifetime = 0;
+        this.boltContainer = new THREE.Object3D();
+        this.boltContainerInner = new THREE.Object3D();
+
+        this.boltContainer.position.copy(spacecraft.container.position)
+
+        this.boltContainer.rotation.copy(spacecraft.container.rotation);
+        this.boltContainerInner.rotation.copy(spacecraft.obj.rotation);
+
+        this.boltContainer.scale.set(spacecraftScale, spacecraftScale, spacecraftScale)
+
+        const geometry = new THREE.CylinderGeometry( 1, 1, 30, 32 );
+        const material = new THREE.MeshBasicMaterial( {color: 0x3cff00} );
+        this.bolt1 = new THREE.Mesh( geometry, material );
+        this.bolt2 = new THREE.Mesh( geometry, material );
+        this.bolt1.scale.set(0.00001 / spacecraftScale,0.00001 / spacecraftScale,0.00001 / spacecraftScale);
+        this.bolt2.scale.set(0.00001 / spacecraftScale,0.00001 / spacecraftScale,0.00001 / spacecraftScale);
+
+        this.bolt1.position.set(4.6, -0.5, 3.6)
+        this.bolt2.position.set(-4.6, -0.5, 3.6)
+
+        this.bolt1.rotation.x = THREE.MathUtils.degToRad(90)
+        this.bolt2.rotation.x = THREE.MathUtils.degToRad(90)
+
+        this.boltContainerInner.add(this.bolt1);
+        this.boltContainerInner.add(this.bolt2);
+
+        this.boltContainer.add(this.boltContainerInner)
+
+        this.boltContainer.bolt1 = this.bolt1;
+        this.boltContainer.bolt2 = this.bolt2;
+
+        scene.add(this.boltContainer)
     }
 }
 
@@ -732,7 +787,6 @@ export class OrbitTrail {
         this.orbitTrailMaterial = new THREE.LineBasicMaterial({ color: color });
         this.orbitTrailObj = new THREE.Line(this.orbitTrailGeometry, this.orbitTrailMaterial);
         this.orbitTrailObj.frustumCulled = false;
-        scene.add(this.orbitTrailObj);
         this.numPoints = 0;
     }
     reset() {

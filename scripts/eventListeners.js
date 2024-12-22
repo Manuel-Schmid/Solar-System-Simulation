@@ -136,6 +136,9 @@ export function initEventListeners({
                 pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
                 return
             }
+            if (event.key === 'Control') {
+                spacecraft.shoot()
+            }
         }
         if (spacecraftSelected && targetPlanet) {
             if (event.key.toLowerCase() === 'r') {
