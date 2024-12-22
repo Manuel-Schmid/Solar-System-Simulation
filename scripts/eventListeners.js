@@ -281,7 +281,7 @@ export function initEventListeners({
                 newSun.zVel = targetPlanet.zVel;
                 newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 2]);
                 newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 1]);
-                newSun.drawOrbits()
+                if (SHOW_ORBITS) newSun.drawOrbits()
                 for (let i = 0; i <= planets.length - 1; i++) {
                     if (planets[i] === targetPlanet) {
                         scene.remove(planets[i].sphere)
@@ -297,8 +297,10 @@ export function initEventListeners({
                         planets[i] = newSun
                         discardedPlanets.push(targetPlanet)
                         targetPlanet = newSun
-                        isCameraLocked = false
-                        if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
+                        if (!spacecraftSelected) {
+                            isCameraLocked = false
+                            if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
+                        }
                         return
                     }
                 }

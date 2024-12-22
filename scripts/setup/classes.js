@@ -594,7 +594,7 @@ export class Planet {
         this.orbitLine.renderOrder = -3;
         this.orbitLine.material.depthTest = true;
         this.orbitLine.material.depthWrite = false;
-        scene.add(this.orbitLine);
+        if (SHOW_ORBITS) scene.add(this.orbitLine);
 
         // vectors
         const gVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
