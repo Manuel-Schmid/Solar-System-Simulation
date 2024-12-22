@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {calcPlanetOffset, pushTextToLabel, updateGridTexture, updateLabel, updateLighting} from "./design/designUtils";
-import {camera, scene, textureLoader} from "./setup/scene";
+import {adjustFOV, camera, scene, textureLoader} from "./setup/scene";
 import {getDistanceBetweenPoints} from "./utils";
 import {Planet} from "./setup/classes";
 
@@ -79,7 +79,7 @@ export function initEventListeners({
             if (event.key === 'ArrowRight') {
                 rotateStarboardPressed = false;
             }
-            if (event.key === 'Shift' || event.key.toLowerCase() === 'ü') {
+            if (event.key === 'Shift') {
                 handbrakePressed = false;
             }
         }
@@ -121,10 +121,14 @@ export function initEventListeners({
                 spacecraft.obj.shipLight.visible = spacecraftLight
             }
             if (event.key.toLowerCase() === 'ü') {
-                spacecraft.container.position.y = 0;
-                spacecraft.obj.rotation.x = 0;
-                handbrakePressed = true;
-                pushTextToLabel('Place spacecraft on xz-plane')
+                activeAscensionAxis = !activeAscensionAxis
+                pushTextToLabel(activeAscensionAxis ? 'Enable ascension axis' : 'Disable ascension axis');
+                if (!activeAscensionAxis) {
+                    spacecraft.container.position.y = 0;
+                    spacecraft.obj.rotation.x = 0;
+                    spacecraft.yVel = 0;
+                }
+                updateLabel()
             }
             if (event.key.toLowerCase() === 'g') {
                 spacecraftGravity = !spacecraftGravity;

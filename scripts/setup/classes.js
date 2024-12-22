@@ -182,7 +182,7 @@ export class Spacecraft {
         const leftX = Math.sin(yaw + Math.PI / 2);        // Lateral (sideways) movement along X-axis
         const leftZ = Math.cos(yaw + Math.PI / 2);        // Lateral (sideways) movement along Z-axis
 
-        const lateralAcceleration = this.acceleration * 0.6; // Reduce lateral acceleration
+        const lateralAcceleration = this.acceleration * 0.75; // Reduce lateral acceleration
 
         // scaling velocities (smooth arrival)
         let accelScale = 1
@@ -197,10 +197,9 @@ export class Spacecraft {
             }
         }
 
-
         if (forwardPressed) {
             this.xVel += forwardX * this.acceleration * accelScale;
-            this.yVel += forwardY * this.acceleration * accelScale;
+            if (activeAscensionAxis) this.yVel += forwardY * this.acceleration * accelScale;
             this.zVel += forwardZ * this.acceleration * accelScale;
 
             this.obj.flame1.visible = true;
@@ -209,7 +208,7 @@ export class Spacecraft {
         }
         if (backwardPressed) {
             this.xVel -= forwardX * this.acceleration * accelScale;
-            this.yVel -= forwardY * this.acceleration * accelScale;
+            if (activeAscensionAxis) this.yVel -= forwardY * this.acceleration * accelScale;
             this.zVel -= forwardZ * this.acceleration * accelScale;
 
             adjustFOV(STANDARD_FOV * 0.85);
@@ -232,8 +231,6 @@ export class Spacecraft {
             this.zVel = 0;
             adjustFOV(STANDARD_FOV * 0.85)
             updateLabel()
-            // this.container.rotation.x = THREE.MathUtils.lerp(this.container.rotation.x, this.tiltAngle, 0.1);
-            // if (this.obj.rotation.x < 0.2) this.rotateSpacecraft(this.tiltAngle * 0.1, 0)
         }
         if (rotatePortPressed && !targetPlanet) {
             this.container.rotation.y += this.angularVelocity;
@@ -241,6 +238,7 @@ export class Spacecraft {
         if (rotateStarboardPressed && !targetPlanet) {
             this.container.rotation.y -= this.angularVelocity;
         }
+        console.log(this.yVel)
     }
     rotateSpacecraft(xAngle, yAngle) {
         this.container.rotation.y -= yAngle;

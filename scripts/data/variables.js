@@ -18,6 +18,7 @@ let spacecraftFirstPerson = false;
 let spacecraftLight = false;
 let spacecraftGravity = false;
 let spacecraftMatchVelocity = false;
+let activeAscensionAxis = true;
 let jwstSelected = false;
 let inEarthSystem = false;
 let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet | todo: change back
