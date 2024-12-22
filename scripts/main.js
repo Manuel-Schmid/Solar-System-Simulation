@@ -362,7 +362,12 @@ function render() { // runs with 60 fps
             if (!forwardPressed) {
                 spacecraft.obj.flame1.visible = false;
                 spacecraft.obj.flame2.visible = false;
-            } else {
+            }
+            if (!backwardPressed) {
+                spacecraft.obj.flame3.visible = false;
+                spacecraft.obj.flame4.visible = false;
+            }
+            if (forwardPressed || backwardPressed) {
                 spacecraft.flameMaterial.uniforms.time.value += 2500 * spacecraft.scale;
             }
             if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== STANDARD_FOV)) {

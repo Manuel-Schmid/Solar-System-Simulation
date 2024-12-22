@@ -88,6 +88,8 @@ export class Spacecraft {
         const flameGeometry = new THREE.ConeGeometry(500 * scale, 2000 * scale, 32); //
         const flame1 = new THREE.Mesh(flameGeometry, this.flameMaterial);
         const flame2 = new THREE.Mesh(flameGeometry, this.flameMaterial);
+        const flame3 = new THREE.Mesh(flameGeometry, this.flameMaterial);
+        const flame4 = new THREE.Mesh(flameGeometry, this.flameMaterial);
 
         flame1.position.set(1.04, -1.2, -2.3)
         flame1.scale.set(0.001 / scale,0.001 / scale,0.0007 / scale);
@@ -96,6 +98,16 @@ export class Spacecraft {
         flame2.position.set(-1.04, -1.2, -2.3)
         flame2.scale.set(0.001 / scale,0.001 / scale,0.0007 / scale);
         flame2.rotation.x = THREE.MathUtils.degToRad(-90)
+
+        flame3.position.set(1.5, -0.95, 6)
+        flame3.scale.set(0.0011 / scale,0.0044 / scale,0.00033 / scale);
+        flame3.rotation.x = THREE.MathUtils.degToRad(-270)
+        flame3.rotation.z = THREE.MathUtils.degToRad(-6)
+
+        flame4.position.set(-1.5, -0.95, 6)
+        flame4.scale.set(0.0011 / scale,0.0044 / scale,0.00033 / scale);
+        flame4.rotation.x = THREE.MathUtils.degToRad(-270)
+        flame4.rotation.z = THREE.MathUtils.degToRad(6)
 
         const cameraHelperFar = new THREE.Object3D();
         cameraHelperFar.position.set(0, 8, -20);
@@ -119,9 +131,15 @@ export class Spacecraft {
             this.obj.flame1 = flame1;
             this.obj.add(flame2)
             this.obj.flame2 = flame2;
+            this.obj.add(flame3)
+            this.obj.flame3 = flame3;
+            this.obj.add(flame4)
+            this.obj.flame4 = flame4;
 
             this.obj.flame1.visible = false;
             this.obj.flame2.visible = false;
+            this.obj.flame3.visible = false;
+            this.obj.flame4.visible = false;
 
             this.obj.add(cameraHelperFar);
             this.obj.cameraHelperFar = cameraHelperFar;
@@ -211,6 +229,8 @@ export class Spacecraft {
             if (activeAscensionAxis) this.yVel -= forwardY * this.acceleration * accelScale;
             this.zVel -= forwardZ * this.acceleration * accelScale;
 
+            this.obj.flame3.visible = true;
+            this.obj.flame4.visible = true;
             adjustFOV(STANDARD_FOV * 0.85);
         }
         if (portPressed) {
