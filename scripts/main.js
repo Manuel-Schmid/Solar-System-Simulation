@@ -356,6 +356,7 @@ function render() { // runs with 60 fps
         rotateTargetPlanet()
         if (spacecraftSelected) {
             spacecraft.updatePosition(planets, sun.sphere.position)
+            spacecraft.updateBolts()
             if (!portPressed && !starboardPressed) {
                 spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, 0, 0.08);
             }
