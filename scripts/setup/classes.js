@@ -120,6 +120,7 @@ export class Spacecraft {
         firstPersonCameraHelper.position.set(0, 1, 0);
 
         // model
+        // gltfLoader.load('models/spacecraft_fullSize.glb' , (gltf) =>
         gltfLoader.load('models/spacecraft.glb' , (gltf) =>
         {
             this.obj = gltf.scene

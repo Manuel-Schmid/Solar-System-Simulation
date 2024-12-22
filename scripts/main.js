@@ -186,28 +186,24 @@ const moonOrbitTrail = new OrbitTrail(200, 0xA2A1A1, false) // 250 for full circ
 
 // create ISS
 const issPlane = new THREE.Object3D();
-let ISS = null
-let issOrbitTrail = null
 const issScaleFactor = 0.000001
 
-gltfLoader.load('models/ISS_stationary.glb' , (gltf) =>
-{
-    ISS = gltf.scene
-    // ISS.rotation.x = THREE.MathUtils.degToRad(90)
+const issGeometry = new THREE.BoxGeometry(50, 50, 50);
+const issMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // red cube instead of ISS model
+const ISS = new THREE.Mesh(issGeometry, issMaterial);
 
-    issPlane.add(ISS)
+issPlane.add(ISS)
+ISS.visible = false; // make ISS-cube invisible
 
-    ISS.position.set(earth.radius * 1.1, 0, 0);
-    ISS.rotation.y = THREE.MathUtils.degToRad(90);
-    ISS.scale.set(issScaleFactor, issScaleFactor, issScaleFactor);
-    issPlane.rotation.x = THREE.MathUtils.degToRad(51.6);
+ISS.position.set(earth.radius * 1.1, 0, 0);
+ISS.rotation.y = THREE.MathUtils.degToRad(90);
+ISS.scale.set(issScaleFactor, issScaleFactor, issScaleFactor);
+issPlane.rotation.x = THREE.MathUtils.degToRad(51.6);
 
-    issPlane.position.copy(ISS.position);
+issPlane.position.copy(ISS.position);
 
-    issOrbitTrail = new OrbitTrail(3000, 0xFF00A6, true)
-    issOrbitTrail.orbitTrailObj.rotation.x = THREE.MathUtils.degToRad(23.5);
-});
-
+const issOrbitTrail = new OrbitTrail(3000, 0xFF00A6, true)
+issOrbitTrail.orbitTrailObj.rotation.x = THREE.MathUtils.degToRad(23.5);
 
 
 // create James Webb space telescope
@@ -225,6 +221,10 @@ gltfLoader.load('models/jwst.glb' , (gltf) =>
     jwst.position.set(jwstCenterDistance, 0, 0);
     jwst.scale.set(jwstScaleFactor, jwstScaleFactor, jwstScaleFactor);
     jwstPlane.rotation.y = THREE.MathUtils.degToRad(90)
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.003, 10000 * DISTANCE_SCALE); // (color, intensity, distance)
+    pointLight.position.set(1, 4, 0); // Set the light's position
+    jwst.add(pointLight);
 });
 
 
