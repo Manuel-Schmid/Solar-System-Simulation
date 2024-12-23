@@ -156,3 +156,20 @@ body {
     font-size: 14px;
     cursor: pointer;
 }
+
+#simulation-speed-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+}
+
+#simulation-speed {
+    width: 100%;
+}
+
+#simulation-speed-display {
+    font-size: 14px;
+    color: white;
+    margin-top: 5px;
+}

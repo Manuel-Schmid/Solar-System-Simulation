@@ -1,4 +1,5 @@
 // already in interface
+let TIME = 60 * 60 * simulationSpeed["24s/Ey"] // 6 = one year in 24 Seconds / REALTIME_FACTOR: true realtime simulation speed
 let PAUSED = false;
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;

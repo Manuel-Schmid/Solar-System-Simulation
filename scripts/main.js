@@ -150,6 +150,17 @@ function setMenuSettings() { // set interface default values
             select.value = distanceUnits.indexOf(distanceUnit).toString();
         }
     });
+
+    document.getElementById("simulation-speed").addEventListener("input", (event) => {
+        const speedKeys = Object.keys(simulationSpeed);
+
+        const sliderValue = event.target.value;
+        const speedLabel = speedKeys[sliderValue]; // Map slider value to speed label
+        const speedValue = simulationSpeed[speedLabel];
+
+        document.getElementById("simulation-speed-display").textContent = speedLabel;
+        TIME = 60 * 60 * speedValue; // update simulation speed
+    });
 }
 
 updateLighting()
