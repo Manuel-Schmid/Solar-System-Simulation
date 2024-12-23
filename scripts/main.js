@@ -4,7 +4,7 @@ import {
     calcPlanetOffset,
     createCircle,
     createStars,
-    drawConnection,
+    drawConnection, pushTextToLabel, toggleSpacecraftSelected,
     updateLabel, updateLighting
 } from "./design/designUtils";
 import { getPointXBeyondLine } from "./utils";
@@ -120,12 +120,36 @@ loadingManager.onLoad = ()=>{
             setCameraOffset: setCameraOffset,
             setJwstCameraOffset: setJwstCameraOffset,
         })
+        setMenuSettings()
     }
-    if (firstLoad) { // todo: only temp
-        spacecraftSelected = true
-        isCameraLocked = true
-    }
+    // if (firstLoad) { // todo: remove spacecraft default select
+    //     toggleSpacecraftSelected(true)
+    //     isCameraLocked = true
+    // }
     firstLoad = false
+}
+
+function setMenuSettings() { // set interface default values
+    document.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
+        if (checkbox.id === "PAUSED_CB") checkbox.checked = PAUSED;
+        else if (checkbox.id === "SHOW_LABEL_CB") checkbox.checked = SHOW_LABEL;
+        else if (checkbox.id === "SHOW_ORBITS_CB") checkbox.checked = SHOW_ORBITS;
+        else if (checkbox.id === "SHOW_SPACECRAFT_ORBIT_CB") checkbox.checked = SHOW_ORBITS;
+        else if (checkbox.id === "HIGH_QUALITY_TEXTURES_CB") checkbox.checked = HIGH_QUALITY_TEXTURES;
+        else if (checkbox.id === "SHOW_VECTORS_CB") checkbox.checked = SHOW_VECTORS;
+        else if (checkbox.id === "REALISTIC_LIGHTING_CB") checkbox.checked = REALISTIC_LIGHTING;
+        else if (checkbox.id === "TRUE_ROTATION_SPEEDS_CB") checkbox.checked = TRUE_ROTATION_SPEEDS;
+        else if (checkbox.id === "ACTIVE_ASCENSION_AXIS_CB") checkbox.checked = ACTIVE_ASCENSION_AXIS;
+        else if (checkbox.id === "SPACECRAFT_FIRST_PERSON_CB") checkbox.checked = spacecraftFirstPerson;
+        else if (checkbox.id === "SPACECRAFT_GRAVITY_CB") checkbox.checked = spacecraftGravity;
+        else if (checkbox.id === "SPACECRAFT_MATCH_VELOCITY_CB") checkbox.checked = spacecraftMatchVelocity;
+        else if (checkbox.id === "SPACECRAFT_LIGHT_CB") checkbox.checked = spacecraftLight;
+    });
+    document.querySelectorAll("select").forEach((select) => {
+        if (select.id === "DISTANCE_UNIT_SELECT") {
+            select.value = distanceUnits.indexOf(distanceUnit).toString();
+        }
+    });
 }
 
 updateLighting()
@@ -134,9 +158,9 @@ updateLighting()
 const stars = createStars()
 scene.add(stars);
 
-// exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
 // exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
 // exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
+// exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
 // {
 //     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
 //     // scene.environment = starmapTexture; // Set environment for reflections
@@ -249,7 +273,7 @@ function updateEarthSystemVisibility(visible) {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
-    spacecraftSelected = false
+    toggleSpacecraftSelected(false)
     jwstSelected = false
     if (SHOW_ORBITS) jwstOrbit.visible = false;
     inEarthSystem = (planet.name === "Earth");

@@ -156,6 +156,12 @@ export function updateGridTexture(constellationSphere) {
     else scene.remove(constellationSphere);
 }
 
+export function toggleSpacecraftSelected(selected) {
+    spacecraftSelected = selected;
+    if (spacecraftSelected) document.getElementById('spacecraft-settings').classList.remove('hidden')
+    else document.getElementById('spacecraft-settings').classList.add('hidden')
+}
+
 export function calcPlanetOffset(planet) {
     if (planet.isSun) {
         return new THREE.Vector3(((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 1.8), planet.radius, ((0 - planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 1.8))

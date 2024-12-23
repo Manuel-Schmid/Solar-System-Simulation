@@ -1,31 +1,36 @@
-// variables
-// setting variables:
+// already in interface
+let PAUSED = false;
 let SHOW_LABEL = true;
 let SHOW_ORBITS = true;
 let HIGH_QUALITY_TEXTURES = false;
-let SHOW_CONNECTION = false;
 let SHOW_VECTORS = false;
 let REALISTIC_LIGHTING = true;
 let TRUE_ROTATION_SPEEDS = false;
-let PAUSED = false;
-let STANDARD_FOV = 75
+let ACTIVE_ASCENSION_AXIS = true;
+let spacecraftFirstPerson = false;
+let spacecraftGravity = false;
+let spacecraftMatchVelocity = false;
+let spacecraftLight = false;
+let distanceUnit = distanceUnits[0];
+let backgroundGrid = backgroundTextures[0];
 
-// program variables
+
+
+// todo
+let isCameraLocked = false;
+let isCameraSunLocked = false;
+
+// target selection:
 let targetPlanet = null; // Default to the sun
 let spacecraft = null
 let spacecraftSelected = false;
-let spacecraftFirstPerson = false;
-let spacecraftLight = false;
-let spacecraftGravity = false;
-let spacecraftMatchVelocity = false;
-let activeAscensionAxis = true;
 let jwstSelected = false;
+
+// program variables
+let SHOW_CONNECTION = false;
+let STANDARD_FOV = 75
 let inEarthSystem = false;
-let isCameraLocked = false; // Flag to indicate if the camera is locked to a planet | todo: change back
-let isCameraSunLocked = false; // Flag to indicate if the camera is locked to a planet
 let sunLockedCameraDistance = 0
-let distanceUnit = distanceUnits[0];
-let backgroundGrid = backgroundTextures[0];
 let birdseye = true;
 
 // keys

@@ -1,5 +1,12 @@
 import * as THREE from "three";
-import {calcPlanetOffset, pushTextToLabel, updateGridTexture, updateLabel, updateLighting} from "./design/designUtils";
+import {
+    calcPlanetOffset,
+    pushTextToLabel,
+    toggleSpacecraftSelected,
+    updateGridTexture,
+    updateLabel,
+    updateLighting
+} from "./design/designUtils";
 import {adjustFOV, camera, scene, textureLoader} from "./setup/scene";
 import {getDistanceBetweenPoints} from "./utils";
 import {Planet} from "./setup/classes";
@@ -85,9 +92,9 @@ export function initEventListeners({
         }
     });
     window.addEventListener('keydown', (event) => {
+        document.activeElement.blur();
         if (event.code === 'Space') { // un/pause the game
-            PAUSED = !PAUSED;
-            pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
+            togglePause(!PAUSED)
         }
         if (spacecraftSelected) { // spacecraft controls
             if (event.key.toLowerCase() === 'w') {
@@ -112,80 +119,64 @@ export function initEventListeners({
                 handbrakePressed = true;
             }
             if (event.key.toLowerCase() === 'b') {
-                spacecraftFirstPerson = !spacecraftFirstPerson
-                pushTextToLabel(spacecraftFirstPerson ? 'Enable cockpit view' : 'Disable cockpit view');
+                switchSpacecraftPerspective(!spacecraftFirstPerson)
             }
             if (event.key.toLowerCase() === 'h') {
-                spacecraftLight = !spacecraftLight
-                pushTextToLabel(spacecraftLight ? 'Enable spacecraft light' : 'Disable spacecraft light');
-                spacecraft.obj.shipLight.visible = spacecraftLight
+                toggleShipLight(!spacecraftLight)
             }
             if (event.key.toLowerCase() === 'ü') {
-                activeAscensionAxis = !activeAscensionAxis
-                pushTextToLabel(activeAscensionAxis ? 'Enable ascension axis' : 'Disable ascension axis');
-                if (!activeAscensionAxis) {
-                    spacecraft.container.position.y = 0;
-                    spacecraft.obj.rotation.x = 0;
-                    spacecraft.yVel = 0;
-                }
-                updateLabel()
+                toggleAscensionAxis(!ACTIVE_ASCENSION_AXIS)
+                return
             }
             if (event.key.toLowerCase() === 'g') {
-                spacecraftGravity = !spacecraftGravity;
-                spacecraftMatchVelocity = false
+                toggleSpacecraftGravity(!spacecraftGravity)
+                toggleSpacecraftMatchVelocity(false)
                 pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
                 return
+            }
+            if (targetPlanet) {
+                if (event.key.toLowerCase() === 'r') {
+                    toggleSpacecraftMatchVelocity(!spacecraftMatchVelocity)
+                    toggleSpacecraftGravity(false)
+                    pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
+                    return
+                }
             }
             if (event.key === 'Control') {
                 spacecraft.shoot()
             }
         }
-        if (spacecraftSelected && targetPlanet) {
-            if (event.key.toLowerCase() === 'r') {
-                spacecraftMatchVelocity = !spacecraftMatchVelocity;
-                spacecraftGravity = false
-                pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
-                return
-            }
-        }
         if (event.key.toLowerCase() === 'l') { // switch lighting
-            REALISTIC_LIGHTING = !REALISTIC_LIGHTING;
-            pushTextToLabel(REALISTIC_LIGHTING ? 'Enable realistic lighting' : 'Disable realistic lighting');
-            updateLighting()
+            toggleRealisticLighting(!REALISTIC_LIGHTING)
             return
         }
         if (event.key.toLowerCase() === 'k') {
             const grid_texture_index = backgroundTextures.indexOf(backgroundGrid)
-            if (grid_texture_index < backgroundTextures.length - 1) backgroundGrid = backgroundTextures[grid_texture_index + 1]
-            else backgroundGrid = backgroundTextures[0]
-            updateGridTexture(constellationSphere);
+            if (grid_texture_index < backgroundTextures.length - 1) cycleBackgroundGrid(backgroundTextures[grid_texture_index + 1])
+            else cycleBackgroundGrid(backgroundTextures[0])
             return
         }
         if (event.key.toLowerCase() === 'z') {
-            TRUE_ROTATION_SPEEDS = !TRUE_ROTATION_SPEEDS;
-            pushTextToLabel(TRUE_ROTATION_SPEEDS ? 'Enable accurate rotation speeds' : 'Disable accurate rotation speeds')
+            toggleTrueRotationSpeeds(!TRUE_ROTATION_SPEEDS)
+            return
         }
         if (event.key.toLowerCase() === 'i') { // hide/show label
-            SHOW_LABEL = !SHOW_LABEL;
-            pushTextToLabel(SHOW_LABEL ? 'Show planet info' : 'Hide planet info')
-            updateLabel()
+            toggleLabel(!SHOW_LABEL)
             return
         }
         if (event.key.toLowerCase() === 'u') { // cycle distance unit
-            if (SHOW_LABEL && ((targetPlanet && !targetPlanet.isSun) || spacecraftSelected)) { // only update if planet is selected
+            // if (SHOW_LABEL && ((targetPlanet && !targetPlanet.isSun) || spacecraftSelected)) { // only update if planet is selected
                 const unit_index = distanceUnits.indexOf(distanceUnit)
-                if (unit_index < distanceUnits.length - 1) distanceUnit = distanceUnits[unit_index + 1]
-                else distanceUnit = distanceUnits[0]
-                pushTextToLabel('Cycle distance unit')
-                updateLabel();
-            }
+                if (unit_index < distanceUnits.length - 1) cycleDistanceUnit(distanceUnits[unit_index + 1])
+                else cycleDistanceUnit(distanceUnits[0])
+            // }
             return
         }
         if (event.key === 'Enter') { // todo: move camera to spacecraft smoothly
             jwstSelected = false
             targetPlanet = null
-            spacecraftSelected = true
             isCameraLocked = true
+            toggleSpacecraftSelected(true)
             updateLabel()
             // if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
         }
@@ -309,8 +300,8 @@ export function initEventListeners({
         if (event.key.toLowerCase() === 'x') {
             isCameraLocked = false;
             jwstSelected = false;
-            spacecraftSelected = false;
             isCameraSunLocked = false
+            toggleSpacecraftSelected(false)
             pushTextToLabel('Topdown view')
 
             const duration = 1;
@@ -337,45 +328,13 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === 'o') {
             if (event.altKey) {
-                if (spacecraft.orbitLine.parent) scene.remove(spacecraft.orbitLine)
-                else scene.add(spacecraft.orbitLine);
-                pushTextToLabel(SHOW_ORBITS ? 'Show spacecraft orbit' : 'Hide spacecraft orbits')
+                toggleSpacecraftOrbit()
                 return
             }
-            SHOW_ORBITS = !SHOW_ORBITS;
-            pushTextToLabel(SHOW_ORBITS ? 'Show orbits' : 'Hide orbits')
-            for (const planet of [...planets, ...discardedPlanets]) {
-                if (SHOW_ORBITS) scene.add(planet.orbitLine);
-                else scene.remove(planet.orbitLine);
-            }
-            if (SHOW_ORBITS) scene.add(spacecraft.orbitLine)
-            else scene.remove(spacecraft.orbitLine);
-            if (inEarthSystem) {
-                moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
-                issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
-            }
-            jwstOrbit.visible = SHOW_ORBITS;
+            togglePlanetOrbits(!SHOW_ORBITS)
         }
         if (event.key.toLowerCase() === 'q') {
-            HIGH_QUALITY_TEXTURES = !HIGH_QUALITY_TEXTURES;
-            pushTextToLabel(HIGH_QUALITY_TEXTURES ? 'Texture quality: 8k' : 'Texture quality: 2k')
-            document.getElementById('loading-screen').style.display = ''
-            for (const planet of planets) {
-                if (planet.lowQMapPath && planet.highQMapPath) {
-                    const texture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.highQMapPath : planet.lowQMapPath);
-                    texture.colorSpace = THREE.SRGBColorSpace
-                    planet.sphere.material.map = texture
-                }
-                if (planet.ring && planet.ring.lowQMapPath && planet.ring.highQMapPath) {
-                    const alphaTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.ring.highQMapPath : planet.ring.lowQMapPath);
-                    alphaTexture.colorSpace = THREE.SRGBColorSpace
-                    alphaTexture.anisotropy = 32;  // Improve texture quality if needed
-                    planet.ring.ringObj.material.map = alphaTexture
-                }
-            }
-            const earthCloudTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? 'planet_textures/8k/8k_earth_clouds.jpg' : 'planet_textures/2k/2k_earth_clouds.jpg')
-            earthCloudTexture.colorSpace = THREE.SRGBColorSpace
-            earth.clouds.material.alphaMap = earthCloudTexture
+            toggleHighQualityTextures(!HIGH_QUALITY_TEXTURES)
         }
         if (event.key.toLowerCase() === 'p') {
             pushTextToLabel('Reset orbits')
@@ -386,12 +345,7 @@ export function initEventListeners({
             spacecraft.resetOrbit()
         }
         if (event.key.toLowerCase() === 'v') {
-            SHOW_VECTORS = !SHOW_VECTORS;
-            pushTextToLabel(SHOW_VECTORS ? 'Show planetary vectors' : 'Hide planetary vectors')
-
-            for (const planet of planets) {
-                planet.updateVectorLines(0,0, SHOW_VECTORS)
-            }
+            toggleVectors(!SHOW_VECTORS)
         }
         if (event.key.toLowerCase() === 't') {
             SHOW_CONNECTION = !SHOW_CONNECTION
@@ -418,7 +372,7 @@ export function initEventListeners({
             }
         }
         if (event.key.toLowerCase() === 'j') {
-            spacecraftSelected = false
+            toggleSpacecraftSelected(false)
             pushTextToLabel('Move to James Webb Space Telescope')
             if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
             let showLabelChanged = false
@@ -469,4 +423,177 @@ export function initEventListeners({
             animateJWST();
         }
     });
+    document.getElementById('PAUSED').addEventListener("change", (event) => {
+        togglePause(event.target.checked)
+    });
+    document.getElementById('SHOW_LABEL').addEventListener("change", (event) => {
+        toggleLabel(event.target.checked)
+    });
+    document.getElementById('SHOW_ORBITS').addEventListener("change", (event) => {
+        togglePlanetOrbits(event.target.checked)
+    });
+    document.getElementById('SHOW_SPACECRAFT_ORBIT').addEventListener("change", (event) => {
+        toggleSpacecraftOrbit()
+    });
+    document.getElementById('HIGH_QUALITY_TEXTURES').addEventListener("change", (event) => {
+        toggleHighQualityTextures(event.target.checked)
+    });
+    document.getElementById('SHOW_VECTORS').addEventListener("change", (event) => {
+        toggleVectors(event.target.checked)
+    });
+    document.getElementById('REALISTIC_LIGHTING').addEventListener("change", (event) => {
+        toggleRealisticLighting(event.target.checked)
+    });
+    document.getElementById('TRUE_ROTATION_SPEEDS').addEventListener("change", (event) => {
+        toggleTrueRotationSpeeds(event.target.checked)
+    });
+    document.getElementById('ACTIVE_ASCENSION_AXIS').addEventListener("change", (event) => {
+        toggleAscensionAxis(event.target.checked)
+    });
+    document.getElementById('DISTANCE_UNIT_SELECT').addEventListener("change", (event) => {
+        cycleDistanceUnit(distanceUnits[event.target.value])
+    });
+    document.getElementById('BACKGROUND_GRID_SELECT').addEventListener("change", (event) => {
+        cycleBackgroundGrid(backgroundTextures[event.target.value])
+    });
+    document.getElementById('SPACECRAFT_FIRST_PERSON').addEventListener("change", (event) => {
+        switchSpacecraftPerspective(event.target.checked)
+    });
+    document.getElementById('SPACECRAFT_GRAVITY').addEventListener("change", (event) => {
+        toggleSpacecraftGravity(event.target.checked)
+        pushTextToLabel(spacecraftGravity ? 'Enable orbital mechanics' : 'Disable orbital mechanics');
+    });
+    document.getElementById('SPACECRAFT_MATCH_VELOCITY').addEventListener("change", (event) => {
+        toggleSpacecraftMatchVelocity(event.target.checked)
+        pushTextToLabel(spacecraftMatchVelocity ? 'Enable match velocity' : 'Disable match velocity');
+    });
+    document.getElementById('SPACECRAFT_LIGHT').addEventListener("change", (event) => {
+        toggleShipLight(event.target.checked)
+    });
+
+
+    // scene update functions
+    function togglePause(pause) {
+        PAUSED = pause;
+        pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
+        document.getElementById('PAUSED_CB').checked = PAUSED
+    }
+    function toggleLabel(visible) {
+        SHOW_LABEL = visible
+        pushTextToLabel(SHOW_LABEL ? 'Show info label' : 'Hide info label')
+        document.getElementById('SHOW_LABEL_CB').checked = SHOW_LABEL
+        updateLabel()
+    }
+    function togglePlanetOrbits(visible) {
+        SHOW_ORBITS = visible
+        pushTextToLabel(SHOW_ORBITS ? 'Show orbits' : 'Hide orbits')
+        document.getElementById('SHOW_ORBITS_CB').checked = SHOW_ORBITS
+        for (const planet of [...planets, ...discardedPlanets]) {
+            if (SHOW_ORBITS) scene.add(planet.orbitLine);
+            else scene.remove(planet.orbitLine);
+        }
+        spacecraft.toggleOrbitLine(SHOW_ORBITS)
+        document.getElementById('SHOW_SPACECRAFT_ORBIT_CB').checked = SHOW_ORBITS
+        if (inEarthSystem) {
+            moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
+            issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
+        }
+        jwstOrbit.visible = SHOW_ORBITS;
+    }
+    function toggleSpacecraftOrbit() {
+        spacecraft.toggleOrbitLine(spacecraft.orbitLine.parent === null)
+        document.getElementById('SHOW_SPACECRAFT_ORBIT_CB').checked = spacecraft.orbitLine.parent !== null
+        pushTextToLabel(SHOW_ORBITS ? 'Show spacecraft orbit' : 'Hide spacecraft orbits')
+    }
+    function toggleHighQualityTextures(enable) {
+        HIGH_QUALITY_TEXTURES = enable;
+        document.getElementById('HIGH_QUALITY_TEXTURES_CB').checked = HIGH_QUALITY_TEXTURES
+
+        pushTextToLabel(HIGH_QUALITY_TEXTURES ? 'Texture quality: 8k' : 'Texture quality: 2k')
+        document.getElementById('loading-screen').style.display = ''
+        for (const planet of planets) {
+            if (planet.lowQMapPath && planet.highQMapPath) {
+                const texture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.highQMapPath : planet.lowQMapPath);
+                texture.colorSpace = THREE.SRGBColorSpace
+                planet.sphere.material.map = texture
+            }
+            if (planet.ring && planet.ring.lowQMapPath && planet.ring.highQMapPath) {
+                const alphaTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.ring.highQMapPath : planet.ring.lowQMapPath);
+                alphaTexture.colorSpace = THREE.SRGBColorSpace
+                alphaTexture.anisotropy = 32;  // Improve texture quality if needed
+                planet.ring.ringObj.material.map = alphaTexture
+            }
+        }
+        const earthCloudTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? 'planet_textures/8k/8k_earth_clouds.jpg' : 'planet_textures/2k/2k_earth_clouds.jpg')
+        earthCloudTexture.colorSpace = THREE.SRGBColorSpace
+        earth.clouds.material.alphaMap = earthCloudTexture
+    }
+    function toggleVectors(enable) {
+        SHOW_VECTORS = enable;
+        document.getElementById('SHOW_VECTORS_CB').checked = SHOW_VECTORS
+
+        pushTextToLabel(SHOW_VECTORS ? 'Show planetary vectors' : 'Hide planetary vectors')
+        for (const planet of planets) {
+            planet.updateVectorLines(0,0, SHOW_VECTORS)
+        }
+    }
+    function toggleRealisticLighting(enable) {
+        REALISTIC_LIGHTING = enable;
+        document.getElementById('REALISTIC_LIGHTING_CB').checked = REALISTIC_LIGHTING
+
+        pushTextToLabel(REALISTIC_LIGHTING ? 'Enable realistic lighting' : 'Disable realistic lighting');
+        updateLighting()
+    }
+    function toggleTrueRotationSpeeds(enable) {
+        TRUE_ROTATION_SPEEDS = enable;
+        document.getElementById('TRUE_ROTATION_SPEEDS_CB').checked = TRUE_ROTATION_SPEEDS
+
+        pushTextToLabel(TRUE_ROTATION_SPEEDS ? 'Enable accurate rotation speeds' : 'Disable accurate rotation speeds')
+    }
+    function toggleAscensionAxis(enable) {
+        ACTIVE_ASCENSION_AXIS = enable
+        document.getElementById('ACTIVE_ASCENSION_AXIS_CB').checked = ACTIVE_ASCENSION_AXIS
+
+        pushTextToLabel(ACTIVE_ASCENSION_AXIS ? 'Enable ascension axis' : 'Disable ascension axis');
+        if (!ACTIVE_ASCENSION_AXIS) {
+            spacecraft.container.position.y = 0;
+            spacecraft.obj.rotation.x = 0;
+            spacecraft.yVel = 0;
+        }
+        updateLabel()
+    }
+    function cycleDistanceUnit(unitValue) {
+        distanceUnit = unitValue
+        document.getElementById('DISTANCE_UNIT_SELECT').value = distanceUnits.indexOf(distanceUnit).toString();
+
+        pushTextToLabel('Cycle distance unit')
+        updateLabel();
+    }
+    function cycleBackgroundGrid(texture) {
+        backgroundGrid = texture
+        document.getElementById('BACKGROUND_GRID_SELECT').value = backgroundTextures.indexOf(backgroundGrid).toString();
+
+        updateGridTexture(constellationSphere);
+    }
+    function switchSpacecraftPerspective(firstPerson) {
+        spacecraftFirstPerson = firstPerson
+        document.getElementById('SPACECRAFT_FIRST_PERSON_CB').checked = spacecraftFirstPerson
+        pushTextToLabel(spacecraftFirstPerson ? 'Enable cockpit view' : 'Disable cockpit view');
+    }
+    function toggleSpacecraftGravity(enable) {
+        spacecraftGravity = enable
+        document.getElementById('SPACECRAFT_GRAVITY_CB').checked = spacecraftGravity
+    }
+    function toggleSpacecraftMatchVelocity(enable) {
+        spacecraftMatchVelocity = enable
+        document.getElementById('SPACECRAFT_MATCH_VELOCITY_CB').checked = spacecraftMatchVelocity
+    }
+    function toggleShipLight(enable) {
+        spacecraftLight = enable
+        document.getElementById('SPACECRAFT_LIGHT_CB').checked = spacecraftLight
+
+        spacecraftLight = enable
+        pushTextToLabel(spacecraftLight ? 'Enable spacecraft light' : 'Disable spacecraft light');
+        spacecraft.obj.shipLight.visible = spacecraftLight
+    }
 }

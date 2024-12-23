@@ -33,5 +33,92 @@
         [ <span id="action-label"></span> ]
     </div>
 </div>
+
+<div id="settings-menu" class="menu">
+    <div class="menu-button-container">
+        <button id="menu-button" onclick="document.getElementById('menu-content').classList.toggle('hidden')">Settings</button>
+    </div>
+    <div id="menu-content" class=""> <!-- hidden -->
+        <div id="spacecraft-settings" class="hidden">
+            <span>Spacecraft: </span>
+            <div id="SPACECRAFT_FIRST_PERSON" class="menu-item">
+                <label for="SPACECRAFT_FIRST_PERSON_CB">&emsp;First Person</label>
+                <input type="checkbox" id="SPACECRAFT_FIRST_PERSON_CB">
+            </div>
+            <div id="SPACECRAFT_GRAVITY" class="menu-item">
+                <label for="SPACECRAFT_GRAVITY_CB">&emsp;Gravity</label>
+                <input type="checkbox" id="SPACECRAFT_GRAVITY_CB">
+            </div>
+            <div id="SPACECRAFT_MATCH_VELOCITY" class="menu-item">
+                <label for="SPACECRAFT_MATCH_VELOCITY_CB">&emsp;Match Velocity</label>
+                <input type="checkbox" id="SPACECRAFT_MATCH_VELOCITY_CB">
+            </div>
+            <div id="SPACECRAFT_LIGHT" class="menu-item">
+                <label for="SPACECRAFT_LIGHT_CB">&emsp;Ship Light</label>
+                <input type="checkbox" id="SPACECRAFT_LIGHT_CB">
+            </div>
+            <div id="ACTIVE_ASCENSION_AXIS" class="menu-item">
+                <label for="ACTIVE_ASCENSION_AXIS_CB">&emsp;Ascension axis</label>
+                <input type="checkbox" id="ACTIVE_ASCENSION_AXIS_CB">
+            </div>
+        </div>
+
+        <div id="PAUSED" class="menu-item">
+            <label for="PAUSED_CB">Paused</label>
+            <input type="checkbox" id="PAUSED_CB">
+        </div>
+        <div id="SHOW_LABEL" class="menu-item">
+            <label for="SHOW_LABEL_CB">Label</label>
+            <input type="checkbox" id="SHOW_LABEL_CB">
+        </div>
+        <div id="SHOW_ORBITS" class="menu-item">
+            <label for="SHOW_ORBITS_CB">Orbits</label>
+            <input type="checkbox" id="SHOW_ORBITS_CB">
+        </div>
+        <div id="SHOW_SPACECRAFT_ORBIT" class="menu-item">
+            <label for="SHOW_SPACECRAFT_ORBIT_CB">&emsp;Spacecraft Orbit</label>
+            <input type="checkbox" id="SHOW_SPACECRAFT_ORBIT_CB">
+        </div>
+        <div id="HIGH_QUALITY_TEXTURES" class="menu-item">
+            <label for="HIGH_QUALITY_TEXTURES_CB">8k Quality</label>
+            <input type="checkbox" id="HIGH_QUALITY_TEXTURES_CB">
+        </div>
+        <div id="SHOW_VECTORS" class="menu-item">
+            <label for="SHOW_VECTORS_CB">Vectors & Axes</label>
+            <input type="checkbox" id="SHOW_VECTORS_CB">
+        </div>
+        <div id="REALISTIC_LIGHTING" class="menu-item">
+            <label for="REALISTIC_LIGHTING_CB">Realistic lighting</label>
+            <input type="checkbox" id="REALISTIC_LIGHTING_CB">
+        </div>
+        <div id="TRUE_ROTATION_SPEEDS" class="menu-item">
+            <label for="TRUE_ROTATION_SPEEDS_CB">True rotation speeds</label>
+            <input type="checkbox" id="TRUE_ROTATION_SPEEDS_CB">
+        </div>
+        <div id="DISTANCE_UNIT" class="menu-item">
+            <label for="DISTANCE_UNIT_SELECT">Distance unit</label>
+            <select id="DISTANCE_UNIT_SELECT">
+                <option value="0">km</option>
+                <option value="1">au</option>
+                <option value="2">ly</option>
+            </select>
+        </div>
+        <div id="BACKGROUND_GRID" class="menu-item">
+            <label for="BACKGROUND_GRID_SELECT">Grid</label>
+            <select id="BACKGROUND_GRID_SELECT">
+                <option value="0" selected>None</option>
+                <option value="1">Galaxy Grid</option>
+                <option value="2">Celestial Bounds</option>
+                <option value="3">Constellations</option>
+            </select>
+        </div>
+
+
+<!--        <div class="menu-item">-->
+<!--            <label for="simulation-speed">Simulation Speed</label>-->
+<!--            <input type="range" id="simulation-speed" min="1" max="10" value="5">-->
+<!--        </div>-->
+    </div>
+</div>
 </body>
 </html>

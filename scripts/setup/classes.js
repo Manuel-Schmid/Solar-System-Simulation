@@ -219,7 +219,7 @@ export class Spacecraft {
 
         if (forwardPressed) {
             this.xVel += forwardX * this.acceleration * accelScale;
-            if (activeAscensionAxis) this.yVel += forwardY * this.acceleration * accelScale;
+            if (ACTIVE_ASCENSION_AXIS) this.yVel += forwardY * this.acceleration * accelScale;
             this.zVel += forwardZ * this.acceleration * accelScale;
 
             this.obj.flame1.visible = true;
@@ -228,7 +228,7 @@ export class Spacecraft {
         }
         if (backwardPressed) {
             this.xVel -= forwardX * this.acceleration * accelScale;
-            if (activeAscensionAxis) this.yVel -= forwardY * this.acceleration * accelScale;
+            if (ACTIVE_ASCENSION_AXIS) this.yVel -= forwardY * this.acceleration * accelScale;
             this.zVel -= forwardZ * this.acceleration * accelScale;
 
             this.obj.flame3.visible = true;
@@ -408,6 +408,10 @@ export class Spacecraft {
         this.currentOrbitPointCount++;
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
+    }
+    toggleOrbitLine(visible) {
+        if (visible) scene.add(this.orbitLine)
+        else scene.remove(this.orbitLine);
     }
     resetOrbit() {
         this.currentOrbitPointCount = 0;
