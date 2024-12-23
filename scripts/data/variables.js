@@ -1,4 +1,4 @@
-// already in interface
+// already in interface todo: remove this comment
 let TIME = 60 * 60 * simulationSpeed["24s/Ey"] // 6 = one year in 24 Seconds / REALTIME_FACTOR: true realtime simulation speed
 let PAUSED = false;
 let SHOW_LABEL = true;
@@ -14,13 +14,13 @@ let spacecraftMatchVelocity = false;
 let spacecraftLight = false;
 let distanceUnit = distanceUnits[0];
 let backgroundGrid = backgroundTextures[0];
-
+let STANDARD_FOV = 75
+let SPACECRAFT_FOV = 75
 
 
 // todo
 let isCameraLocked = false;
 let isCameraSunLocked = false;
-
 // target selection:
 let targetPlanet = null; // Default to the sun
 let spacecraft = null
@@ -29,7 +29,6 @@ let jwstSelected = false;
 
 // program variables
 let SHOW_CONNECTION = false;
-let STANDARD_FOV = 75
 let inEarthSystem = false;
 let sunLockedCameraDistance = 0
 let birdseye = true;

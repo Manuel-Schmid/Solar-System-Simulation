@@ -7,7 +7,7 @@ import {
     updateLabel,
     updateLighting
 } from "./design/designUtils";
-import {adjustFOV, camera, scene, textureLoader} from "./setup/scene";
+import { camera, scene, textureLoader} from "./setup/scene";
 import {getDistanceBetweenPoints} from "./utils";
 import {Planet} from "./setup/classes";
 
@@ -34,7 +34,7 @@ export function initEventListeners({
                                        setJwstCameraOffset,
                                    }) {
     window.addEventListener('mousedown', (event) => {
-        if (!spacecraftSelected) return
+        if (!spacecraftSelected || event.target.nodeName !== 'CANVAS') return
         isMouseDown = true;
         document.querySelector('canvas').style.cursor = 'none'
         lastMousePosition.x = event.clientX; // Initialize last position

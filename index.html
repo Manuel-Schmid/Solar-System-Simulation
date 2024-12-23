@@ -41,6 +41,14 @@
     <div id="menu-content" class=""> <!-- hidden -->
         <div id="spacecraft-settings" class="hidden">
             <span>Spacecraft: </span>
+            <div id="spacecraft-fov-container" class="menu-item slider-container">
+                <label for="spacecraft-fov">&emsp;FOV</label>
+                <div class="slider">
+                    &emsp;
+                    <input type="range" id="spacecraft-fov" class="slider-input" min="30" max="150" step="15" value="75">
+                    <span id="spacecraft-fov-display" class="slider-display">75°</span>
+                </div>
+            </div>
             <div id="SPACECRAFT_FIRST_PERSON" class="menu-item">
                 <label for="SPACECRAFT_FIRST_PERSON_CB">&emsp;First Person</label>
                 <input type="checkbox" id="SPACECRAFT_FIRST_PERSON_CB">
@@ -111,11 +119,13 @@
                 <option value="2">Celestial Bounds</option>
                 <option value="3">Constellations</option>
             </select>
-        </div>
-        <div id="simulation-speed-container" class="menu-item">
+        </div>y<
+        <div id="simulation-speed-container" class="menu-item slider-container">
             <label for="simulation-speed">Simulation Speed</label>
-            <input type="range" id="simulation-speed" min="0" max="7" step="1" value="3">
-            <span id="simulation-speed-display">24s/Ey</span>
+            <div class="slider">
+                <input type="range" id="simulation-speed" class="slider-input" min="0" max="7" step="1" value="3">
+                <span id="simulation-speed-display" class="slider-display">24s/Ey</span>
+            </div>
         </div>
 
 <!--        <div class="menu-item">-->

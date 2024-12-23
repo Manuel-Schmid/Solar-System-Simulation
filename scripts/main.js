@@ -161,6 +161,13 @@ function setMenuSettings() { // set interface default values
         document.getElementById("simulation-speed-display").textContent = speedLabel;
         TIME = 60 * 60 * speedValue; // update simulation speed
     });
+    document.getElementById("spacecraft-fov").addEventListener("input", (event) => {
+        const fovValue = event.target.value;
+        document.getElementById("spacecraft-fov-display").textContent = `${fovValue}°`;
+
+        SPACECRAFT_FOV = fovValue
+        adjustFOV(SPACECRAFT_FOV)
+    });
 }
 
 updateLighting()
@@ -410,9 +417,9 @@ function render() { // runs with 60 fps
             if (forwardPressed || backwardPressed) {
                 spacecraft.flameMaterial.uniforms.time.value += 2500 * spacecraft.scale;
             }
-            if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== STANDARD_FOV)) {
+            if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== SPACECRAFT_FOV)) {
                 // spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.container.rotation.x, 0, 0.1);
-                adjustFOV(STANDARD_FOV)
+                adjustFOV(SPACECRAFT_FOV)
             }
             // Smoothly reset to no tilt
             if ((forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed || handbrakePressed) && !spacecraftMatchVelocity) {

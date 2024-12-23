@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {convertDistance, convertHexToRGB} from "../utils";
-import {brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
+import {adjustFOV, brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();
@@ -155,11 +155,16 @@ export function updateGridTexture(constellationSphere) {
     }
     else scene.remove(constellationSphere);
 }
-
 export function toggleSpacecraftSelected(selected) {
     spacecraftSelected = selected;
-    if (spacecraftSelected) document.getElementById('spacecraft-settings').classList.remove('hidden')
-    else document.getElementById('spacecraft-settings').classList.add('hidden')
+    if (spacecraftSelected) {
+        document.getElementById('spacecraft-settings').classList.remove('hidden')
+        adjustFOV(SPACECRAFT_FOV)
+    }
+    else {
+        document.getElementById('spacecraft-settings').classList.add('hidden')
+        adjustFOV(STANDARD_FOV, false)
+    }
 }
 
 export function calcPlanetOffset(planet) {

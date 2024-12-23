@@ -157,19 +157,32 @@ body {
     cursor: pointer;
 }
 
-#simulation-speed-container {
+#simulation-speed-display {
+    min-width: calc(8ch);
+    margin-left: 5px;
+}
+
+.slider-container {
     display: flex;
     flex-direction: column;
-    gap: 5px;
     align-items: flex-start;
 }
 
-#simulation-speed {
+.slider {
+    display: flex;
+    flex-direction: row;
     width: 100%;
 }
 
-#simulation-speed-display {
+.slider-input {
+    width: 100%;
+}
+
+.slider-display {
     font-size: 14px;
     color: white;
-    margin-top: 5px;
+    margin-left: 10px;
+    display: inline-block;
+    text-align: right;
+    white-space: nowrap;
 }

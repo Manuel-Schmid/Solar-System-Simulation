@@ -224,7 +224,7 @@ export class Spacecraft {
 
             this.obj.flame1.visible = true;
             this.obj.flame2.visible = true;
-            adjustFOV(STANDARD_FOV * 1.2);
+            adjustFOV(Math.min(SPACECRAFT_FOV * 1.2, 170));
         }
         if (backwardPressed) {
             this.xVel -= forwardX * this.acceleration * accelScale;
@@ -233,7 +233,7 @@ export class Spacecraft {
 
             this.obj.flame3.visible = true;
             this.obj.flame4.visible = true;
-            adjustFOV(STANDARD_FOV * 0.85);
+            adjustFOV(SPACECRAFT_FOV * 0.85);
         }
         if (portPressed) {
             this.xVel += leftX * lateralAcceleration * accelScale;
@@ -251,7 +251,7 @@ export class Spacecraft {
             this.xVel = 0;
             this.yVel = 0;
             this.zVel = 0;
-            adjustFOV(STANDARD_FOV * 0.85)
+            adjustFOV(SPACECRAFT_FOV * 0.85)
             updateLabel()
         }
         if (rotatePortPressed && !targetPlanet) {
