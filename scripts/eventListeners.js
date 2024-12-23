@@ -369,9 +369,8 @@ export function initEventListeners({
             isCameraSunLocked = false
             const number = parseInt(event.key);
             if (planets[number]) {
-                if (planets[number] === targetPlanet && spacecraftSelected) return
-                pushTextToLabel('Move to ' + planets[number].name)
                 if (event.altKey) {
+                    if (planets[number] === targetPlanet && spacecraftSelected) return
                     birdseye = true
                     targetPlanet = planets[number]
                     if (SHOW_LABEL) {
@@ -379,6 +378,7 @@ export function initEventListeners({
                     }
                 }
                 else moveToPlanet(planets[number]);
+                pushTextToLabel('Move to ' + planets[number].name)
             }
         }
         if (event.key.toLowerCase() === 'j') {
