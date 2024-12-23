@@ -284,11 +284,15 @@ function updateEarthSystemVisibility(visible) {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
+    if (planet === targetPlanet && !planet.isSun && !spacecraftSelected) {
+        cameraOffset = calcPlanetOffset(planet)
+        isCameraLocked = true;
+        return
+    }
     toggleSpacecraftSelected(false)
     jwstSelected = false
     if (SHOW_ORBITS) jwstOrbit.visible = false;
     inEarthSystem = (planet.name === "Earth");
-    if (planet === targetPlanet && !planet.isSun) return;
     if(targetPlanet && !planet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
 
     let showLabelChanged = false

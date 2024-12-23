@@ -178,7 +178,7 @@ export function initEventListeners({
             isCameraLocked = true
             toggleSpacecraftSelected(true)
             updateLabel()
-            // if (!PAUSED) spacecraft.obj.rotation.z = THREE.MathUtils.lerp(spacecraft.obj.rotation.z, Math.PI, 2.5) // do a flip
+            // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
             if (spacecraftSelected) {
@@ -190,12 +190,11 @@ export function initEventListeners({
                     isCameraLocked = true;
                     const spacecraftWorldPosition = new THREE.Vector3();
                     spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
-                    // todo???
                 }
                 return
             }
 
-            if (jwstSelected) {
+            if (jwstSelected && !PAUSED) {
                 pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
                 if (isCameraLocked) {
                     isCameraLocked = false
@@ -205,30 +204,40 @@ export function initEventListeners({
                     const jwstWorldPosition = new THREE.Vector3();
                     jwst.getWorldPosition(jwstWorldPosition);
 
-                    if (PAUSED) setJwstCameraOffset(new THREE.Vector3().subVectors(camera.position, jwstWorldPosition))
-                    else setCameraOffset(jwstCameraOffset)
+                    setJwstCameraOffset(new THREE.Vector3().subVectors(camera.position, jwstWorldPosition))
                 }
                 return
             }
 
-            if (targetPlanet) {
+            if (targetPlanet && !PAUSED) {
                 pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
                 if (isCameraLocked) {
                     isCameraLocked = false
                     isCameraSunLocked = false
                 } else {
                     isCameraLocked = true;
-                    if (PAUSED) setCameraOffset(new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position))
-                    else setCameraOffset(calcPlanetOffset(targetPlanet))
+                    setCameraOffset(new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position))
                 }
             }
             return
         }
         if ((event.key === 'Shift') && !spacecraftSelected) {
             if (targetPlanet || jwstSelected) {
-                isCameraSunLocked = !isCameraSunLocked
-                pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
-                if (isCameraSunLocked && !isCameraLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
+                if (!PAUSED) {
+                    isCameraSunLocked = !isCameraSunLocked
+                    pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
+                    if (isCameraSunLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
+                    else if (!isCameraSunLocked) {
+                        cameraSunLockChanged = false
+                        if(targetPlanet) setCameraOffset(calcPlanetOffset(targetPlanet))
+                        else if (jwstSelected) setCameraOffset(jwstCameraOffset)
+                    }
+                } else {
+                    if (cameraSunLockChanged) {
+                        cameraSunLockChanged = false
+                        pushTextToLabel('Unlock camera from sun')
+                    }
+                }
             }
         }
         if (event.key.toLowerCase() === 's' && !spacecraftSelected) {
@@ -360,6 +369,7 @@ export function initEventListeners({
             isCameraSunLocked = false
             const number = parseInt(event.key);
             if (planets[number]) {
+                if (planets[number] === targetPlanet && spacecraftSelected) return
                 pushTextToLabel('Move to ' + planets[number].name)
                 if (event.altKey) {
                     birdseye = true
@@ -472,12 +482,34 @@ export function initEventListeners({
     });
 
 
-    // scene update functions
+    let cameraSunLockChanged = false;
     function togglePause(pause) {
         PAUSED = pause;
         pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
         document.getElementById('PAUSED_CB').checked = PAUSED
+
+        if (spacecraftSelected) isCameraLocked = true
+        else {
+            isCameraLocked = !PAUSED
+            if (PAUSED && !jwstSelected) {
+                cameraSunLockChanged = isCameraSunLocked;
+                isCameraSunLocked = false
+            } else if (cameraSunLockChanged) {
+                sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
+                isCameraSunLocked = true
+            }
+
+            if(jwstSelected) {
+                const jwstWorldPosition = new THREE.Vector3();
+                jwst.getWorldPosition(jwstWorldPosition);
+                if (isCameraLocked) setJwstCameraOffset(new THREE.Vector3().subVectors(camera.position, jwstWorldPosition))
+            } else if (targetPlanet) {
+                if (isCameraLocked) setCameraOffset(new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position))
+            }
+        }
     }
+
+    // scene update functionality
     function toggleLabel(visible) {
         SHOW_LABEL = visible
         pushTextToLabel(SHOW_LABEL ? 'Show info label' : 'Hide info label')
