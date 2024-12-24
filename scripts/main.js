@@ -325,7 +325,7 @@ function moveToPlanet(planet, topDown=false) {
         } else { // animation is finished
             targetPlanet = planet;
             birdseye = topDown
-            if (!topDown) isCameraLocked = true
+            if (!topDown && !PAUSED) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf(planet.name))
@@ -419,7 +419,7 @@ function moveToJWST() {
             if (SHOW_ORBITS) jwstOrbit.visible = true;
             jwstSelected = true
             inEarthSystem = true
-            isCameraLocked = true
+            if (!PAUSED) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("JWST"))
