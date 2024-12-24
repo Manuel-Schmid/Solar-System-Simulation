@@ -5,7 +5,7 @@ import {
     createCircle,
     createStars,
     drawConnection, pushTextToLabel, toggleSpacecraftSelected,
-    updateLabel, updateLighting
+    updateLabel, updateLighting, updateTargetList, updateTargetSelection
 } from "./design/designUtils";
 import { getPointXBeyondLine } from "./utils";
 import {
@@ -115,6 +115,9 @@ loadingManager.onLoad = ()=>{
             constellationSphere: constellationSphere,
             connectionOutline: connectionOutline,
             moveToPlanet: moveToPlanet,
+            moveToSpacecraft: moveToSpacecraft,
+            moveToDefault: moveToDefault,
+            moveToJWST: moveToJWST,
             updateEarthSystemVisibility: updateEarthSystemVisibility,
             updateJWSTPosition: updateJWSTPosition,
             setCameraOffset: setCameraOffset,
@@ -150,6 +153,7 @@ function setMenuSettings() { // set interface default values
             select.value = distanceUnits.indexOf(distanceUnit).toString();
         }
     });
+    updateTargetList(planets)
 
     document.getElementById("simulation-speed").addEventListener("input", (event) => {
         const speedKeys = Object.keys(simulationSpeed);
@@ -340,10 +344,104 @@ function moveToPlanet(planet, topDown=false) {
             if (!topDown) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
+            updateTargetSelection(targets.indexOf(planet.name))
         }
     }
 
     animate();
+}
+
+function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
+    jwstSelected = false
+    targetPlanet = null
+    isCameraLocked = true
+    toggleSpacecraftSelected(true)
+    updateLabel()
+    updateTargetSelection(targets.indexOf("Spacecraft"))
+    // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
+}
+
+function moveToDefault() {
+    isCameraLocked = false;
+    jwstSelected = false;
+    isCameraSunLocked = false
+    toggleSpacecraftSelected(false)
+    pushTextToLabel('Topdown view')
+
+    const duration = 1;
+    const startPosition = camera.position.clone();
+    const startTime = performance.now();
+
+    const targetPosition = new THREE.Vector3(0,40,0)
+
+    function animate() {
+        const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+        const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
+        camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+        controls.target.copy(new THREE.Vector3(0,0,0)); // Update the OrbitControls target to the new planet
+        controls.update(); // Update controls to apply the new target
+
+        if (t < 1) {
+            requestAnimationFrame(animate); // Continue animation
+        } else { // animation is finished
+            targetPlanet = null;
+            if (SHOW_LABEL) updateLabel()
+            updateTargetSelection(targets.indexOf("None"))
+        }
+    }
+    animate();
+}
+
+function moveToJWST() {
+    toggleSpacecraftSelected(false)
+    pushTextToLabel('Move to James Webb Space Telescope')
+    if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
+    let showLabelChanged = false
+    if (SHOW_LABEL) {
+        SHOW_LABEL = false // make label stop updating during transition
+        showLabelChanged = true
+    }
+
+    isCameraLocked = false
+    isCameraSunLocked = false
+
+    updateJWSTPosition()
+    const jwstWorldPosition = new THREE.Vector3();
+    jwst.getWorldPosition(jwstWorldPosition);
+
+    const targetPosition = jwstWorldPosition
+    setJwstCameraOffset(new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3))
+    setCameraOffset(jwstCameraOffset)
+    targetPosition.x += jwstCameraOffset.x
+    targetPosition.y += jwstCameraOffset.y
+    targetPosition.z += jwstCameraOffset.z
+
+    const duration = 1; // Duration the movement in seconds
+    const startPosition = camera.position.clone();
+    const startTime = performance.now()
+
+    function animateJWST() {
+        const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
+        const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
+        camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+        controls.target.copy(jwstWorldPosition); // Update the OrbitControls target to the new planet
+        controls.update(); // Update controls to apply the new target
+
+        if (t < 1) {
+            requestAnimationFrame(animateJWST); // Continue animation
+        } else { // animation is finished
+            targetPlanet = null;
+            scene.add(jwstPlane)
+            if (SHOW_ORBITS) jwstOrbit.visible = true;
+            jwstSelected = true
+            inEarthSystem = true
+            isCameraLocked = true
+            if (showLabelChanged) SHOW_LABEL = true
+            if (SHOW_LABEL) updateLabel()
+            updateTargetSelection(targets.indexOf("JWST"))
+        }
+    }
+    animateJWST();
 }
 
 function updateJWSTPosition() {

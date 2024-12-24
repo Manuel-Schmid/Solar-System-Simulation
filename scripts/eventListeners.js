@@ -5,7 +5,7 @@ import {
     toggleSpacecraftSelected,
     updateGridTexture,
     updateLabel,
-    updateLighting
+    updateLighting, updateTargetList
 } from "./design/designUtils";
 import { camera, scene, textureLoader} from "./setup/scene";
 import {getDistanceBetweenPoints} from "./utils";
@@ -28,6 +28,9 @@ export function initEventListeners({
                                        constellationSphere,
                                        connectionOutline,
                                        moveToPlanet,
+                                       moveToSpacecraft,
+                                       moveToDefault,
+                                       moveToJWST,
                                        updateEarthSystemVisibility,
                                        updateJWSTPosition,
                                        setCameraOffset,
@@ -172,13 +175,8 @@ export function initEventListeners({
             // }
             return
         }
-        if (event.key === 'Enter') { // todo: move camera to spacecraft smoothly
-            jwstSelected = false
-            targetPlanet = null
-            isCameraLocked = true
-            toggleSpacecraftSelected(true)
-            updateLabel()
-            // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
+        if (event.key === 'Enter') {
+            moveToSpacecraft()
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
             if (spacecraftSelected) {
@@ -296,6 +294,7 @@ export function initEventListeners({
 
                         planets[i] = newSun
                         discardedPlanets.push(targetPlanet)
+                        updateTargetList(planets, targetPlanet.name)
                         targetPlanet = newSun
                         if (!spacecraftSelected) {
                             isCameraLocked = false
@@ -307,33 +306,7 @@ export function initEventListeners({
             }
         }
         if (event.key.toLowerCase() === 'x') {
-            isCameraLocked = false;
-            jwstSelected = false;
-            isCameraSunLocked = false
-            toggleSpacecraftSelected(false)
-            pushTextToLabel('Topdown view')
-
-            const duration = 1;
-            const startPosition = camera.position.clone();
-            const startTime = performance.now();
-
-            const targetPosition = new THREE.Vector3(0,40,0)
-
-            function animate() {
-                const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
-                const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
-                camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
-                controls.target.copy(new THREE.Vector3(0,0,0)); // Update the OrbitControls target to the new planet
-                controls.update(); // Update controls to apply the new target
-
-                if (t < 1) {
-                    requestAnimationFrame(animate); // Continue animation
-                } else { // animation is finished
-                    targetPlanet = null;
-                    if (SHOW_LABEL) updateLabel()
-                }
-            }
-            animate();
+            moveToDefault()
         }
         if (event.key.toLowerCase() === 'o') {
             if (event.altKey) {
@@ -382,55 +355,7 @@ export function initEventListeners({
             }
         }
         if (event.key.toLowerCase() === 'j') {
-            toggleSpacecraftSelected(false)
-            pushTextToLabel('Move to James Webb Space Telescope')
-            if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
-            let showLabelChanged = false
-            if (SHOW_LABEL) {
-                SHOW_LABEL = false // make label stop updating during transition
-                showLabelChanged = true
-            }
-
-            isCameraLocked = false
-            isCameraSunLocked = false
-
-            updateJWSTPosition()
-            const jwstWorldPosition = new THREE.Vector3();
-            jwst.getWorldPosition(jwstWorldPosition);
-
-            const targetPosition = jwstWorldPosition
-            setJwstCameraOffset(new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3))
-            setCameraOffset(jwstCameraOffset)
-            targetPosition.x += jwstCameraOffset.x
-            targetPosition.y += jwstCameraOffset.y
-            targetPosition.z += jwstCameraOffset.z
-
-            const duration = 1; // Duration the movement in seconds
-            const startPosition = camera.position.clone();
-            const startTime = performance.now()
-
-            function animateJWST() {
-                const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
-                const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
-                camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
-                controls.target.copy(jwstWorldPosition); // Update the OrbitControls target to the new planet
-                controls.update(); // Update controls to apply the new target
-
-                if (t < 1) {
-                    requestAnimationFrame(animateJWST); // Continue animation
-                } else { // animation is finished
-                    targetPlanet = null;
-                    scene.add(jwstPlane)
-                    if (SHOW_ORBITS) jwstOrbit.visible = true;
-                    jwstSelected = true
-                    inEarthSystem = true
-                    isCameraLocked = true
-                    if (showLabelChanged) SHOW_LABEL = true
-                    if (SHOW_LABEL) updateLabel()
-                }
-            }
-
-            animateJWST();
+            moveToJWST();
         }
     });
     document.getElementById('PAUSED').addEventListener("change", (event) => {
@@ -479,6 +404,9 @@ export function initEventListeners({
     });
     document.getElementById('SPACECRAFT_LIGHT').addEventListener("change", (event) => {
         toggleShipLight(event.target.checked)
+    });
+    document.getElementById('TARGET_SELECT').addEventListener("change", (event) => {
+        changeTarget(event.target.value)
     });
 
 
@@ -627,5 +555,19 @@ export function initEventListeners({
         spacecraftLight = enable
         pushTextToLabel(spacecraftLight ? 'Enable spacecraft light' : 'Disable spacecraft light');
         spacecraft.obj.shipLight.visible = spacecraftLight
+    }
+    function changeTarget(targetIdx) {
+        const targetName = targets[targetIdx]
+        if (targetName === "None") {
+            moveToDefault();
+        } else if (targetName === "Spacecraft") {
+            moveToSpacecraft();
+        } else if (targetName === "JWST") {
+            moveToJWST();
+        } else { //  target is a planet
+            let targetP = planets.find(planet => planet.name === targetName);
+            moveToPlanet(targetP);
+            pushTextToLabel('Move to ' + targetP.name)
+        }
     }
 }

@@ -16,16 +16,17 @@ let distanceUnit = distanceUnits[0];
 let backgroundGrid = backgroundTextures[0];
 let STANDARD_FOV = 75
 let SPACECRAFT_FOV = 75
+// target selection:
+const targets = [];
+let targetPlanet = null; // Default to the sun
+let spacecraft = null
+let spacecraftSelected = false;
+let jwstSelected = false;
 
 
 // todo
 let isCameraLocked = false;
 let isCameraSunLocked = false;
-// target selection:
-let targetPlanet = null; // Default to the sun
-let spacecraft = null
-let spacecraftSelected = false;
-let jwstSelected = false;
 
 // program variables
 let SHOW_CONNECTION = false;

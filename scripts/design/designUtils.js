@@ -167,6 +167,35 @@ export function toggleSpacecraftSelected(selected) {
     }
 }
 
+export function updateTargetList(planets, oldPlanetName=null, selectedIdx=0) {
+    const selectElement = document.getElementById("TARGET_SELECT")
+
+    if (oldPlanetName) selectedIdx = targets.indexOf(oldPlanetName);
+    targets.length = 0; // clear array
+    targets.push("None")
+    targets.push("Spacecraft")
+    for (const planet of planets) {
+        targets.push(planet.name)
+    }
+    targets.push("JWST")
+
+    selectElement.innerHTML = ""
+    targets.forEach((target, index) => {
+        const option = document.createElement("option");
+        option.value = index.toString();
+        option.selected = index === selectedIdx
+        option.textContent = target;
+        selectElement.appendChild(option);
+    });
+}
+
+export function updateTargetSelection(selectedIdx) {
+    const selectElement = document.getElementById("TARGET_SELECT")
+    for (let i = 0; i < selectElement.options.length; i++) {
+        selectElement.options[i].selected = i === selectedIdx;
+    }
+}
+
 export function calcPlanetOffset(planet) {
     if (planet.isSun) {
         return new THREE.Vector3(((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 1.8), planet.radius, ((0 - planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 1.8))

@@ -39,6 +39,12 @@
         <button id="menu-button" onclick="document.getElementById('menu-content').classList.toggle('hidden')">Settings</button>
     </div>
     <div id="menu-content" class=""> <!-- hidden -->
+        <div id="TARGET" class="menu-item">
+            <label for="TARGET_SELECT">Target</label>
+            <select id="TARGET_SELECT">
+                <option value="0" >None</option>
+            </select>
+        </div>
         <div id="spacecraft-settings" class="hidden">
             <span>Spacecraft: </span>
             <div id="spacecraft-fov-container" class="menu-item slider-container">
