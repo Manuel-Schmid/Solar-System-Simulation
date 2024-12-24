@@ -5,7 +5,7 @@ import {
     createCircle,
     createStars,
     drawConnection, pushTextToLabel, toggleSpacecraftSelected,
-    updateLabel, updateLighting, updateTargetList, updateTargetSelection
+    updateLabel, updateLighting, updateTargetList, updateSelectionElement, changeBackground
 } from "./design/designUtils";
 import { getPointXBeyondLine } from "./utils";
 import {
@@ -13,7 +13,6 @@ import {
     camera,
     renderer,
     textureLoader,
-    exrLoader,
     gltfLoader,
     sunLight, loadingManager, adjustFOV
 } from './setup/scene';
@@ -174,23 +173,8 @@ function setMenuSettings() { // set interface default values
     });
 }
 
+changeBackground(0)
 updateLighting()
-
-// create star background
-const stars = createStars()
-scene.add(stars);
-
-// exrLoader.load('starmaps/starmap_2020_4k_gal.exr' , (starmapTexture) =>
-// exrLoader.load('starmaps/starmap_2020_8k_gal.exr' , (starmapTexture) =>
-// exrLoader.load('starmaps/starmap_2020_8k.exr' , (starmapTexture) =>
-// {
-//     starmapTexture.mapping = THREE.EquirectangularReflectionMapping
-//     // scene.environment = starmapTexture; // Set environment for reflections
-//     scene.background = starmapTexture;
-// });
-
-// renderer.toneMapping = THREE.ACESFilmicToneMapping;
-// renderer.toneMappingExposure = 1;
 
 // add constellation grid sphere
 const constellationSphereGeometry = new THREE.SphereGeometry(5000, 60, 40);
@@ -344,7 +328,7 @@ function moveToPlanet(planet, topDown=false) {
             if (!topDown) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
-            updateTargetSelection(targets.indexOf(planet.name))
+            updateSelectionElement("TARGET_SELECT", targets.indexOf(planet.name))
         }
     }
 
@@ -357,7 +341,7 @@ function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
     isCameraLocked = true
     toggleSpacecraftSelected(true)
     updateLabel()
-    updateTargetSelection(targets.indexOf("Spacecraft"))
+    updateSelectionElement("TARGET_SELECT", targets.indexOf("Spacecraft"))
     // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
 }
 
@@ -386,7 +370,7 @@ function moveToDefault() {
         } else { // animation is finished
             targetPlanet = null;
             if (SHOW_LABEL) updateLabel()
-            updateTargetSelection(targets.indexOf("None"))
+            updateSelectionElement("TARGET_SELECT", targets.indexOf("None"))
         }
     }
     animate();
@@ -438,7 +422,7 @@ function moveToJWST() {
             isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
-            updateTargetSelection(targets.indexOf("JWST"))
+            updateSelectionElement("TARGET_SELECT", targets.indexOf("JWST"))
         }
     }
     animateJWST();

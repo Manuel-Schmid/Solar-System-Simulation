@@ -1,6 +1,14 @@
 import * as THREE from "three";
 import {convertDistance, convertHexToRGB} from "../utils";
-import {adjustFOV, brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
+import {
+    adjustFOV,
+    brightAmbientLight,
+    exrLoader,
+    scene,
+    softAmbientLight,
+    sunLight,
+    textureLoader
+} from "../setup/scene";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();
@@ -189,11 +197,39 @@ export function updateTargetList(planets, oldPlanetName=null, selectedIdx=0) {
     });
 }
 
-export function updateTargetSelection(selectedIdx) {
-    const selectElement = document.getElementById("TARGET_SELECT")
-    for (let i = 0; i < selectElement.options.length; i++) {
-        selectElement.options[i].selected = i === selectedIdx;
+export function changeBackground(value) {
+    value = parseInt(value);
+    if (value === 0) {
+        if (starBackground === null) starBackground = createStars()
+        scene.background = null;
+        scene.add(starBackground);
+    } else {
+        scene.remove(starBackground);
+
+        let backgroundPath = null
+        if (value === 1) backgroundPath = 'starmaps/starmap_2020_4k_gal.exr'
+        else if (value === 2) backgroundPath = 'starmaps/starmap_2020_8k_gal.exr'
+        else if (value === 3) backgroundPath = 'starmaps/starmap_2020_8k.exr'
+
+        if (backgroundPath) {
+            document.getElementById('loading-screen').style.display = ''
+            exrLoader.load(backgroundPath, (starmapTexture) =>
+            {
+                starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+                // scene.environment = starmapTexture; // Set environment for reflections
+                scene.background = starmapTexture;
+            });
+            // renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            // renderer.toneMappingExposure = 1;
+        }
     }
+
+    updateSelectionElement("BACKGROUND_SELECT", value)
+}
+
+export function updateSelectionElement(selectElementID, selectedIdx) {
+    const selectElement = document.getElementById(selectElementID)
+    selectElement.value = selectedIdx
 }
 
 export function calcPlanetOffset(planet) {

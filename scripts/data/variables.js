@@ -14,8 +14,9 @@ let spacecraftMatchVelocity = false;
 let spacecraftLight = false;
 let distanceUnit = distanceUnits[0];
 let backgroundGrid = backgroundTextures[0];
-let STANDARD_FOV = 75
-let SPACECRAFT_FOV = 75
+let STANDARD_FOV = 75;
+let SPACECRAFT_FOV = 75;
+let starBackground = null;
 // target selection:
 const targets = [];
 let targetPlanet = null; // Default to the sun

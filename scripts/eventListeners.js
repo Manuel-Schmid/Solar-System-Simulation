@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import {
-    calcPlanetOffset,
+    calcPlanetOffset, changeBackground, createStars,
     pushTextToLabel,
     toggleSpacecraftSelected,
     updateGridTexture,
     updateLabel,
-    updateLighting, updateTargetList
+    updateLighting, updateSelectionElement, updateTargetList
 } from "./design/designUtils";
 import { camera, scene, textureLoader} from "./setup/scene";
 import {getDistanceBetweenPoints} from "./utils";
@@ -387,6 +387,9 @@ export function initEventListeners({
     });
     document.getElementById('DISTANCE_UNIT_SELECT').addEventListener("change", (event) => {
         cycleDistanceUnit(distanceUnits[event.target.value])
+    });
+    document.getElementById('BACKGROUND_SELECT').addEventListener("change", (event) => {
+        changeBackground(event.target.value)
     });
     document.getElementById('BACKGROUND_GRID_SELECT').addEventListener("change", (event) => {
         cycleBackgroundGrid(backgroundTextures[event.target.value])
