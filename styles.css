@@ -157,6 +157,19 @@ body {
     cursor: pointer;
 }
 
+.menu-item.disabled {
+    opacity: 0.5;
+    pointer-events: none; /* Prevent all interactions */
+}
+
+.menu-item.disabled label {
+    cursor: not-allowed; /* Show a disabled cursor */
+}
+
+.menu-item.disabled input[type="checkbox"] {
+    pointer-events: none;
+}
+
 #simulation-speed-display {
     min-width: calc(8ch);
     margin-left: 5px;

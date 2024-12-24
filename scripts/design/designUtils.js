@@ -166,6 +166,10 @@ export function updateGridTexture(constellationSphere) {
 export function toggleSpacecraftSelected(selected) {
     spacecraftSelected = selected;
     if (spacecraftSelected) {
+        spacecraftMatchVelocity = false
+        document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.add('disabled')
+        document.getElementById('SPACECRAFT_MATCH_VELOCITY_CB').checked = false
+
         document.getElementById('spacecraft-settings').classList.remove('hidden')
         adjustFOV(SPACECRAFT_FOV)
     }

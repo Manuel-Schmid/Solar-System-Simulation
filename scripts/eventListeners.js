@@ -349,6 +349,7 @@ export function initEventListeners({
                     if (SHOW_LABEL) {
                         updateLabel()
                     }
+                    if (spacecraftSelected) document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.remove('disabled')
                 }
                 else moveToPlanet(planets[number]);
                 pushTextToLabel('Move to ' + planets[number].name)
