@@ -105,6 +105,10 @@
             <label for="REALISTIC_LIGHTING_CB">Realistic lighting</label>
             <input type="checkbox" id="REALISTIC_LIGHTING_CB">
         </div>
+        <div id="EARTH_SYSTEM_SCALING" class="menu-item">
+            <label for="EARTH_SYSTEM_SCALING_CB">Scale down Earth system</label>
+            <input type="checkbox" id="EARTH_SYSTEM_SCALING_CB">
+        </div>
         <div id="TRUE_ROTATION_SPEEDS" class="menu-item">
             <label for="TRUE_ROTATION_SPEEDS_CB">True rotation speeds</label>
             <input type="checkbox" id="TRUE_ROTATION_SPEEDS_CB">
@@ -134,6 +138,16 @@
                 <option value="2">Celestial Bounds</option>
                 <option value="3">Constellations</option>
             </select>
+        </div>
+        <div id="planet-scale-container" class="menu-item slider-container">
+            <label for="planet-scale">
+                Planet Scale
+                <span class="slider-hint">(1 = Accurate Size)</span>
+            </label>
+            <div class="slider">
+                <input type="range" id="planet-scale" class="slider-input" min="1" max="60" step="1" value="10">
+                <span id="planet-scale-display" class="slider-display">10</span>
+            </div>
         </div>
         <div id="simulation-speed-container" class="menu-item slider-container">
             <label for="simulation-speed">Simulation Speed</label>

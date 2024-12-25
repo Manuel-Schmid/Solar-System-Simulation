@@ -17,6 +17,8 @@ let backgroundGrid = backgroundTextures[0];
 let STANDARD_FOV = 75;
 let SPACECRAFT_FOV = 75;
 let starBackground = null;
+let PLANET_SCALE = DISTANCE_SCALE * 10
+let earthSystemScaling = 0.1 // scale down jwst & moon orbit distance
 // target selection:
 const targets = [];
 let targetPlanet = null; // Default to the sun

@@ -175,6 +175,11 @@ body {
     margin-left: 5px;
 }
 
+#planet-scale-display {
+    min-width: calc(2ch);
+    margin-left: 10%;
+}
+
 .slider-container {
     display: flex;
     flex-direction: column;
@@ -185,6 +190,12 @@ body {
     display: flex;
     flex-direction: row;
     width: 100%;
+}
+
+.slider-hint {
+    font-size: 0.9em;
+    opacity: 0.5;
+    margin-left: 5px;
 }
 
 .slider-input {

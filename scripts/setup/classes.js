@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import FakeGlowMaterial from "../design/GlowMaterial";
 import {getPositionDistance, PlanetRingGeometry} from "../utils";
-import {adjustFOV, camera, gltfLoader, scene, textureLoader} from "./scene";
+import {adjustFOV, gltfLoader, scene, textureLoader} from "./scene";
 import {updateLabel} from "../design/designUtils";
 
 export class Spacecraft {
@@ -493,6 +493,7 @@ export class Planet {
         this.highQMapPath = highQMapPath;
         this.atmosphere = null
         this.glowSphere = null
+        this.ring = null
 
         this.geometry = new THREE.SphereGeometry( radius, 64, 32 );
         this.geometry.rotateY(THREE.MathUtils.degToRad(90));
@@ -618,8 +619,8 @@ export class Planet {
                 new THREE.Vector3(0, -axisHeight, 0), // Start below the sphere
                 new THREE.Vector3(0, axisHeight, 0)   // End above the sphere
             ];
-            const axisLineMaterial = new THREE.LineBasicMaterial( { color: 0x00ff08 } );
             const axisLineGeometry = new THREE.BufferGeometry().setFromPoints(axisCoords);
+            const axisLineMaterial = new THREE.LineBasicMaterial( { color: 0x00ff08 } );
             this.axisLine = new THREE.Line( axisLineGeometry, axisLineMaterial );
             this.axisLine.rotation.x = THREE.MathUtils.degToRad(axialTilt); // axis tilt
             this.axisLine.frustumCulled = false;
@@ -631,8 +632,6 @@ export class Planet {
             this.sphere.rotation.z = THREE.MathUtils.degToRad(axialTilt);
             this.axisLine.rotation.z = THREE.MathUtils.degToRad(axialTilt);
         }
-
-        this.ring = null
     }
     updatePosition(planets, SHOW_VECTORS) {
         let totalFx = 0;
@@ -737,11 +736,13 @@ export class Ring {
         this.parentPlanet = planet
         this.lowQMapPath = lowQMapPath;
         this.highQMapPath = highQMapPath;
-        const innerRadius = this.parentPlanet.radius * innerRadiusFactor; // Inner radius slightly larger than planet
-        const outerRadius = this.parentPlanet.radius * outerRadiusFactor; // Outer radius of the ring
-        const ringSegments = 96;
+        this.innerRadiusFactor = innerRadiusFactor
+        this.outerRadiusFactor = outerRadiusFactor
 
-        const ringGeometry = new PlanetRingGeometry(innerRadius, outerRadius, ringSegments, ringSegments);
+        const innerRadius = this.parentPlanet.radius * this.innerRadiusFactor; // Inner radius slightly larger than planet
+        const outerRadius = this.parentPlanet.radius * this.outerRadiusFactor; // Outer radius of the ring
+
+        const ringGeometry = new PlanetRingGeometry(innerRadius, outerRadius, 96, 96);
 
         let alphaTexture = null;
         if (this.lowQMapPath) {
@@ -779,6 +780,7 @@ export class Ring {
         }
 
         scene.add(this.ringObj);
+        this.parentPlanet.ring = this
     }
 }
 

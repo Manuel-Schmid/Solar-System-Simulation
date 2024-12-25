@@ -1,18 +1,18 @@
 import * as THREE from "three";
 import {
-    calcPlanetOffset, changeBackground, createStars,
+    calcPlanetOffset,
+    changeBackground,
     pushTextToLabel,
-    toggleSpacecraftSelected,
     updateGridTexture,
     updateLabel,
-    updateLighting, updateSelectionElement, updateTargetList
+    updateLighting,
+    updateTargetList,
 } from "./design/designUtils";
 import { camera, scene, textureLoader} from "./setup/scene";
 import {getDistanceBetweenPoints} from "./utils";
 import {Planet} from "./setup/classes";
 
 export function initEventListeners({
-                                       controls,
                                        jwstCameraOffset,
                                        planets,
                                        discardedPlanets,
@@ -24,7 +24,6 @@ export function initEventListeners({
                                        issOrbitTrail,
                                        jwst,
                                        jwstOrbit,
-                                       jwstPlane,
                                        constellationSphere,
                                        connectionOutline,
                                        moveToPlanet,
@@ -32,7 +31,7 @@ export function initEventListeners({
                                        moveToDefault,
                                        moveToJWST,
                                        updateEarthSystemVisibility,
-                                       updateJWSTPosition,
+                                       updateEarthSystemScaling,
                                        setCameraOffset,
                                        setJwstCameraOffset,
                                    }) {
@@ -380,6 +379,9 @@ export function initEventListeners({
     document.getElementById('REALISTIC_LIGHTING').addEventListener("change", (event) => {
         toggleRealisticLighting(event.target.checked)
     });
+    document.getElementById('EARTH_SYSTEM_SCALING').addEventListener("change", (event) => {
+        toggleEarthSystemScaling(event.target.checked)
+    });
     document.getElementById('TRUE_ROTATION_SPEEDS').addEventListener("change", (event) => {
         toggleTrueRotationSpeeds(event.target.checked)
     });
@@ -507,6 +509,13 @@ export function initEventListeners({
 
         pushTextToLabel(REALISTIC_LIGHTING ? 'Enable realistic lighting' : 'Disable realistic lighting');
         updateLighting()
+    }
+    function toggleEarthSystemScaling(enable) {
+        earthSystemScaling = enable ? 0.1 : 1
+        document.getElementById('EARTH_SYSTEM_SCALING_CB').checked = enable
+
+        updateEarthSystemScaling();
+        pushTextToLabel(enable ? 'Switch to scaled down earth system' : 'Switch to true scale earth system')
     }
     function toggleTrueRotationSpeeds(enable) {
         TRUE_ROTATION_SPEEDS = enable;
