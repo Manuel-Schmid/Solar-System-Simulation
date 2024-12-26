@@ -392,16 +392,7 @@ function moveToPlanet(planet, topDown=false) {
 
     isCameraLocked = false
     isCameraSunLocked = false
-    let targetPosition = null
     updateEarthSystemVisibility(inEarthSystem)
-
-    if (topDown) targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y + 40, planet.sphere.position.z);
-    else targetPosition = new THREE.Vector3(planet.sphere.position.x, planet.sphere.position.y, planet.sphere.position.z)
-
-    cameraOffset = calcPlanetOffset(planet)
-    targetPosition.x += cameraOffset.x
-    targetPosition.y += cameraOffset.y
-    targetPosition.z += cameraOffset.z
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
@@ -410,9 +401,16 @@ function moveToPlanet(planet, topDown=false) {
     function animate() {
         const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
         const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
-        camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
-        controls.target.copy(planet.sphere.position); // Update the OrbitControls target to the new planet
-        controls.update(); // Update controls to apply the new target
+
+        const dynamicTargetPosition = planet.sphere.position.clone();
+        if (topDown) dynamicTargetPosition.y += 40; // Add height for top-down view
+
+        cameraOffset = calcPlanetOffset(planet);
+        dynamicTargetPosition.add(cameraOffset);
+
+        camera.position.lerpVectors(startPosition, dynamicTargetPosition, t);
+        controls.target.copy(planet.sphere.position);
+        controls.update();
 
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
@@ -471,6 +469,7 @@ function moveToDefault() {
 }
 
 function moveToJWST() {
+    movingToJwst = true
     toggleSpacecraftSelected(false)
     pushTextToLabel('Move to James Webb Space Telescope')
     if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
@@ -484,25 +483,25 @@ function moveToJWST() {
     isCameraSunLocked = false
 
     updateJWSTPosition()
-    const jwstWorldPosition = new THREE.Vector3();
-    jwst.getWorldPosition(jwstWorldPosition);
 
-    const targetPosition = jwstWorldPosition
     const currentJwstScaleFactor = jwstScaleFactor * PLANET_SCALE / DISTANCE_SCALE / 10
     setJwstCameraOffset(new THREE.Vector3(currentJwstScaleFactor * 3, currentJwstScaleFactor * 3, currentJwstScaleFactor * 3))
     setCameraOffset(jwstCameraOffset)
-    targetPosition.x += jwstCameraOffset.x
-    targetPosition.y += jwstCameraOffset.y
-    targetPosition.z += jwstCameraOffset.z
 
-    const duration = 0.8; // Duration the movement in seconds
+    const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
     const startTime = performance.now()
 
     function animateJWST() {
         const elapsed = (performance.now() - startTime) / 1000; // Convert to seconds
         const t = Math.min(elapsed / duration, 1); // Normalize time to [0, 1]
-        camera.position.lerpVectors(startPosition, targetPosition, t); // Smoothly move camera
+
+        const jwstWorldPosition = new THREE.Vector3();
+        jwst.getWorldPosition(jwstWorldPosition);
+
+        const dynamicTargetPosition = jwstWorldPosition.clone().add(jwstCameraOffset);
+        camera.position.lerpVectors(startPosition, dynamicTargetPosition, t);
+
         controls.target.copy(jwstWorldPosition); // Update the OrbitControls target to the new planet
         controls.update(); // Update controls to apply the new target
 
@@ -519,6 +518,7 @@ function moveToJWST() {
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("JWST"))
+            movingToJwst = false
         }
     }
     animateJWST();
@@ -604,7 +604,7 @@ function render() { // runs with 60 fps
                 spacecraft.changeMomentum()
             }
         }
-        if (jwstSelected) updateJWSTPosition()
+        if (jwstSelected || movingToJwst) updateJWSTPosition()
 
         if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
         if (SHOW_CONNECTION) drawConnection([sun.sphere.position, earth.sphere.position, jwstPlane.position], connectionGeo);
