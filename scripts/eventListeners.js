@@ -265,7 +265,7 @@ export function initEventListeners({
                 toggleSpacecraftOrbit()
                 return
             }
-            togglePlanetOrbits(!SHOW_ORBITS)
+            toggleOrbits(!SHOW_ORBITS)
         }
         if (event.key.toLowerCase() === 'q') {
             toggleHighQualityTextures(!HIGH_QUALITY_TEXTURES)
@@ -304,7 +304,7 @@ export function initEventListeners({
         toggleLabel(event.target.checked)
     });
     document.getElementById('SHOW_ORBITS').addEventListener("change", (event) => {
-        togglePlanetOrbits(event.target.checked)
+        toggleOrbits(event.target.checked)
     });
     document.getElementById('SHOW_SPACECRAFT_ORBIT').addEventListener("change", (event) => {
         toggleSpacecraftOrbit()
@@ -398,7 +398,7 @@ export function initEventListeners({
         document.getElementById('SHOW_LABEL_CB').checked = SHOW_LABEL
         updateLabel()
     }
-    function togglePlanetOrbits(visible) {
+    function toggleOrbits(visible) {
         SHOW_ORBITS = visible
         pushTextToLabel(SHOW_ORBITS ? 'Show orbits' : 'Hide orbits')
         document.getElementById('SHOW_ORBITS_CB').checked = SHOW_ORBITS

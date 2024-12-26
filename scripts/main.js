@@ -355,7 +355,10 @@ gltfLoader.load('models/jwst.glb' , (gltf) =>
 
 function toggleJWSTSelected(selected) {
     jwstSelected = selected
-    if (jwstSelected) scene.add(jwstPlane)
+    if (jwstSelected) {
+        scene.add(jwstPlane)
+        jwstOrbit.visible = SHOW_ORBITS;
+    }
     else scene.remove(jwstPlane)
 }
 
@@ -478,6 +481,7 @@ function moveToDefault() {
 
 function moveToJWST() {
     movingToJwst = true
+    jwstOrbit.visible = false;
     toggleSpacecraftSelected(false, planets)
     pushTextToLabel('Move to James Webb Space Telescope')
     if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
@@ -517,11 +521,9 @@ function moveToJWST() {
             requestAnimationFrame(animateJWST); // Continue animation
         } else { // animation is finished
             setTargetPlanet(null)
-            scene.add(jwstPlane)
-            if (SHOW_ORBITS) jwstOrbit.visible = true;
-            toggleJWSTSelected(true)
             inEarthSystem = true
             updateEarthSystemVisibility(inEarthSystem)
+            toggleJWSTSelected(true)
             if (!PAUSED) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
