@@ -273,3 +273,13 @@ body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+#TOGGLE_SPACECRAFT_CONTAINER {
+    width: 100%;
+}
+
+#TOGGLE_SPACECRAFT_BTN {
+    padding: 10px;
+    width: 100%;
+    font-size: 16px;
+}

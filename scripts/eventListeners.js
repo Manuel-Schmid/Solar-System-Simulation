@@ -5,7 +5,7 @@ import {
     pushTextToLabel, setTargetPlanet,
     updateGridTexture,
     updateLabel,
-    updateLighting,
+    updateLighting, updateSelectionElement,
     updateTargetList,
 } from "./design/designUtils";
 import { camera, scene, textureLoader} from "./setup/scene";
@@ -173,7 +173,8 @@ export function initEventListeners({
             return
         }
         if (event.key === 'Enter') {
-            moveToSpacecraft()
+            if (!spacecraftSelected) moveToSpacecraft();
+            else moveToDefault()
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
             if (spacecraftSelected) {
@@ -293,15 +294,8 @@ export function initEventListeners({
             isCameraSunLocked = false
             const number = parseInt(event.key);
             if (planets[number]) {
-                if (event.altKey) {
-                    if (planets[number] === targetPlanet && spacecraftSelected) return
-                    birdseye = true
-                    setTargetPlanet(planets[number])
-                    if (SHOW_LABEL) updateLabel()
-                    if (spacecraftSelected) document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.remove('disabled')
-                }
-                else moveToPlanet(planets[number]);
-                pushTextToLabel('Move to ' + planets[number].name)
+                if (!spacecraftSelected && event.altKey) altMoveToPlanet(planets[number])
+                else changeTarget(targets.indexOf(planets[number].name))
             }
         }
         if (event.key.toLowerCase() === 'j') {
@@ -366,6 +360,10 @@ export function initEventListeners({
     });
     document.getElementById('TRANSFORM_PLANET').addEventListener("click", () => {
         transformTargetPlanet()
+    });
+    document.getElementById('TOGGLE_SPACECRAFT_BTN').addEventListener("click", () => {
+        if (!spacecraftSelected) moveToSpacecraft();
+        else moveToDefault()
     });
 
 
@@ -524,17 +522,34 @@ export function initEventListeners({
     }
     function changeTarget(targetIdx) {
         const targetName = targets[targetIdx]
-        if (targetName === "None") {
-            moveToDefault();
-        } else if (targetName === "Spacecraft") {
-            moveToSpacecraft();
-        } else if (targetName === "JWST") {
-            moveToJWST();
-        } else { //  target is a planet
-            let targetP = planets.find(planet => planet.name === targetName);
-            moveToPlanet(targetP);
-            pushTextToLabel('Move to ' + targetP.name)
+
+        if (spacecraftSelected) {
+            if (targetName === "Free flight") {
+                pushTextToLabel('Enable free flight')
+                moveToSpacecraft()
+            }else { //  target is a planet
+                let targetP = planets.find(planet => planet.name === targetName);
+                altMoveToPlanet(targetP)
+            }
+        } else {
+            if (targetName === "None") {
+                moveToDefault();
+            } else if (targetName === "JWST") {
+                moveToJWST();
+            } else { //  target is a planet
+                let targetP = planets.find(planet => planet.name === targetName);
+                moveToPlanet(targetP);
+            }
         }
+    }
+    function altMoveToPlanet(planet) {
+        if (planet === targetPlanet) return
+        pushTextToLabel('Target: ' + planet.name)
+        birdseye = true
+        setTargetPlanet(planet)
+        if (SHOW_LABEL) updateLabel()
+        if (spacecraftSelected) document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.remove('disabled')
+        updateSelectionElement("TARGET_SELECT", targets.indexOf(planet.name))
     }
     function transformTargetPlanet() {
         pushTextToLabel('Turn ' + targetPlanet.name + ' into a star')
@@ -559,7 +574,7 @@ export function initEventListeners({
 
                 planets[i] = newSun
                 discardedPlanets.push(targetPlanet)
-                updateTargetList(planets, targetPlanet.name)
+                updateTargetList(planets, spacecraftSelected, targetPlanet.name)
                 setTargetPlanet(newSun)
                 if (!spacecraftSelected) {
                     isCameraLocked = false

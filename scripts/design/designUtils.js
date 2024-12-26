@@ -173,10 +173,12 @@ export function setTargetPlanet(planet) {
     }
     else document.getElementById('target-planet-settings').classList.add('hidden')
 }
-export function toggleSpacecraftSelected(selected) {
+export function toggleSpacecraftSelected(selected, planets) {
+    if(selected !== spacecraftSelected) updateTargetList(planets, selected,  null);
     spacecraftSelected = selected;
     if (spacecraftSelected) {
         spacecraftMatchVelocity = false
+        document.getElementById("TOGGLE_SPACECRAFT_BTN").textContent = "Leave spacecraft"
         document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.add('disabled')
         document.getElementById('SPACECRAFT_MATCH_VELOCITY_CB').checked = false
 
@@ -184,22 +186,23 @@ export function toggleSpacecraftSelected(selected) {
         adjustFOV(SPACECRAFT_FOV)
     }
     else {
+        document.getElementById("TOGGLE_SPACECRAFT_BTN").textContent = "Enter spacecraft"
         document.getElementById('spacecraft-settings').classList.add('hidden')
         adjustFOV(STANDARD_FOV, false)
     }
 }
 
-export function updateTargetList(planets, oldPlanetName=null, selectedIdx=0) {
+export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null) {
     const selectElement = document.getElementById("TARGET_SELECT")
+    let selectedIdx = 0
 
     if (oldPlanetName) selectedIdx = targets.indexOf(oldPlanetName);
     targets.length = 0; // clear array
-    targets.push("None")
-    targets.push("Spacecraft")
+    targets.push(spacecraftSelected ? "Free flight" : "None")
     for (const planet of planets) {
         targets.push(planet.name)
     }
-    targets.push("JWST")
+    if (!spacecraftSelected) targets.push("JWST")
 
     selectElement.innerHTML = ""
     targets.forEach((target, index) => {

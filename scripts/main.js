@@ -126,7 +126,7 @@ loadingManager.onLoad = ()=>{
         setMenuSettings()
     }
     // if (firstLoad) { // todo: remove spacecraft default select
-    //     toggleSpacecraftSelected(true)
+    //     toggleSpacecraftSelected(true, planets)
     //     isCameraLocked = true
     // }
     firstLoad = false
@@ -239,7 +239,7 @@ function setMenuSettings() { // set interface default values
             select.value = distanceUnits.indexOf(distanceUnit).toString();
         }
     });
-    updateTargetList(planets)
+    updateTargetList(planets, spacecraftSelected)
 
     document.getElementById("simulation-speed").addEventListener("input", (event) => {
         const speedKeys = Object.keys(simulationSpeed);
@@ -385,7 +385,8 @@ function moveToPlanet(planet, topDown=false) {
         isCameraLocked = true;
         return
     }
-    toggleSpacecraftSelected(false)
+    pushTextToLabel('Move to ' + planet.name)
+    toggleSpacecraftSelected(false, planets)
     toggleJWSTSelected(false)
     if (SHOW_ORBITS) jwstOrbit.visible = false;
     inEarthSystem = (planet.name === "Earth");
@@ -438,9 +439,9 @@ function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
     toggleJWSTSelected(false)
     setTargetPlanet(null)
     isCameraLocked = true
-    toggleSpacecraftSelected(true)
+    toggleSpacecraftSelected(true, planets)
     updateLabel()
-    updateSelectionElement("TARGET_SELECT", targets.indexOf("Spacecraft"))
+    updateSelectionElement("TARGET_SELECT", targets.indexOf("Free flight"))
     // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
 }
 
@@ -448,7 +449,7 @@ function moveToDefault() {
     isCameraLocked = false;
     toggleJWSTSelected(false)
     isCameraSunLocked = false
-    toggleSpacecraftSelected(false)
+    toggleSpacecraftSelected(false, planets)
     pushTextToLabel('Topdown view')
 
     const duration = 1;
@@ -477,7 +478,7 @@ function moveToDefault() {
 
 function moveToJWST() {
     movingToJwst = true
-    toggleSpacecraftSelected(false)
+    toggleSpacecraftSelected(false, planets)
     pushTextToLabel('Move to James Webb Space Telescope')
     if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
     let showLabelChanged = false
