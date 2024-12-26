@@ -92,16 +92,17 @@ body {
 
 #settings-menu {
     position: absolute;
-    top: 10px;
+    top: 1vh;
     right: 10px;
     z-index: 1000;
 }
 
-.menu-button-container {
+.settings-button-container {
     text-align: right;
+    height: 5vh;
 }
 
-#menu-button {
+#settings-button {
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
     border: 1px solid white;
@@ -109,14 +110,14 @@ body {
     padding: 10px;
     cursor: pointer;
     font-size: 16px;
+    max-height: 5vh;
 }
-
-#menu-button:hover {
+#settings-button:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
 #menu-content {
-    margin-top: 10px;
+    margin-top: 1vh;
     background-color: rgba(0, 0, 0, 0.8);
     border: 1px solid white;
     border-radius: 5px;
@@ -126,7 +127,25 @@ body {
     gap: 10px;
     width: 200px;
     color: white;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+
+    max-height: 88vh;
+    overflow-y: auto;
+}
+
+#menu-content::-webkit-scrollbar {
+    width: 8px; /* scrollbar width */
+}
+#menu-content::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.4); /* Thumb color */
+    border-radius: 4px; /* Rounded corners for the thumb */
+}
+#menu-content::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.6); /* Thumb hover color */
+}
+#menu-content::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.5); /* Track background color */
+    border-radius: 4px;
 }
 
 .hidden {
@@ -209,4 +228,48 @@ body {
     display: inline-block;
     text-align: right;
     white-space: nowrap;
+}
+
+#PLANET_SPEED .menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+#PLANET_SPEED button {
+    flex: 1; /* Ensures buttons adjust their size to fit */
+    text-align: center;
+}
+
+.menu-button-container {
+    display: flex;
+    gap: 5px;
+    margin: 2px 0;
+}
+
+.menu-button {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 11px;
+    min-width: 38px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.menu-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-button:active {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(0.95);
+}
+
+.menu-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

@@ -163,6 +163,16 @@ export function updateGridTexture(constellationSphere) {
     }
     else scene.remove(constellationSphere);
 }
+export function setTargetPlanet(planet) {
+    targetPlanet = planet
+    if (targetPlanet !== null) {
+        document.getElementById('target-planet-label').textContent = targetPlanet.name + ": "
+        document.getElementById('target-planet-settings').classList.remove('hidden')
+        if (targetPlanet.isSun) document.getElementById('PLANET_TRANSFORM_ITEM').classList.add('disabled')
+        else document.getElementById('PLANET_TRANSFORM_ITEM').classList.remove('disabled')
+    }
+    else document.getElementById('target-planet-settings').classList.add('hidden')
+}
 export function toggleSpacecraftSelected(selected) {
     spacecraftSelected = selected;
     if (spacecraftSelected) {

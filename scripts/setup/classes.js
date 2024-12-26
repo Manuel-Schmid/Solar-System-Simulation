@@ -2,7 +2,7 @@ import * as THREE from "three";
 import FakeGlowMaterial from "../design/GlowMaterial";
 import {getPositionDistance, PlanetRingGeometry} from "../utils";
 import {adjustFOV, gltfLoader, scene, textureLoader} from "./scene";
-import {updateLabel} from "../design/designUtils";
+import {pushTextToLabel, updateLabel} from "../design/designUtils";
 
 export class Spacecraft {
     constructor(mass, x, y, z, angularVelocity, acceleration, scale, tiltAngle) {
@@ -728,6 +728,18 @@ export class Planet {
         this.currentOrbitPointCount = 0;
         this.orbitGeometry.setDrawRange(0, this.currentOrbitPointCount);
         this.orbitGeometry.attributes.position.needsUpdate = true; // Notify Three.js of the update
+    }
+    changeSpeed(factor) {
+        pushTextToLabel((factor < 1) ? 'Decrease planetary speed' : 'Increase planetary speed')
+        this.xVel *= factor
+        this.yVel *= factor
+        this.zVel *= factor
+        updateLabel()
+    }
+    changeMass(factor) {
+        pushTextToLabel((factor === 2) ? 'Double planetary mass' : (factor === 0.5) ? 'Halve planetary mass' : 'Change planetary mass')
+        this.mass *= factor
+        updateLabel()
     }
 }
 

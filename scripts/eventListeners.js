@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {
     calcPlanetOffset,
     changeBackground,
-    pushTextToLabel,
+    pushTextToLabel, setTargetPlanet,
     updateGridTexture,
     updateLabel,
     updateLighting,
@@ -167,11 +167,9 @@ export function initEventListeners({
             return
         }
         if (event.key.toLowerCase() === 'u') { // cycle distance unit
-            // if (SHOW_LABEL && ((targetPlanet && !targetPlanet.isSun) || spacecraftSelected)) { // only update if planet is selected
-                const unit_index = distanceUnits.indexOf(distanceUnit)
-                if (unit_index < distanceUnits.length - 1) cycleDistanceUnit(distanceUnits[unit_index + 1])
-                else cycleDistanceUnit(distanceUnits[0])
-            // }
+            const unit_index = distanceUnits.indexOf(distanceUnit)
+            if (unit_index < distanceUnits.length - 1) cycleDistanceUnit(distanceUnits[unit_index + 1])
+            else cycleDistanceUnit(distanceUnits[0])
             return
         }
         if (event.key === 'Enter') {
@@ -238,32 +236,16 @@ export function initEventListeners({
             }
         }
         if (event.key.toLowerCase() === 's' && !spacecraftSelected) {
-            pushTextToLabel('Decrease planet speed')
-            if (targetPlanet) {
-                targetPlanet.xVel *= 0.8
-                targetPlanet.yVel *= 0.8
-                targetPlanet.zVel *= 0.8
-            }
+            if (targetPlanet) targetPlanet.changeSpeed(0.8)
         }
-        if (event.key.toLowerCase() === 'f') {
-            pushTextToLabel('Increase planet speed')
-            if (targetPlanet) {
-                targetPlanet.xVel *= 1.2
-                targetPlanet.yVel *= 1.2
-                targetPlanet.zVel *= 1.2
-            }
+        if (event.key.toLowerCase() === 'f' && !spacecraftSelected) {
+            if (targetPlanet) targetPlanet.changeSpeed(1.2)
         }
         if (event.key.toLowerCase() === 'm') {
-            pushTextToLabel('Double planet mass')
-            if (targetPlanet) {
-                targetPlanet.mass *= 2
-            }
+            if (targetPlanet) targetPlanet.changeMass(2)
         }
         if (event.key.toLowerCase() === 'n') {
-            pushTextToLabel('Half planet mass')
-            if (targetPlanet) {
-                targetPlanet.mass *= 0.5
-            }
+            if (targetPlanet) targetPlanet.changeMass(0.5)
         }
         if (event.key.toLowerCase() === 'c') {
             pushTextToLabel('Move to Sun')
@@ -271,37 +253,7 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === '.') {
             if (targetPlanet && !targetPlanet.isSun) {
-                pushTextToLabel('Evolve planet into a star')
-                const newSun = new Planet(targetPlanet.name + " (Star)", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
-                newSun.xVel = targetPlanet.xVel;
-                newSun.yVel = targetPlanet.yVel;
-                newSun.zVel = targetPlanet.zVel;
-                newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 2]);
-                newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 1]);
-                if (SHOW_ORBITS) newSun.drawOrbits()
-                for (let i = 0; i <= planets.length - 1; i++) {
-                    if (planets[i] === targetPlanet) {
-                        scene.remove(planets[i].sphere)
-                        if (planets[i].ring) scene.remove(planets[i].ring.ringObj)
-                        if (planets[i].atmosphere) scene.remove(planets[i].atmosphere)
-                        if (planets[i].clouds) scene.remove(planets[i].clouds)
-                        if (targetPlanet.name === "Earth") {
-                            inEarthSystem = false;
-                            updateEarthSystemVisibility(false);
-                        }
-                        planets[i].updateVectorLines(null, null, SHOW_VECTORS, true)
-
-                        planets[i] = newSun
-                        discardedPlanets.push(targetPlanet)
-                        updateTargetList(planets, targetPlanet.name)
-                        targetPlanet = newSun
-                        if (!spacecraftSelected) {
-                            isCameraLocked = false
-                            if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
-                        }
-                        return
-                    }
-                }
+                transformTargetPlanet();
             }
         }
         if (event.key.toLowerCase() === 'x') {
@@ -344,10 +296,8 @@ export function initEventListeners({
                 if (event.altKey) {
                     if (planets[number] === targetPlanet && spacecraftSelected) return
                     birdseye = true
-                    targetPlanet = planets[number]
-                    if (SHOW_LABEL) {
-                        updateLabel()
-                    }
+                    setTargetPlanet(planets[number])
+                    if (SHOW_LABEL) updateLabel()
                     if (spacecraftSelected) document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.remove('disabled')
                 }
                 else moveToPlanet(planets[number]);
@@ -413,6 +363,9 @@ export function initEventListeners({
     });
     document.getElementById('TARGET_SELECT').addEventListener("change", (event) => {
         changeTarget(event.target.value)
+    });
+    document.getElementById('TRANSFORM_PLANET').addEventListener("click", () => {
+        transformTargetPlanet()
     });
 
 
@@ -581,6 +534,39 @@ export function initEventListeners({
             let targetP = planets.find(planet => planet.name === targetName);
             moveToPlanet(targetP);
             pushTextToLabel('Move to ' + targetP.name)
+        }
+    }
+    function transformTargetPlanet() {
+        pushTextToLabel('Turn ' + targetPlanet.name + ' into a star')
+        const newSun = new Planet(targetPlanet.name + " (Star)", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+        newSun.xVel = targetPlanet.xVel;
+        newSun.yVel = targetPlanet.yVel;
+        newSun.zVel = targetPlanet.zVel;
+        newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 2]);
+        newSun.orbits.push(targetPlanet.orbits[targetPlanet.orbits.length - 1]);
+        if (SHOW_ORBITS) newSun.drawOrbits()
+        for (let i = 0; i <= planets.length - 1; i++) {
+            if (planets[i] === targetPlanet) {
+                scene.remove(planets[i].sphere)
+                if (planets[i].ring) scene.remove(planets[i].ring.ringObj)
+                if (planets[i].atmosphere) scene.remove(planets[i].atmosphere)
+                if (planets[i].clouds) scene.remove(planets[i].clouds)
+                if (targetPlanet.name === "Earth") {
+                    inEarthSystem = false;
+                    updateEarthSystemVisibility(false);
+                }
+                planets[i].updateVectorLines(null, null, SHOW_VECTORS, true)
+
+                planets[i] = newSun
+                discardedPlanets.push(targetPlanet)
+                updateTargetList(planets, targetPlanet.name)
+                setTargetPlanet(newSun)
+                if (!spacecraftSelected) {
+                    isCameraLocked = false
+                    if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
+                }
+                return
+            }
         }
     }
 }

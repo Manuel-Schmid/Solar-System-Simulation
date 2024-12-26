@@ -3,8 +3,15 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {
     calcPlanetOffset,
     createCircle,
-    drawConnection, pushTextToLabel, toggleSpacecraftSelected,
-    updateLabel, updateLighting, updateTargetList, updateSelectionElement, changeBackground
+    drawConnection,
+    pushTextToLabel,
+    toggleSpacecraftSelected,
+    updateLabel,
+    updateLighting,
+    updateTargetList,
+    updateSelectionElement,
+    changeBackground,
+    setTargetPlanet
 } from "./design/designUtils";
 import {getPointXBeyondLine, PlanetRingGeometry} from "./utils";
 import {
@@ -126,8 +133,6 @@ loadingManager.onLoad = ()=>{
 }
 
 function changePlanetScale(newPlanetScale) {
-    console.log(newPlanetScale)
-    // console.log(PLANET_SCALE / DISTANCE_SCALE)
     const oldPlanetScale = PLANET_SCALE
     PLANET_SCALE = DISTANCE_SCALE * newPlanetScale
     for (const planet of planets) {
@@ -417,7 +422,7 @@ function moveToPlanet(planet, topDown=false) {
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
-            targetPlanet = planet;
+            setTargetPlanet(planet)
             birdseye = topDown
             if (!topDown && !PAUSED) isCameraLocked = true
             if (showLabelChanged) SHOW_LABEL = true
@@ -431,7 +436,7 @@ function moveToPlanet(planet, topDown=false) {
 
 function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
     toggleJWSTSelected(false)
-    targetPlanet = null
+    setTargetPlanet(null)
     isCameraLocked = true
     toggleSpacecraftSelected(true)
     updateLabel()
@@ -462,7 +467,7 @@ function moveToDefault() {
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
-            targetPlanet = null;
+            setTargetPlanet(null)
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("None"))
         }
@@ -510,7 +515,7 @@ function moveToJWST() {
         if (t < 1) {
             requestAnimationFrame(animateJWST); // Continue animation
         } else { // animation is finished
-            targetPlanet = null;
+            setTargetPlanet(null)
             scene.add(jwstPlane)
             if (SHOW_ORBITS) jwstOrbit.visible = true;
             toggleJWSTSelected(true)
@@ -670,10 +675,11 @@ function render() { // runs with 60 fps
             }
             // first person camera tilt (only if first person and only while the tilt is still being lerped)
             // if (spacecraftFirstPerson) { // optimization (causes lags sometimes):  && (portPressed || starboardPressed || (Math.abs(spacecraft.container.rotation.z) > 0.0000005 && Math.abs(spacecraft.container.rotation.z) <= spacecraft.tiltAngle))
-                // const spacecraftQuaternion = new THREE.Quaternion();
-                // spacecraftQuaternion.setFromEuler(spacecraft.container.rotation);
-                // camera.rotation.setFromQuaternion(spacecraftQuaternion);
-                // camera.rotation.y += Math.PI
+            //      //   almost works, but turning around y breaks z-rotation: solve by wrapping camera in container
+            //     const zRotation = new THREE.Euler(0, 0, spacecraft.container.rotation.z, 'XYZ');
+            //     const zQuaternion = new THREE.Quaternion();
+            //     zQuaternion.setFromEuler(zRotation);
+            //     camera.quaternion.multiplyQuaternions(zQuaternion, camera.quaternion);
             // }
         } else {
             controls.target.copy(spacecraft.container.position);
