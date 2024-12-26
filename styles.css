@@ -274,6 +274,18 @@ body {
     cursor: not-allowed;
 }
 
+.dual-button-container {
+    width: 100%;
+}
+
+.dual-button-container button {
+    width: 50%;
+}
+
+#SIMULATION_RESETS {
+    margin-top: -7px;
+}
+
 #TOGGLE_SPACECRAFT_CONTAINER {
     width: 100%;
 }

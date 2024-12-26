@@ -271,12 +271,7 @@ export function initEventListeners({
             toggleHighQualityTextures(!HIGH_QUALITY_TEXTURES)
         }
         if (event.key.toLowerCase() === 'p') {
-            pushTextToLabel('Reset orbits')
-            for (const planet of [...planets, ...discardedPlanets]) {
-                planet.resetOrbit()
-            }
-            discardedPlanets.length = 0 // clear discarded planets array
-            spacecraft.resetOrbit()
+            resetAllOrbits()
         }
         if (event.key.toLowerCase() === 'v') {
             toggleVectors(!SHOW_VECTORS)
@@ -365,7 +360,9 @@ export function initEventListeners({
         if (!spacecraftSelected) moveToSpacecraft();
         else moveToDefault()
     });
-
+    document.getElementById('RESET_ORBITS_BTN').addEventListener("click", () => {
+        resetAllOrbits()
+    });
 
     let cameraSunLockChanged = false;
     function togglePause(pause) {
@@ -583,5 +580,13 @@ export function initEventListeners({
                 return
             }
         }
+    }
+    function resetAllOrbits() {
+        pushTextToLabel('Reset orbits')
+        for (const planet of [...planets, ...discardedPlanets]) {
+            planet.resetOrbit()
+        }
+        discardedPlanets.length = 0 // clear discarded planets array
+        spacecraft.resetOrbit()
     }
 }
