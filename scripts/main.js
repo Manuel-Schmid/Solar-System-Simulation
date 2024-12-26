@@ -187,12 +187,6 @@ function changePlanetScale(newPlanetScale) {
         camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
         camera.lookAt(targetPlanet.sphere.position);
     }
-    else if (jwstSelected) {
-        const jwstWorldPosition = new THREE.Vector3();
-        jwst.getWorldPosition(jwstWorldPosition);
-        camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
-        camera.lookAt(jwstWorldPosition);
-    }
 }
 
 function updateEarthSystemScaling() {
@@ -206,8 +200,16 @@ function updateEarthSystemScaling() {
     jwstOrbit.geometry.dispose();
     jwstOrbit = createCircle(newJwstDistance, 0xA2A1A1,128);
     jwstPlane.add(jwstOrbit);
-    if (jwstSelected) updateJWSTPosition()
-    else scene.remove(jwstPlane)
+
+    if (jwstSelected) {
+        updateJWSTPosition()
+        const jwstWorldPosition = new THREE.Vector3();
+        jwst.getWorldPosition(jwstWorldPosition);
+        camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
+        camera.lookAt(jwstWorldPosition);
+    } else {
+        scene.remove(jwstPlane)
+    }
 }
 
 function setMenuSettings() { // set interface default values
