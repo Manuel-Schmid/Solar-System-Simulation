@@ -152,6 +152,10 @@ body {
     display: none !important;
 }
 
+.menu-container {
+    transition: opacity 0.3s ease;
+}
+
 .menu-item {
     display: flex;
     justify-content: space-between;
@@ -174,6 +178,13 @@ body {
     padding: 5px;
     font-size: 14px;
     cursor: pointer;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+    transition: opacity 0.3s ease;
 }
 
 .menu-item.disabled {

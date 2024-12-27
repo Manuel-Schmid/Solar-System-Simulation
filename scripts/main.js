@@ -11,7 +11,7 @@ import {
     updateTargetList,
     updateSelectionElement,
     changeBackground,
-    setTargetPlanet
+    setTargetPlanet, toggleTransitionAnimation
 } from "./design/designUtils";
 import {getPointXBeyondLine, PlanetRingGeometry} from "./utils";
 import {
@@ -111,7 +111,7 @@ loadingManager.onLoad = ()=>{
             ISS: ISS,
             issOrbitTrail: issOrbitTrail,
             jwst: jwst,
-            jwstOrbit: jwstOrbit,
+            jwstPlane: jwstPlane,
             constellationSphere: constellationSphere,
             connectionOutline: connectionOutline,
             moveToPlanet: moveToPlanet,
@@ -212,9 +212,9 @@ function updateEarthSystemScaling() {
         jwst.getWorldPosition(jwstWorldPosition);
         camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
         camera.lookAt(jwstWorldPosition);
-    } else {
-        scene.remove(jwstPlane)
     }
+
+    toggleJWSTSelected(jwstSelected)
 }
 
 function setMenuSettings() { // set interface default values
@@ -388,6 +388,7 @@ function moveToPlanet(planet, topDown=false) {
         isCameraLocked = true;
         return
     }
+    toggleTransitionAnimation(true)
     pushTextToLabel('Move to ' + planet.name)
     toggleSpacecraftSelected(false, planets)
     toggleJWSTSelected(false)
@@ -432,6 +433,7 @@ function moveToPlanet(planet, topDown=false) {
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf(planet.name))
+            toggleTransitionAnimation(false)
         }
     }
 
@@ -449,6 +451,7 @@ function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
 }
 
 function moveToDefault() {
+    toggleTransitionAnimation(true)
     isCameraLocked = false;
     toggleJWSTSelected(false)
     isCameraSunLocked = false
@@ -474,12 +477,14 @@ function moveToDefault() {
             setTargetPlanet(null)
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("None"))
+            toggleTransitionAnimation(false)
         }
     }
     animate();
 }
 
 function moveToJWST() {
+    toggleTransitionAnimation(true)
     movingToJwst = true
     jwstOrbit.visible = false;
     toggleSpacecraftSelected(false, planets)
@@ -529,6 +534,7 @@ function moveToJWST() {
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("JWST"))
             movingToJwst = false
+            toggleTransitionAnimation(false)
         }
     }
     animateJWST();

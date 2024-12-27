@@ -249,6 +249,13 @@ export function updateSelectionElement(selectElementID, selectedIdx) {
     selectElement.value = selectedIdx
 }
 
+export function toggleTransitionAnimation(animationActive) {
+    transitionAnimationActive = animationActive
+    document.activeElement.blur();
+    if (transitionAnimationActive) document.getElementById('menu-content').classList.add('disabled')
+    else document.getElementById('menu-content').classList.remove('disabled')
+}
+
 export function calcPlanetOffset(planet) {
     if (planet.isSun) {
         return new THREE.Vector3(((0 - planet.sphere.position.x) / planet.sphere.position.x) * (planet.radius * 1.8), planet.radius, ((0 - planet.sphere.position.z) / planet.sphere.position.z) * (planet.radius * 1.8))

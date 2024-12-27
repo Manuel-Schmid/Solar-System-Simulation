@@ -23,7 +23,7 @@ export function initEventListeners({
                                        ISS,
                                        issOrbitTrail,
                                        jwst,
-                                       jwstOrbit,
+                                       jwstPlane,
                                        constellationSphere,
                                        connectionOutline,
                                        moveToPlanet,
@@ -35,6 +35,7 @@ export function initEventListeners({
                                        setCameraOffset,
                                        setJwstCameraOffset,
                                    }) {
+    // mouse controls
     window.addEventListener('mousedown', (event) => {
         if (!spacecraftSelected || event.target.nodeName !== 'CANVAS') return
         isMouseDown = true;
@@ -68,6 +69,8 @@ export function initEventListeners({
         if (!spacecraftSelected) return
         isMouseDown = false;
     });
+
+    // keyboard controls
     document.addEventListener('keyup', (event) => {
         if (spacecraftSelected) {
             if (event.key.toLowerCase() === 'w') {
@@ -94,6 +97,7 @@ export function initEventListeners({
         }
     });
     window.addEventListener('keydown', (event) => {
+        if (transitionAnimationActive) return
         document.activeElement.blur();
         if (event.code === 'Space') { // un/pause the game
             togglePause(!PAUSED)
@@ -297,6 +301,8 @@ export function initEventListeners({
             moveToJWST();
         }
     });
+
+    // interface controls
     document.getElementById('PAUSED').addEventListener("change", (event) => {
         togglePause(event.target.checked)
     });
@@ -412,7 +418,7 @@ export function initEventListeners({
             moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
             issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
         }
-        jwstOrbit.visible = SHOW_ORBITS;
+        jwstPlane.children[1].visible = SHOW_ORBITS;
     }
     function toggleSpacecraftOrbit() {
         spacecraft.toggleOrbitLine(spacecraft.orbitLine.parent === null)

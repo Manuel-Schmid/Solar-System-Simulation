@@ -25,6 +25,7 @@ let targetPlanet = null; // Default to the sun
 let spacecraft = null
 let spacecraftSelected = false;
 let jwstSelected = false;
+let transitionAnimationActive = false;
 let movingToJwst = false;
 
 
