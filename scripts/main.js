@@ -11,7 +11,7 @@ import {
     updateTargetList,
     updateSelectionElement,
     changeBackground,
-    setTargetPlanet, toggleTransitionAnimation, toggleCameraLock, toggleCameraSunLock
+    setTargetPlanet, toggleTransitionAnimation, toggleCameraLock, toggleCameraSunLock, initPlanetScaleSlider
 } from "./design/designUtils";
 import {getPointXBeyondLine, PlanetRingGeometry} from "./utils";
 import {
@@ -87,6 +87,7 @@ loadingManager.onProgress = ( item, loaded, total ) =>  {
     document.getElementById('loading-progress').innerHTML = ": " + loaded + "/" + total
 }
 loadingManager.onLoad = ()=>{
+    document.getElementById('loading-title').textContent = 'Loading Textures'
     document.getElementById('loading-screen').style.display = 'none'
     if (firstLoad) {
         initEventListeners({
@@ -260,7 +261,8 @@ function setMenuSettings() { // set interface default values
     });
 }
 
-changeBackground(0)
+changeBackground(backgroundTextures.indexOf(backgroundTexture).toString())
+initPlanetScaleSlider()
 updateLighting()
 
 // add constellation grid sphere

@@ -57,8 +57,8 @@ export function convertHexToRGB(colorHex) {
     return `#${colorHex.toString(16).padStart(6, '0')}`;
 }
 
-export function convertRGBToHex(colorRGB) {
-    return `#${colorRGB.toString(16).padStart(6, '0')}`;
+export function convertHexTo0x(hexColor) {
+    return `0x${hexColor.slice(1)}`;
 }
 
 export function formatDistance(value) { // todo delete
@@ -178,4 +178,3 @@ export class PlanetRingGeometry extends THREE.BufferGeometry {
         this.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     }
 }
-

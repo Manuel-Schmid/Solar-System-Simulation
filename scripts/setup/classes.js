@@ -505,7 +505,7 @@ export class Planet {
         });
         if (lowQMapPath || highQMapPath) {
             this.material.color = null;
-            const texture = textureLoader.load(HIGH_QUALITY_TEXTURES ? highQMapPath : lowQMapPath);
+            const texture = textureLoader.load(HIGH_QUALITY_TEXTURES && highQMapPath ? highQMapPath : lowQMapPath);
             texture.colorSpace = THREE.SRGBColorSpace
             this.material.map = texture;
 
@@ -520,7 +520,7 @@ export class Planet {
                 this.material.roughness = 0.5
                 this.material.metalness = 0.7
 
-                const cloudTexture = textureLoader.load('planet_textures/2k/2k_earth_clouds.jpg')
+                const cloudTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? 'planet_textures/8k/8k_earth_clouds.jpg' : 'planet_textures/2k/2k_earth_clouds.jpg')
                 texture.colorSpace = THREE.SRGBColorSpace
 
                 let cloudGeo = new THREE.SphereGeometry(this.radius * 1.005, 64, 32)

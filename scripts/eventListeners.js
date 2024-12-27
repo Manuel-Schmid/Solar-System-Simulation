@@ -157,9 +157,9 @@ export function initEventListeners({
             return
         }
         if (event.key.toLowerCase() === 'k') {
-            const grid_texture_index = backgroundTextures.indexOf(backgroundGrid)
-            if (grid_texture_index < backgroundTextures.length - 1) cycleBackgroundGrid(backgroundTextures[grid_texture_index + 1])
-            else cycleBackgroundGrid(backgroundTextures[0])
+            const grid_texture_index = backgroundGridTextures.indexOf(backgroundGrid)
+            if (grid_texture_index < backgroundGridTextures.length - 1) cycleBackgroundGrid(backgroundGridTextures[grid_texture_index + 1])
+            else cycleBackgroundGrid(backgroundGridTextures[0])
             return
         }
         if (event.key.toLowerCase() === 'z') {
@@ -287,7 +287,7 @@ export function initEventListeners({
         changeBackground(event.target.value)
     });
     document.getElementById('BACKGROUND_GRID_SELECT').addEventListener("change", (event) => {
-        cycleBackgroundGrid(backgroundTextures[event.target.value])
+        cycleBackgroundGrid(backgroundGridTextures[event.target.value])
     });
     document.getElementById('SPACECRAFT_FIRST_PERSON').addEventListener("change", (event) => {
         switchSpacecraftPerspective(event.target.checked)
@@ -327,6 +327,7 @@ export function initEventListeners({
         PAUSED = pause;
         pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
         document.getElementById('PAUSED_CB').checked = PAUSED
+        if (birdseye) return
 
         if (spacecraftSelected) toggleCameraLock(true)
         else if(targetPlanet || jwstSelected) {
@@ -385,12 +386,12 @@ export function initEventListeners({
         document.getElementById('loading-screen').style.display = ''
         for (const planet of planets) {
             if (planet.lowQMapPath && planet.highQMapPath) {
-                const texture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.highQMapPath : planet.lowQMapPath);
+                const texture = textureLoader.load(HIGH_QUALITY_TEXTURES && planet.highQMapPath ? planet.highQMapPath : planet.lowQMapPath);
                 texture.colorSpace = THREE.SRGBColorSpace
                 planet.sphere.material.map = texture
             }
             if (planet.ring && planet.ring.lowQMapPath && planet.ring.highQMapPath) {
-                const alphaTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? planet.ring.highQMapPath : planet.ring.lowQMapPath);
+                const alphaTexture = textureLoader.load(HIGH_QUALITY_TEXTURES && planet.ring.highQMapPath ? planet.ring.highQMapPath : planet.ring.lowQMapPath);
                 alphaTexture.colorSpace = THREE.SRGBColorSpace
                 alphaTexture.anisotropy = 32;  // Improve texture quality if needed
                 planet.ring.ringObj.material.map = alphaTexture
@@ -451,7 +452,7 @@ export function initEventListeners({
     }
     function cycleBackgroundGrid(texture) {
         backgroundGrid = texture
-        document.getElementById('BACKGROUND_GRID_SELECT').value = backgroundTextures.indexOf(backgroundGrid).toString();
+        document.getElementById('BACKGROUND_GRID_SELECT').value = backgroundGridTextures.indexOf(backgroundGrid).toString();
 
         updateGridTexture(constellationSphere);
     }
@@ -536,6 +537,7 @@ export function initEventListeners({
                 setTargetPlanet(newSun)
                 if (!spacecraftSelected) {
                     toggleCameraLock(false)
+                    toggleCameraSunLock(false)
                     if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
                 }
                 return
