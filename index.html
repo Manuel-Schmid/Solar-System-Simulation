@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solar System</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,11 +16,9 @@
 <script type="module" src="scripts/main.js"></script>
 
 <div id="loading-screen">
-    <span>[ Loading ... ]</span>
-    <span id="loading-progress"></span>
-    <div id="loaded-elements">
-        <span id="loaded-elements-left"></span>
-        <span id="loaded-elements-right"></span>
+    <span id="loading-title">Initializing simulation</span>
+    <div class="loading-container">
+        <span>[ Loading<span id="loading-progress"></span> ]</span>
     </div>
 </div>
 
@@ -56,66 +57,71 @@
                 <option value="0" >None</option>
             </select>
         </div>
-        <div id="CAMERA_LOCK" class="menu-item disabled">
-            <label for="CAMERA_LOCK_CB">&emsp;Lock camera</label>
-            <input type="checkbox" id="CAMERA_LOCK_CB">
-        </div>
-        <div id="CAMERA_SUN_LOCK" class="menu-item disabled">
-            <label for="CAMERA_SUN_LOCK_CB">&emsp;Sunlock camera</label>
-            <input type="checkbox" id="CAMERA_SUN_LOCK_CB">
+        <div class="submenu-item">
+            <div id="CAMERA_LOCK" class="menu-item disabled">
+                <label for="CAMERA_LOCK_CB">Lock camera</label>
+                <input type="checkbox" id="CAMERA_LOCK_CB">
+            </div>
+            <div id="CAMERA_SUN_LOCK" class="menu-item disabled">
+                <label for="CAMERA_SUN_LOCK_CB">Sunlock camera</label>
+                <input type="checkbox" id="CAMERA_SUN_LOCK_CB">
+            </div>
         </div>
         <div id="spacecraft-settings" class="hidden">
             <span>Spacecraft: </span>
-            <div id="spacecraft-fov-container" class="menu-item slider-container">
-                <label for="spacecraft-fov">&emsp;FOV</label>
-                <div class="slider">
-                    &emsp;
-                    <input type="range" id="spacecraft-fov" class="slider-input" min="30" max="150" step="15" value="75">
-                    <span id="spacecraft-fov-display" class="slider-display">75°</span>
+            <div class="submenu-item">
+                <div id="spacecraft-fov-container" class="menu-item slider-container">
+                    <label for="spacecraft-fov">FOV</label>
+                    <div class="slider">
+                        <input type="range" id="spacecraft-fov" class="slider-input" min="30" max="150" step="15" value="75">
+                        <span id="spacecraft-fov-display" class="slider-display">75°</span>
+                    </div>
                 </div>
-            </div>
-            <div id="SPACECRAFT_FIRST_PERSON" class="menu-item">
-                <label for="SPACECRAFT_FIRST_PERSON_CB">&emsp;First Person</label>
-                <input type="checkbox" id="SPACECRAFT_FIRST_PERSON_CB">
-            </div>
-            <div id="SPACECRAFT_GRAVITY" class="menu-item">
-                <label for="SPACECRAFT_GRAVITY_CB">&emsp;Gravity</label>
-                <input type="checkbox" id="SPACECRAFT_GRAVITY_CB">
-            </div>
-            <div id="SPACECRAFT_MATCH_VELOCITY" class="menu-item disabled">
-                <label for="SPACECRAFT_MATCH_VELOCITY_CB">&emsp;Match Velocity</label>
-                <input type="checkbox" id="SPACECRAFT_MATCH_VELOCITY_CB">
-            </div>
-            <div id="SPACECRAFT_LIGHT" class="menu-item">
-                <label for="SPACECRAFT_LIGHT_CB">&emsp;Ship Light</label>
-                <input type="checkbox" id="SPACECRAFT_LIGHT_CB">
-            </div>
-            <div id="ACTIVE_ASCENSION_AXIS" class="menu-item">
-                <label for="ACTIVE_ASCENSION_AXIS_CB">&emsp;Ascension axis</label>
-                <input type="checkbox" id="ACTIVE_ASCENSION_AXIS_CB">
+                <div id="SPACECRAFT_FIRST_PERSON" class="menu-item">
+                    <label for="SPACECRAFT_FIRST_PERSON_CB">First Person</label>
+                    <input type="checkbox" id="SPACECRAFT_FIRST_PERSON_CB">
+                </div>
+                <div id="SPACECRAFT_GRAVITY" class="menu-item">
+                    <label for="SPACECRAFT_GRAVITY_CB">Gravity</label>
+                    <input type="checkbox" id="SPACECRAFT_GRAVITY_CB">
+                </div>
+                <div id="SPACECRAFT_MATCH_VELOCITY" class="menu-item disabled">
+                    <label for="SPACECRAFT_MATCH_VELOCITY_CB">Match Velocity</label>
+                    <input type="checkbox" id="SPACECRAFT_MATCH_VELOCITY_CB">
+                </div>
+                <div id="SPACECRAFT_LIGHT" class="menu-item">
+                    <label for="SPACECRAFT_LIGHT_CB">Ship Light</label>
+                    <input type="checkbox" id="SPACECRAFT_LIGHT_CB">
+                </div>
+                <div id="ACTIVE_ASCENSION_AXIS" class="menu-item">
+                    <label for="ACTIVE_ASCENSION_AXIS_CB">Ascension axis</label>
+                    <input type="checkbox" id="ACTIVE_ASCENSION_AXIS_CB">
+                </div>
             </div>
         </div>
 
         <div id="target-planet-settings" class="menu hidden">
             <span id="target-planet-label" >Target planet: </span>
-            <div id="PLANET_SPEED" class="menu-item">
-                <label>&emsp;Change speed</label>
-                <div class="menu-button-container">
-                    <button id="decrease-speed" onclick="targetPlanet.changeSpeed(0.8)" class="menu-button">0.8x</button>
-                    <button id="increase-speed" onclick="targetPlanet.changeSpeed(1.2)" class="menu-button">1.2x</button>
+            <div class="submenu-item">
+                <div id="PLANET_SPEED" class="menu-item">
+                    <label>Change speed</label>
+                    <div class="menu-button-container">
+                        <button id="decrease-speed" onclick="targetPlanet.changeSpeed(0.8)" class="menu-button">0.8x</button>
+                        <button id="increase-speed" onclick="targetPlanet.changeSpeed(1.2)" class="menu-button">1.2x</button>
+                    </div>
                 </div>
-            </div>
-            <div id="PLANET_MASS" class="menu-item">
-                <label>&emsp;Change mass</label>
-                <div class="menu-button-container">
-                    <button id="decrease-mass" onclick="targetPlanet.changeMass(0.5)" class="menu-button">0.5</button>
-                    <button id="increase-mass" onclick="targetPlanet.changeMass(2)" class="menu-button">2x</button>
+                <div id="PLANET_MASS" class="menu-item">
+                    <label>Change mass</label>
+                    <div class="menu-button-container">
+                        <button id="decrease-mass" onclick="targetPlanet.changeMass(0.5)" class="menu-button">0.5</button>
+                        <button id="increase-mass" onclick="targetPlanet.changeMass(2)" class="menu-button">2x</button>
+                    </div>
                 </div>
-            </div>
-            <div id="PLANET_TRANSFORM_ITEM" class="menu-item">
-                <label>&emsp;Turn into a star</label>
-                <div class="menu-button-container">
-                    <button id="TRANSFORM_PLANET" class="menu-button">Transform</button>
+                <div id="PLANET_TRANSFORM_ITEM" class="menu-item">
+                    <label>Turn into a star</label>
+                    <div class="menu-button-container">
+                        <button id="TRANSFORM_PLANET" class="menu-button">Transform</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,9 +138,11 @@
             <label for="SHOW_ORBITS_CB">Orbits</label>
             <input type="checkbox" id="SHOW_ORBITS_CB">
         </div>
-        <div id="SHOW_SPACECRAFT_ORBIT" class="menu-item">
-            <label for="SHOW_SPACECRAFT_ORBIT_CB">&emsp;Spacecraft Orbit</label>
-            <input type="checkbox" id="SHOW_SPACECRAFT_ORBIT_CB">
+        <div class="submenu-item">
+            <div id="SHOW_SPACECRAFT_ORBIT" class="menu-item">
+                <label for="SHOW_SPACECRAFT_ORBIT_CB">Spacecraft Orbit</label>
+                <input type="checkbox" id="SHOW_SPACECRAFT_ORBIT_CB">
+            </div>
         </div>
         <div id="HIGH_QUALITY_TEXTURES" class="menu-item">
             <label for="HIGH_QUALITY_TEXTURES_CB">8k Quality</label>

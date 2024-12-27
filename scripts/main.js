@@ -83,19 +83,8 @@ controls.update();
 
 // loading
 let firstLoad = true
-const leftElement = document.getElementById('loaded-elements-left');
-const rightElement = document.getElementById('loaded-elements-right');
-function addLoadedItem(item) {
-    leftElement.innerHTML += item + "<br>";
-    if (leftElement.scrollHeight > leftElement.offsetHeight) {
-        leftElement.innerHTML = leftElement.innerHTML.replace(item + "<br>", '');
-        rightElement.innerHTML += item + "<br>";
-    }
-}
-
 loadingManager.onProgress = ( item, loaded, total ) =>  {
-    document.getElementById('loading-progress').innerHTML = loaded + "/" + total + "<br>" + item
-    addLoadedItem(item)
+    document.getElementById('loading-progress').innerHTML = ": " + loaded + "/" + total
 }
 loadingManager.onLoad = ()=>{
     document.getElementById('loading-screen').style.display = 'none'
