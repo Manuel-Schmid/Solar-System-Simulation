@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {
     calcPlanetOffset,
     changeBackground,
-    pushTextToLabel, setTargetPlanet,
+    pushTextToLabel, setTargetPlanet, toggleCameraLock, toggleCameraSunLock,
     updateGridTexture,
     updateLabel,
     updateLighting, updateSelectionElement,
@@ -181,63 +181,11 @@ export function initEventListeners({
             else moveToDefault()
         }
         if (event.key.toLowerCase() === 'e') { // lock/unlock camera to target planet
-            if (spacecraftSelected) {
-                pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
-                if (isCameraLocked) {
-                    isCameraLocked = false
-                    isCameraSunLocked = false
-                } else {
-                    isCameraLocked = true;
-                    const spacecraftWorldPosition = new THREE.Vector3();
-                    spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
-                }
-                return
-            }
-
-            if (jwstSelected && !PAUSED) {
-                pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
-                if (isCameraLocked) {
-                    isCameraLocked = false
-                    isCameraSunLocked = false
-                } else {
-                    isCameraLocked = true;
-                    const jwstWorldPosition = new THREE.Vector3();
-                    jwst.getWorldPosition(jwstWorldPosition);
-
-                    setJwstCameraOffset(new THREE.Vector3().subVectors(camera.position, jwstWorldPosition))
-                }
-                return
-            }
-
-            if (targetPlanet && !PAUSED) {
-                pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
-                if (isCameraLocked) {
-                    isCameraLocked = false
-                    isCameraSunLocked = false
-                } else {
-                    isCameraLocked = true;
-                    setCameraOffset(new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position))
-                }
-            }
-            return
+            switchCameraLock()
         }
         if ((event.key === 'Shift') && !spacecraftSelected) {
-            if (targetPlanet || jwstSelected) {
-                if (!PAUSED) {
-                    isCameraSunLocked = !isCameraSunLocked
-                    pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
-                    if (isCameraSunLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
-                    else if (!isCameraSunLocked) {
-                        cameraSunLockChanged = false
-                        if(targetPlanet) setCameraOffset(calcPlanetOffset(targetPlanet))
-                        else if (jwstSelected) setCameraOffset(jwstCameraOffset)
-                    }
-                } else {
-                    if (cameraSunLockChanged) {
-                        cameraSunLockChanged = false
-                        pushTextToLabel('Unlock camera from sun')
-                    }
-                }
+            if ((targetPlanet && targetPlanet.name !== "Sun") || jwstSelected) {
+                switchCameraSunLock()
             }
         }
         if (event.key.toLowerCase() === 's' && !spacecraftSelected) {
@@ -290,7 +238,6 @@ export function initEventListeners({
             }
         }
         if (event.key >= '0' && event.key <= '9') {
-            isCameraSunLocked = false
             const number = parseInt(event.key);
             if (planets[number]) {
                 if (!spacecraftSelected && event.altKey) altMoveToPlanet(planets[number])
@@ -369,21 +316,26 @@ export function initEventListeners({
     document.getElementById('RESET_ORBITS_BTN').addEventListener("click", () => {
         resetAllOrbits()
     });
+    document.getElementById('CAMERA_LOCK').addEventListener("change", (event) => {
+        switchCameraLock()
+    });
+    document.getElementById('CAMERA_SUN_LOCK').addEventListener("change", (event) => {
+        switchCameraSunLock()
+    });
 
-    let cameraSunLockChanged = false;
     function togglePause(pause) {
         PAUSED = pause;
         pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
         document.getElementById('PAUSED_CB').checked = PAUSED
 
-        if (spacecraftSelected) isCameraLocked = true
-        else {
-            isCameraLocked = !PAUSED
-            if (PAUSED && !jwstSelected) {
+        if (spacecraftSelected) toggleCameraLock(true)
+        else if(targetPlanet || jwstSelected) {
+            toggleCameraLock(!PAUSED)
+            if (PAUSED) {
                 cameraSunLockChanged = isCameraSunLocked;
                 isCameraSunLocked = false
             } else if (cameraSunLockChanged) {
-                sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
+                if (targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
                 isCameraSunLocked = true
             }
 
@@ -456,6 +408,7 @@ export function initEventListeners({
         for (const planet of planets) {
             planet.updateVectorLines(0,0, SHOW_VECTORS)
         }
+        spacecraft.updateVectorLines(0,0,0)
     }
     function toggleRealisticLighting(enable) {
         REALISTIC_LIGHTING = enable;
@@ -533,6 +486,7 @@ export function initEventListeners({
             }else { //  target is a planet
                 let targetP = planets.find(planet => planet.name === targetName);
                 altMoveToPlanet(targetP)
+                // document.getElementById('target-planet-settings').style.color = convertRGBToHex(targetP.colorHex)
             }
         } else {
             if (targetName === "None") {
@@ -542,6 +496,7 @@ export function initEventListeners({
             } else { //  target is a planet
                 let targetP = planets.find(planet => planet.name === targetName);
                 moveToPlanet(targetP);
+                // document.getElementById('target-planet-settings').style.color = convertRGBToHex(targetP.colorHex)
             }
         }
     }
@@ -580,7 +535,7 @@ export function initEventListeners({
                 updateTargetList(planets, spacecraftSelected, targetPlanet.name)
                 setTargetPlanet(newSun)
                 if (!spacecraftSelected) {
-                    isCameraLocked = false
+                    toggleCameraLock(false)
                     if(!birdseye) camera.position.copy(targetPlanet.sphere.position).add(calcPlanetOffset(targetPlanet));
                 }
                 return
@@ -594,5 +549,61 @@ export function initEventListeners({
         }
         discardedPlanets.length = 0 // clear discarded planets array
         spacecraft.resetOrbit()
+    }
+    function switchCameraLock() {
+        if (spacecraftSelected) {
+            pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
+            if (isCameraLocked) {
+                toggleCameraLock(false)
+                toggleCameraSunLock(false)
+            } else {
+                toggleCameraLock(true)
+                const spacecraftWorldPosition = new THREE.Vector3();
+                spacecraft.obj.getWorldPosition(spacecraftWorldPosition);
+            }
+            return
+        }
+
+        if (jwstSelected && !PAUSED) {
+            pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
+            if (isCameraLocked) {
+                toggleCameraLock(false)
+                toggleCameraSunLock(false)
+            } else {
+                toggleCameraLock(true)
+                const jwstWorldPosition = new THREE.Vector3();
+                jwst.getWorldPosition(jwstWorldPosition);
+
+                setJwstCameraOffset(new THREE.Vector3().subVectors(camera.position, jwstWorldPosition))
+            }
+            return
+        }
+
+        if (targetPlanet && !PAUSED) {
+            pushTextToLabel(isCameraLocked ? 'Unlock camera' : 'Lock camera')
+            if (isCameraLocked) {
+                toggleCameraLock(false)
+                toggleCameraSunLock(false)
+            } else {
+                toggleCameraLock(true)
+                setCameraOffset(new THREE.Vector3().subVectors(camera.position, targetPlanet.sphere.position))
+            }
+        }
+    }
+    function switchCameraSunLock() {
+        if (!PAUSED) {
+            toggleCameraSunLock(!isCameraSunLocked)
+            pushTextToLabel(isCameraSunLocked ? 'Lock camera to sun' : 'Unlock camera from sun')
+            if (isCameraSunLocked && targetPlanet) sunLockedCameraDistance = getDistanceBetweenPoints(targetPlanet.sphere.position, camera.position)
+            else if (!isCameraSunLocked) {
+                cameraSunLockChanged = false
+                if (targetPlanet) setCameraOffset(calcPlanetOffset(targetPlanet))
+                else if (jwstSelected) setCameraOffset(jwstCameraOffset)
+            }
+        } else {
+            cameraSunLockChanged = !cameraSunLockChanged
+            pushTextToLabel(cameraSunLockChanged ? 'Lock camera to sun' : 'Unlock camera from sun')
+            document.getElementById('CAMERA_SUN_LOCK_CB').checked = cameraSunLockChanged
+        }
     }
 }

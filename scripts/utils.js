@@ -57,6 +57,10 @@ export function convertHexToRGB(colorHex) {
     return `#${colorHex.toString(16).padStart(6, '0')}`;
 }
 
+export function convertRGBToHex(colorRGB) {
+    return `#${colorRGB.toString(16).padStart(6, '0')}`;
+}
+
 export function formatDistance(value) { // todo delete
     return Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'")
 }

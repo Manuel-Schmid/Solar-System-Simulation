@@ -11,7 +11,7 @@ import {
     updateTargetList,
     updateSelectionElement,
     changeBackground,
-    setTargetPlanet, toggleTransitionAnimation
+    setTargetPlanet, toggleTransitionAnimation, toggleCameraLock, toggleCameraSunLock
 } from "./design/designUtils";
 import {getPointXBeyondLine, PlanetRingGeometry} from "./utils";
 import {
@@ -127,7 +127,7 @@ loadingManager.onLoad = ()=>{
     }
     // if (firstLoad) { // todo: remove spacecraft default select
     //     toggleSpacecraftSelected(true, planets)
-    //     isCameraLocked = true
+    //     toggleCameraLock(true)
     // }
     firstLoad = false
 }
@@ -233,6 +233,8 @@ function setMenuSettings() { // set interface default values
         else if (checkbox.id === "SPACECRAFT_GRAVITY_CB") checkbox.checked = spacecraftGravity;
         else if (checkbox.id === "SPACECRAFT_MATCH_VELOCITY_CB") checkbox.checked = spacecraftMatchVelocity;
         else if (checkbox.id === "SPACECRAFT_LIGHT_CB") checkbox.checked = spacecraftLight;
+        else if (checkbox.id === "CAMERA_LOCK_CB") checkbox.checked = isCameraLocked;
+        else if (checkbox.id === "CAMERA_SUN_LOCK_CB") checkbox.checked = isCameraSunLocked;
     });
     document.querySelectorAll("select").forEach((select) => {
         if (select.id === "DISTANCE_UNIT_SELECT") {
@@ -385,7 +387,7 @@ function updateEarthSystemVisibility(visible) {
 function moveToPlanet(planet, topDown=false) {
     if (planet === targetPlanet && !planet.isSun && !spacecraftSelected) {
         cameraOffset = calcPlanetOffset(planet)
-        isCameraLocked = true;
+        toggleCameraLock(true)
         return
     }
     toggleTransitionAnimation(true)
@@ -429,7 +431,8 @@ function moveToPlanet(planet, topDown=false) {
         } else { // animation is finished
             setTargetPlanet(planet)
             birdseye = topDown
-            if (!topDown && !PAUSED) isCameraLocked = true
+            toggleCameraLock(!topDown && !PAUSED)
+            toggleCameraSunLock(false)
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf(planet.name))
@@ -443,8 +446,9 @@ function moveToPlanet(planet, topDown=false) {
 function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
     toggleJWSTSelected(false)
     setTargetPlanet(null)
-    isCameraLocked = true
     toggleSpacecraftSelected(true, planets)
+    toggleCameraLock(true)
+    toggleCameraSunLock(false)
     updateLabel()
     updateSelectionElement("TARGET_SELECT", targets.indexOf("Free flight"))
     // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
@@ -453,8 +457,8 @@ function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
 function moveToDefault() {
     toggleTransitionAnimation(true)
     isCameraLocked = false;
-    toggleJWSTSelected(false)
     isCameraSunLocked = false
+    toggleJWSTSelected(false)
     toggleSpacecraftSelected(false, planets)
     pushTextToLabel('Topdown view')
 
@@ -475,6 +479,8 @@ function moveToDefault() {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
             setTargetPlanet(null)
+            toggleCameraLock(false)
+            toggleCameraSunLock(false)
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("None"))
             toggleTransitionAnimation(false)
@@ -529,7 +535,8 @@ function moveToJWST() {
             inEarthSystem = true
             updateEarthSystemVisibility(inEarthSystem)
             toggleJWSTSelected(true)
-            if (!PAUSED) isCameraLocked = true
+            toggleCameraLock(!PAUSED)
+            toggleCameraSunLock(false)
             if (showLabelChanged) SHOW_LABEL = true
             if (SHOW_LABEL) updateLabel()
             updateSelectionElement("TARGET_SELECT", targets.indexOf("JWST"))

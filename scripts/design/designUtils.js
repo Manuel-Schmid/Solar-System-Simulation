@@ -212,6 +212,31 @@ export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null
         option.textContent = target;
         selectElement.appendChild(option);
     });
+
+    // for (const planet of planets) {
+    //     for (let i = 0; i < selectElement.options.length; i++) {
+    //         const option = selectElement.options[i];
+    //         if (option.text === planet.name) option.style.color = convertRGBToHex(planet.colorHex)
+    //     }
+    // }
+}
+
+export function toggleCameraLock(lock) {
+    isCameraLocked = lock
+    document.getElementById('CAMERA_LOCK_CB').checked = isCameraLocked
+
+    const enableLockCB = ((targetPlanet && !PAUSED) || (jwstSelected && !PAUSED) || (spacecraftSelected))
+    if (enableLockCB) document.getElementById('CAMERA_LOCK').classList.remove('disabled')
+    else document.getElementById('CAMERA_LOCK').classList.add('disabled')
+}
+
+export function toggleCameraSunLock(sunLock) {
+    isCameraSunLocked = sunLock
+    document.getElementById('CAMERA_SUN_LOCK_CB').checked = isCameraSunLocked
+
+    const enableSunLockCB = (((targetPlanet && targetPlanet.name !== "Sun") || jwstSelected) && !spacecraftSelected)
+    if (enableSunLockCB) document.getElementById('CAMERA_SUN_LOCK').classList.remove('disabled')
+    else document.getElementById('CAMERA_SUN_LOCK').classList.add('disabled')
 }
 
 export function changeBackground(value) {

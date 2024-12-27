@@ -14,11 +14,17 @@ let spacecraftMatchVelocity = false;
 let spacecraftLight = false;
 let distanceUnit = distanceUnits[0];
 let backgroundGrid = backgroundTextures[0];
-let STANDARD_FOV = 75;
-let SPACECRAFT_FOV = 75;
 let starBackground = null;
 let PLANET_SCALE = DISTANCE_SCALE * 10
 let earthSystemScaling = 0.1 // scale down jwst & moon orbit distance
+
+// camera
+let isCameraLocked = false;
+let isCameraSunLocked = false;
+let cameraSunLockChanged = false;
+let STANDARD_FOV = 75;
+let SPACECRAFT_FOV = 75;
+
 // target selection:
 const targets = [];
 let targetPlanet = null; // Default to the sun
@@ -27,11 +33,6 @@ let spacecraftSelected = false;
 let jwstSelected = false;
 let transitionAnimationActive = false;
 let movingToJwst = false;
-
-
-// todo
-let isCameraLocked = false;
-let isCameraSunLocked = false;
 
 // program variables
 let SHOW_CONNECTION = false;
