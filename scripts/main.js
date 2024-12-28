@@ -625,7 +625,7 @@ function render() { // runs with 60 fps
         if (SHOW_LABEL) updateLabel()
     }
 
-    if (jwstSelected) {
+    if (jwstSelected && !transitionAnimationActive) {
         const jwstWorldPosition = new THREE.Vector3();
         jwst.getWorldPosition(jwstWorldPosition);
 
@@ -693,7 +693,7 @@ function render() { // runs with 60 fps
             controls.update();
         }
     }
-    else if (targetPlanet) {
+    else if (targetPlanet && !transitionAnimationActive) {
         if (!isCameraSunLocked) sunLockedCameraDistance = 0
         if (isCameraSunLocked) {
             const d = (sunLockedCameraDistance > 0) ? sunLockedCameraDistance : targetPlanet.radius * AU * PLANET_SCALE / 10
