@@ -58,13 +58,19 @@
             </select>
         </div>
         <div class="submenu-item">
-            <div id="CAMERA_LOCK" class="menu-item disabled">
+            <div id="CAMERA_LOCK" class="menu-item toggle disabled">
                 <label for="CAMERA_LOCK_CB">Lock camera</label>
-                <input type="checkbox" id="CAMERA_LOCK_CB">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="CAMERA_LOCK_CB">
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
-            <div id="CAMERA_SUN_LOCK" class="menu-item disabled">
+            <div id="CAMERA_SUN_LOCK" class="menu-item toggle disabled">
                 <label for="CAMERA_SUN_LOCK_CB">Sunlock camera</label>
-                <input type="checkbox" id="CAMERA_SUN_LOCK_CB">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="CAMERA_SUN_LOCK_CB">
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
         </div>
         <div id="spacecraft-settings" class="hidden">
@@ -77,25 +83,40 @@
                         <span id="spacecraft-fov-display" class="slider-display">75°</span>
                     </div>
                 </div>
-                <div id="SPACECRAFT_FIRST_PERSON" class="menu-item">
+                <div id="SPACECRAFT_FIRST_PERSON" class="menu-item toggle">
                     <label for="SPACECRAFT_FIRST_PERSON_CB">First Person</label>
-                    <input type="checkbox" id="SPACECRAFT_FIRST_PERSON_CB">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="SPACECRAFT_FIRST_PERSON_CB">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
-                <div id="SPACECRAFT_GRAVITY" class="menu-item">
+                <div id="SPACECRAFT_GRAVITY" class="menu-item toggle">
                     <label for="SPACECRAFT_GRAVITY_CB">Gravity</label>
-                    <input type="checkbox" id="SPACECRAFT_GRAVITY_CB">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="SPACECRAFT_GRAVITY_CB">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
-                <div id="SPACECRAFT_MATCH_VELOCITY" class="menu-item disabled">
+                <div id="SPACECRAFT_MATCH_VELOCITY" class="menu-item toggle disabled">
                     <label for="SPACECRAFT_MATCH_VELOCITY_CB">Match Velocity</label>
-                    <input type="checkbox" id="SPACECRAFT_MATCH_VELOCITY_CB">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="SPACECRAFT_MATCH_VELOCITY_CB">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
-                <div id="SPACECRAFT_LIGHT" class="menu-item">
+                <div id="SPACECRAFT_LIGHT" class="menu-item toggle">
                     <label for="SPACECRAFT_LIGHT_CB">Ship Light</label>
-                    <input type="checkbox" id="SPACECRAFT_LIGHT_CB">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="SPACECRAFT_LIGHT_CB">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
-                <div id="ACTIVE_ASCENSION_AXIS" class="menu-item">
+                <div id="ACTIVE_ASCENSION_AXIS" class="menu-item toggle">
                     <label for="ACTIVE_ASCENSION_AXIS_CB">Ascension axis</label>
-                    <input type="checkbox" id="ACTIVE_ASCENSION_AXIS_CB">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ACTIVE_ASCENSION_AXIS_CB">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
         </div>
@@ -104,14 +125,14 @@
             <span id="target-planet-label" >Target planet: </span>
             <div class="submenu-item">
                 <div id="PLANET_SPEED" class="menu-item">
-                    <label>Change speed</label>
+                    <label>Velocity</label>
                     <div class="menu-button-container">
                         <button id="decrease-speed" onclick="targetPlanet.changeSpeed(0.8)" class="menu-button">0.8x</button>
                         <button id="increase-speed" onclick="targetPlanet.changeSpeed(1.2)" class="menu-button">1.2x</button>
                     </div>
                 </div>
                 <div id="PLANET_MASS" class="menu-item">
-                    <label>Change mass</label>
+                    <label>Mass</label>
                     <div class="menu-button-container">
                         <button id="decrease-mass" onclick="targetPlanet.changeMass(0.5)" class="menu-button">0.5</button>
                         <button id="increase-mass" onclick="targetPlanet.changeMass(2)" class="menu-button">2x</button>
@@ -126,43 +147,70 @@
             </div>
         </div>
 
-        <div id="PAUSED" class="menu-item">
+        <div id="PAUSED" class="menu-item toggle">
             <label for="PAUSED_CB">Paused</label>
-            <input type="checkbox" id="PAUSED_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="PAUSED_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div id="SHOW_LABEL" class="menu-item">
+        <div id="SHOW_LABEL" class="menu-item toggle">
             <label for="SHOW_LABEL_CB">Label</label>
-            <input type="checkbox" id="SHOW_LABEL_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="SHOW_LABEL_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div id="SHOW_ORBITS" class="menu-item">
+        <div id="SHOW_ORBITS" class="menu-item toggle">
             <label for="SHOW_ORBITS_CB">Orbits</label>
-            <input type="checkbox" id="SHOW_ORBITS_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="SHOW_ORBITS_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
         <div class="submenu-item">
-            <div id="SHOW_SPACECRAFT_ORBIT" class="menu-item">
+            <div id="SHOW_SPACECRAFT_ORBIT" class="menu-item toggle">
                 <label for="SHOW_SPACECRAFT_ORBIT_CB">Spacecraft Orbit</label>
-                <input type="checkbox" id="SHOW_SPACECRAFT_ORBIT_CB">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="SHOW_SPACECRAFT_ORBIT_CB">
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
         </div>
-        <div id="HIGH_QUALITY_TEXTURES" class="menu-item">
+        <div id="HIGH_QUALITY_TEXTURES" class="menu-item toggle">
             <label for="HIGH_QUALITY_TEXTURES_CB">8k Quality</label>
-            <input type="checkbox" id="HIGH_QUALITY_TEXTURES_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="HIGH_QUALITY_TEXTURES_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div id="SHOW_VECTORS" class="menu-item">
+        <div id="SHOW_VECTORS" class="menu-item toggle">
             <label for="SHOW_VECTORS_CB">Vectors & Axes</label>
-            <input type="checkbox" id="SHOW_VECTORS_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="SHOW_VECTORS_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div id="REALISTIC_LIGHTING" class="menu-item">
+        <div id="REALISTIC_LIGHTING" class="menu-item toggle">
             <label for="REALISTIC_LIGHTING_CB">Realistic lighting</label>
-            <input type="checkbox" id="REALISTIC_LIGHTING_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="REALISTIC_LIGHTING_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div id="EARTH_SYSTEM_SCALING" class="menu-item">
+        <div id="EARTH_SYSTEM_SCALING" class="menu-item toggle">
             <label for="EARTH_SYSTEM_SCALING_CB">Scale down Earth system</label>
-            <input type="checkbox" id="EARTH_SYSTEM_SCALING_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="EARTH_SYSTEM_SCALING_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div id="TRUE_ROTATION_SPEEDS" class="menu-item">
+        <div id="TRUE_ROTATION_SPEEDS" class="menu-item toggle">
             <label for="TRUE_ROTATION_SPEEDS_CB">True rotation speeds</label>
-            <input type="checkbox" id="TRUE_ROTATION_SPEEDS_CB">
+            <label class="toggle-switch">
+                <input type="checkbox" id="TRUE_ROTATION_SPEEDS_CB">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
         <div id="DISTANCE_UNIT" class="menu-item">
             <label for="DISTANCE_UNIT_SELECT">Distance unit</label>
@@ -207,11 +255,6 @@
                 <span id="simulation-speed-display" class="slider-display">24s/Ey</span>
             </div>
         </div>
-
-<!--        <div class="menu-item">-->
-<!--            <label for="simulation-speed">Simulation Speed</label>-->
-<!--            <input type="range" id="simulation-speed" min="1" max="10" value="5">-->
-<!--        </div>-->
     </div>
 </div>
 </body>

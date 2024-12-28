@@ -171,33 +171,109 @@ body {
     transition: opacity 0.3s ease;
 }
 
-.submenu-item {
-    margin-left: 7%;
-    margin-top: -7px;
-}
-
 .menu-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 5px;
 }
 
-.menu-item label, .submenu-item label {
-    font-size: 12px;
+.submenu-item {
+    margin-left: 7%;
+    margin-top: -3px;
+    margin-bottom: 10px;
 }
 
-.menu-item input[type="range"], .submenu-item input[type="range"] {
-    width: 100%;
+.submenu-item .menu-item {
+    margin-bottom: 0;
+}
+
+.submenu-item .toggle {
+    margin-bottom: 5px !important;
 }
 
 .menu-item select, .submenu-item select {
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
-    border: 1px solid white;
-    border-radius: 5px;
-    padding: 5px;
-    font-size: 12px;
+    border: 1px solid white; /* Light gray border */
+    border-radius: 8px; /* Softer corners for a modern feel */
+    padding: 8px 8px;
+    font-size: 13px;
     cursor: pointer;
+    transition: all 0.3s ease; /* Smooth hover and focus effects */
+    outline: none;
+}
+
+.menu-item select:hover, .submenu-item select:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-item select:focus, .submenu-item select:focus  {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-color: #aaa; /* Accent border for focus */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for focus */
+}
+
+select option {
+    background-color: #333333;;
+    color: white;
+}
+
+.menu-item label {
+    font-size: 13px;
+}
+
+.toggle label {
+    cursor: pointer;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #515151;
+    transition: 0.4s;
+    border-radius: 20px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #392dfe;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+input[type="range"] {
+    accent-color: #392dfe;
 }
 
 .disabled {
@@ -261,6 +337,19 @@ body {
     white-space: nowrap;
 }
 
+.slider-input::-webkit-slider-thumb {
+    transition: transform 0.3s ease; /* Smooth scaling effect */
+}
+.slider-input:active::-webkit-slider-thumb {
+    transform: scale(1.2); /* Slight enlargement when active */
+}
+.slider-input::-moz-range-thumb {
+    transition: transform 0.3s ease; /* Smooth scaling effect */
+}
+.slider-input:active::-moz-range-thumb {
+    transform: scale(1.2); /* Slight enlargement when active */
+}
+
 #PLANET_SPEED .menu-item {
     display: flex;
     justify-content: space-between;
@@ -318,7 +407,7 @@ body {
 }
 
 #SIMULATION_RESETS {
-    margin-top: -7px;
+    margin-top: -17px;
 }
 
 #TOGGLE_SPACECRAFT_CONTAINER {

@@ -97,9 +97,10 @@ export function initEventListeners({
         }
     });
     window.addEventListener('keydown', (event) => {
-        if (transitionAnimationActive) return
         document.activeElement.blur();
+        if (transitionAnimationActive) return
         if (event.code === 'Space') { // un/pause the game
+            event.preventDefault();
             togglePause(!PAUSED)
         }
         if (spacecraftSelected) { // spacecraft controls
