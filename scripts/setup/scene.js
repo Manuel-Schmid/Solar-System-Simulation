@@ -24,8 +24,9 @@ sunLight.decay = 0;
 const softAmbientLight = new THREE.AmbientLight(0x404040, 0.7); // Soft white ambient light
 const brightAmbientLight = new THREE.AmbientLight(0xffffff, 2.5);
 
-export function adjustFOV(targetFov) {
-    camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.1);
+export function adjustFOV(targetFov, animation=true) {
+    if (animation) camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.1);
+    else camera.fov = targetFov
     camera.updateProjectionMatrix();
 }
 

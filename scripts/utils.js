@@ -32,8 +32,9 @@ export function findVectorPair(vectorList, findClosest = true) {
 
 export function getDistanceBetweenPoints(P1, P2) {
     const dx = P2.x - P1.x;
-    const dy = P2.z - P1.z;
-    return Math.sqrt(dx ** 2 + dy ** 2);
+    const dy = P2.y - P1.y;
+    const dz = P2.z - P1.z;
+    return Math.sqrt(dx ** 2 + dy ** 2 + dz ** 2);
 }
 
 export function getPositionDistance(position1, position2) {
@@ -54,6 +55,10 @@ export function getPointXBeyondLine(P1, P2, d) { // two points and distance of P
 
 export function convertHexToRGB(colorHex) {
     return `#${colorHex.toString(16).padStart(6, '0')}`;
+}
+
+export function convertHexTo0x(hexColor) {
+    return `0x${hexColor.slice(1)}`;
 }
 
 export function formatDistance(value) { // todo delete
@@ -173,4 +178,3 @@ export class PlanetRingGeometry extends THREE.BufferGeometry {
         this.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     }
 }
-

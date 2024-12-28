@@ -1,6 +1,14 @@
 import * as THREE from "three";
-import {convertDistance, convertHexToRGB} from "../utils";
-import {brightAmbientLight, scene, softAmbientLight, sunLight, textureLoader} from "../setup/scene";
+import {convertDistance, convertHexTo0x, convertHexToRGB} from "../utils";
+import {
+    adjustFOV,
+    brightAmbientLight,
+    exrLoader,
+    scene,
+    softAmbientLight,
+    sunLight,
+    textureLoader
+} from "../setup/scene";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();
@@ -9,14 +17,14 @@ export function createStars() {
     const colors = new Float32Array(starCount * 3); // r, g, b for each star
 
     const colorOptions = [
-        // new THREE.Color().setHex( 0xffffff ), // white
-        // new THREE.Color().setHex( 0xf3a4a4 ), // red
-        // new THREE.Color().setHex( 0xb9b9ea ), // purple
-        // new THREE.Color().setHex( 0xf6c68e ), // purple
+        new THREE.Color().setHex( convertHexTo0x("#ffffff") ), // white
+        new THREE.Color().setHex( convertHexTo0x("#f3a4a4") ), // red
+        new THREE.Color().setHex( convertHexTo0x("#cbb9ea") ), // purple
+        new THREE.Color().setHex( convertHexTo0x("#f6c68e") ), // yellow
 
-        new THREE.Color().setHex( 0x7300ff ), // blue
-        new THREE.Color().setHex( 0xff00ea ), // pink
-        new THREE.Color().setHex( 0xff0000 ), // red
+        // new THREE.Color().setHex( convertHexTo0x("#7300ff") ), // blue
+        // new THREE.Color().setHex( convertHexTo0x("#ff00ea") ), // pink
+        // new THREE.Color().setHex( convertHexTo0x("#ff0000") ), // red
     ];
 
     for (let i = 0; i < starCount; i++) {
@@ -154,6 +162,129 @@ export function updateGridTexture(constellationSphere) {
         });
     }
     else scene.remove(constellationSphere);
+}
+export function setTargetPlanet(planet) {
+    targetPlanet = planet
+    if (targetPlanet !== null) {
+        document.getElementById('target-planet-label').textContent = targetPlanet.name + ": "
+        document.getElementById('target-planet-settings').classList.remove('hidden')
+        if (targetPlanet.isSun) document.getElementById('PLANET_TRANSFORM_ITEM').classList.add('disabled')
+        else document.getElementById('PLANET_TRANSFORM_ITEM').classList.remove('disabled')
+    }
+    else document.getElementById('target-planet-settings').classList.add('hidden')
+}
+export function toggleSpacecraftSelected(selected, planets) {
+    if(selected !== spacecraftSelected) updateTargetList(planets, selected,  null);
+    spacecraftSelected = selected;
+    if (spacecraftSelected) {
+        spacecraftMatchVelocity = false
+        document.getElementById("TOGGLE_SPACECRAFT_BTN").textContent = "Leave spacecraft"
+        document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.add('disabled')
+        document.getElementById('SPACECRAFT_MATCH_VELOCITY_CB').checked = false
+
+        document.getElementById('spacecraft-settings').classList.remove('hidden')
+        adjustFOV(SPACECRAFT_FOV)
+    }
+    else {
+        document.getElementById("TOGGLE_SPACECRAFT_BTN").textContent = "Enter spacecraft"
+        document.getElementById('spacecraft-settings').classList.add('hidden')
+        adjustFOV(STANDARD_FOV, false)
+    }
+}
+
+export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null) {
+    const selectElement = document.getElementById("TARGET_SELECT")
+    let selectedIdx = 0
+
+    if (oldPlanetName) selectedIdx = targets.indexOf(oldPlanetName);
+    targets.length = 0; // clear array
+    targets.push(spacecraftSelected ? "Free flight" : "None")
+    for (const planet of planets) {
+        targets.push(planet.name)
+    }
+    if (!spacecraftSelected) targets.push("JWST")
+
+    selectElement.innerHTML = ""
+    targets.forEach((target, index) => {
+        const option = document.createElement("option");
+        option.value = index.toString();
+        option.selected = index === selectedIdx
+        option.textContent = target;
+        selectElement.appendChild(option);
+    });
+
+    // for (const planet of planets) {
+    //     for (let i = 0; i < selectElement.options.length; i++) {
+    //         const option = selectElement.options[i];
+    //         if (option.text === planet.name) option.style.color = convertRGBToHex(planet.colorHex)
+    //     }
+    // }
+}
+
+export function toggleCameraLock(lock) {
+    isCameraLocked = lock
+    document.getElementById('CAMERA_LOCK_CB').checked = isCameraLocked
+
+    const enableLockCB = ((targetPlanet && !PAUSED) || (jwstSelected && !PAUSED) || (spacecraftSelected))
+    if (enableLockCB) document.getElementById('CAMERA_LOCK').classList.remove('disabled')
+    else document.getElementById('CAMERA_LOCK').classList.add('disabled')
+}
+
+export function toggleCameraSunLock(sunLock) {
+    isCameraSunLocked = sunLock
+    document.getElementById('CAMERA_SUN_LOCK_CB').checked = isCameraSunLocked
+
+    const enableSunLockCB = (((targetPlanet && targetPlanet.name !== "Sun") || jwstSelected) && !spacecraftSelected)
+    if (enableSunLockCB) document.getElementById('CAMERA_SUN_LOCK').classList.remove('disabled')
+    else document.getElementById('CAMERA_SUN_LOCK').classList.add('disabled')
+}
+
+export function changeBackground(backgroundTextureIdx) {
+    const newBackground = backgroundTextures[backgroundTextureIdx]
+    if (!newBackground) {
+        if (starBackground === null) starBackground = createStars()
+        scene.background = null;
+        scene.add(starBackground);
+    } else {
+        scene.remove(starBackground);
+
+        const backgroundPath = newBackground
+
+        if (backgroundPath) {
+            document.getElementById('loading-screen').style.display = ''
+            exrLoader.load(backgroundPath, (starmapTexture) =>
+            {
+                starmapTexture.mapping = THREE.EquirectangularReflectionMapping
+                // scene.environment = starmapTexture; // Set environment for reflections
+                scene.background = starmapTexture;
+            });
+            // renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            // renderer.toneMappingExposure = 1;
+        }
+    }
+
+    updateSelectionElement("BACKGROUND_SELECT", backgroundTextureIdx)
+}
+
+export function initPlanetScaleSlider() {
+    let sliderScaleValue = PLANET_SCALE / DISTANCE_SCALE
+    if (sliderScaleValue > 1) {
+        sliderScaleValue = Math.round(sliderScaleValue / 2) * 2; // Snap to the nearest multiple of 2
+    }
+    document.getElementById("planet-scale").value = sliderScaleValue
+    document.getElementById("planet-scale-display").textContent = sliderScaleValue.toString();
+}
+
+export function updateSelectionElement(selectElementID, selectedIdx) {
+    const selectElement = document.getElementById(selectElementID)
+    selectElement.value = selectedIdx
+}
+
+export function toggleTransitionAnimation(animationActive) {
+    transitionAnimationActive = animationActive
+    document.activeElement.blur();
+    if (transitionAnimationActive) document.getElementById('menu-content').classList.add('disabled')
+    else document.getElementById('menu-content').classList.remove('disabled')
 }
 
 export function calcPlanetOffset(planet) {
