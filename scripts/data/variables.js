@@ -29,14 +29,22 @@ if (preset === "recommended") {
     backgroundTexture = backgroundTextures[3]
     PLANET_SCALE = DISTANCE_SCALE
     earthSystemScaling = 1
-} else if (preset === "cinematic") {
-    SHOW_LABEL = false;
+} else if (preset === "cinematic") { // currently presentation mode
+    SHOW_LABEL = true;
     SHOW_ORBITS = true;
     HIGH_QUALITY_TEXTURES = true;
     backgroundTexture = backgroundTextures[3]
-    PLANET_SCALE = DISTANCE_SCALE * 20
+    PLANET_SCALE = DISTANCE_SCALE * 10
     earthSystemScaling = 0.1
 }
+// else if (preset === "cinematic") { // todo: this is the real cinematic mode
+//     SHOW_LABEL = false;
+//     SHOW_ORBITS = false;
+//     HIGH_QUALITY_TEXTURES = true;
+//     backgroundTexture = backgroundTextures[3]
+//     PLANET_SCALE = DISTANCE_SCALE * 20
+//     earthSystemScaling = 0.1
+// }
 
 // camera
 let isCameraLocked = false;

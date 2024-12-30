@@ -37,9 +37,12 @@
 
 <div id="settings-menu" class="menu">
     <div class="settings-button-container">
-        <button id="settings-button" onclick="document.getElementById('menu-content').classList.toggle('hidden')">Controls</button>
+        <button id="settings-button" onclick="
+        document.getElementById('settings-menu').classList.toggle('active-settings-menu');
+        document.getElementById('menu-content').classList.toggle('hidden')
+        ">Controls</button>
     </div>
-    <div id="menu-content" class="menu-container"> <!-- hidden -->
+    <div id="menu-content" class="menu-container hidden"> <!-- hidden -->
         <div id="SIMULATION_RESETS" class="menu-item">
             <div id="SIMULATION_RESETS_CONTAINER" class="menu-button-container dual-button-container">
                 <button id="RESTART_SIMULATION_BTN" onclick="location.reload()" class="menu-button">Restart simulation</button>

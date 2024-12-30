@@ -106,36 +106,44 @@ body {
 }
 
 #settings-menu {
+    background-color: rgba(0, 0, 0, 0.8);
     position: absolute;
     top: 1vh;
     right: 10px;
     z-index: 999;
-}
-
-.settings-button-container {
-    text-align: right;
-    height: 5vh;
-}
-
-#settings-button {
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
     border: 1px solid white;
     border-radius: 5px;
-    padding: 10px;
+    overflow: hidden;
+    box-sizing: border-box;
+    opacity: 0.4;
+    width: 93px;
+    transition: opacity 0.1s ease, width 0.3s ease;
+}
+#settings-menu:hover {
+    opacity: 1;
+}
+.active-settings-menu {
+    width: 220px !important;
+    opacity: 1 !important;
+}
+.settings-button-container {
+    text-align: center;
+}
+#settings-button {
+    background: transparent;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     max-height: 5vh;
+    width: 100%;
+    transition: opacity 0.1s ease;
 }
-#settings-button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
 #menu-content {
     margin-top: 1vh;
-    background-color: rgba(0, 0, 0, 0.8);
-    border: 1px solid white;
-    border-radius: 5px;
+    border: none;
     padding: 10px;
     display: flex;
     flex-direction: column;
@@ -143,7 +151,6 @@ body {
     width: 200px;
     color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-
     max-height: 88vh;
     overflow-y: auto;
 }
