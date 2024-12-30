@@ -508,7 +508,7 @@ export function initEventListeners({
     function altMoveToPlanet(planet) {
         if (planet === targetPlanet) return
         pushTextToLabel('Target: ' + planet.name)
-        birdseye = true
+        if (!spacecraftSelected) birdseye = true
         setTargetPlanet(planet)
         if (SHOW_LABEL) updateLabel()
         if (spacecraftSelected) document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.remove('disabled')
