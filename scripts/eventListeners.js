@@ -328,7 +328,10 @@ export function initEventListeners({
         PAUSED = pause;
         pushTextToLabel(PAUSED ? 'Pause' : 'Unpause')
         document.getElementById('PAUSED_CB').checked = PAUSED
-        if (birdseye) return
+        if (birdseye) {
+            toggleCameraLock(false)
+            return
+        }
 
         if (spacecraftSelected) toggleCameraLock(true)
         else if(targetPlanet || jwstSelected) {

@@ -283,6 +283,7 @@ export function updateSelectionElement(selectElementID, selectedIdx) {
 export function toggleTransitionAnimation(animationActive) {
     transitionAnimationActive = animationActive
     document.activeElement.blur();
+    cameraSunLockChanged = false;
     if (transitionAnimationActive) document.getElementById('menu-content').classList.add('disabled')
     else document.getElementById('menu-content').classList.remove('disabled')
 }

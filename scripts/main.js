@@ -24,10 +24,25 @@ import {
 } from './setup/scene';
 import {OrbitTrail, Planet, Ring, Spacecraft} from "./setup/classes";
 import { initEventListeners } from "./eventListeners";
+import {TrackballControls} from "three/addons";
 
 
 // setup
 const controls = new OrbitControls( camera, renderer.domElement );
+controls.enableDamping = true;
+controls.dampingFactor = 0.1; // damping for rotation/panning
+controls.screenSpacePanning = true;
+
+controls.enableZoom = false;
+controls.rotateSpeed = 0.7;
+
+const controls2 = new TrackballControls(camera, renderer.domElement);
+controls2.noRotate = true;
+controls2.noPan = true;
+controls2.noZoom = false;
+controls2.zoomSpeed = 1;
+controls2.dynamicDampingFactor = 0.15; // damping for zooming
+
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 let jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
 
@@ -435,6 +450,7 @@ function moveToPlanet(planet, topDown=false) {
 }
 
 function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
+    birdseye = false;
     toggleJWSTSelected(false)
     setTargetPlanet(null)
     toggleSpacecraftSelected(true, planets)
@@ -469,6 +485,7 @@ function moveToDefault() {
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
+            birdseye = true
             setTargetPlanet(null)
             toggleCameraLock(false)
             toggleCameraSunLock(false)
@@ -524,6 +541,7 @@ function moveToJWST() {
         } else { // animation is finished
             setTargetPlanet(null)
             inEarthSystem = true
+            birdseye = false
             updateEarthSystemVisibility(inEarthSystem)
             toggleJWSTSelected(true)
             toggleCameraLock(!PAUSED)
@@ -586,6 +604,13 @@ function rotateTargetPlanet() {
     }
 }
 
+function updateControls(controlsPosition) {
+    controls.target.copy(controlsPosition);
+    controls.update();
+    controls2.target.copy(controls.target);
+    controls2.update();
+}
+
 function render() { // runs with 60 fps
     if(!PAUSED) {
         for (const planet of planets) {
@@ -642,8 +667,7 @@ function render() { // runs with 60 fps
             camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
             camera.lookAt(jwstWorldPosition);
         } else {
-            controls.target.copy(jwstWorldPosition);
-            controls.update();
+            updateControls(jwstWorldPosition)
         }
     } else if (spacecraftSelected) {
         if (isCameraLocked) {
@@ -689,8 +713,7 @@ function render() { // runs with 60 fps
             //     camera.quaternion.multiplyQuaternions(zQuaternion, camera.quaternion);
             // }
         } else {
-            controls.target.copy(spacecraft.container.position);
-            controls.update();
+            updateControls(spacecraft.container.position)
         }
     }
     else if (targetPlanet && !transitionAnimationActive) {
@@ -706,9 +729,10 @@ function render() { // runs with 60 fps
             camera.lookAt(targetPlanet.sphere.position);
         }
         else {
-            controls.target.copy(targetPlanet.sphere.position);
-            controls.update();
+            updateControls(targetPlanet.sphere.position)
         }
+    } else if (!transitionAnimationActive) { // default (0,0,0) target
+        updateControls(new THREE.Vector3(0,0,0))
     }
     renderer.render( scene, camera );
 }
