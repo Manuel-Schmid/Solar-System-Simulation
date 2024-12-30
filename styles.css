@@ -406,8 +406,12 @@ input[type="range"] {
     margin-top: 10px;
 }
 
-#SIMULATION_RESETS {
-    margin-top: -17px;
+#SIMULATION_RESETS .menu-button-container, #TOGGLE_SPACECRAFT .menu-button-container {
+    margin: 0;
+}
+
+#TOGGLE_SPACECRAFT {
+    margin-top: -10px;
 }
 
 #TOGGLE_SPACECRAFT_CONTAINER {

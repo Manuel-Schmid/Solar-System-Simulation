@@ -533,6 +533,8 @@ export function initEventListeners({
                 planets[i].updateVectorLines(null, null, SHOW_VECTORS, true)
 
                 planets[i] = newSun
+                planets[i].updatePosition(planets, SHOW_VECTORS)
+
                 discardedPlanets.push(targetPlanet)
                 updateTargetList(planets, spacecraftSelected, targetPlanet.name)
                 setTargetPlanet(newSun)
