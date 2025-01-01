@@ -779,9 +779,6 @@ export class Ring {
             depthWrite: false           // Optional: Prevent depth writes for transparent areas
         });
 
-        if (alphaTexture) ringMaterial.color = null;
-
-        // noinspection JSCheckFunctionSignatures
         this.ringObj = new THREE.Mesh(ringGeometry, ringMaterial);
         this.ringObj.rotation.x = THREE.MathUtils.degToRad(this.parentPlanet.axialTilt + 90); // axis tilt
         this.ringObj.position.set(this.parentPlanet.sphere.position.x, this.parentPlanet.sphere.position.y, this.parentPlanet.sphere.position.z);    // Center the ring at the planet's position
