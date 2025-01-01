@@ -401,7 +401,7 @@ export function initEventListeners({
                 planet.ring.ringObj.material.map = alphaTexture
             }
         }
-        const earthCloudTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? 'planet_textures/8k/8k_earth_clouds.jpg' : 'planet_textures/2k/2k_earth_clouds.jpg')
+        const earthCloudTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? '/planet_textures/8k/8k_earth_clouds.jpg' : '/planet_textures/2k/2k_earth_clouds.jpg')
         earthCloudTexture.colorSpace = THREE.SRGBColorSpace
         earth.clouds.material.alphaMap = earthCloudTexture
     }
@@ -516,7 +516,7 @@ export function initEventListeners({
     }
     function transformTargetPlanet() {
         pushTextToLabel('Turn ' + targetPlanet.name + ' into a star')
-        const newSun = new Planet(targetPlanet.name + " (Star)", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, 'planet_textures/2k/2k_sun.jpg', 'planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+        const newSun = new Planet(targetPlanet.name + " (Star)", 696340 * PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, targetPlanet.colorHex, targetPlanet.sphere.position.x, 0, targetPlanet.sphere.position.z, true, '/planet_textures/2k/2k_sun.jpg', '/planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
         newSun.xVel = targetPlanet.xVel;
         newSun.yVel = targetPlanet.yVel;
         newSun.zVel = targetPlanet.zVel;
