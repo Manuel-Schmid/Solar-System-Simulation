@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {convertDistance, convertHexTo0x, convertHexToRGB} from "../utils";
+import {convertDistance, convertHexTo0x, convertHexToRGB} from "../utils.js";
 import {
     adjustFOV,
     brightAmbientLight, controls, controls2,
@@ -8,7 +8,7 @@ import {
     softAmbientLight,
     sunLight,
     textureLoader
-} from "../setup/scene";
+} from "../setup/scene.js";
 
 export function createStars() {
     const starGeometry = new THREE.BufferGeometry();

@@ -7,10 +7,10 @@ import {
     updateLabel,
     updateLighting, updateSelectionElement,
     updateTargetList,
-} from "./design/designUtils";
-import { camera, scene, textureLoader} from "./setup/scene";
-import {getDistanceBetweenPoints} from "./utils";
-import {Planet} from "./setup/classes";
+} from "./design/designUtils.js";
+import { camera, scene, textureLoader} from "./setup/scene.js";
+import {getDistanceBetweenPoints} from "./utils.js";
+import {Planet} from "./setup/classes.js";
 
 export function initEventListeners({
                                        jwstCameraOffset,

@@ -2,13 +2,12 @@
   "name": "Solar-System-Simulation",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "vite build && gh-pages -d dist --add"
+    "deploy": "gh-pages -d dist"
   },
   "private": true,
   "dependencies": {

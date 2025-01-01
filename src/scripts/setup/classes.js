@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import FakeGlowMaterial from "../design/GlowMaterial";
-import {getPositionDistance, PlanetRingGeometry} from "../utils";
-import {adjustFOV, gltfLoader, scene, textureLoader} from "./scene";
-import {pushTextToLabel, updateLabel} from "../design/designUtils";
+import FakeGlowMaterial from "../design/GlowMaterial.js";
+import {getPositionDistance, PlanetRingGeometry} from "../utils.js";
+import {adjustFOV, gltfLoader, scene, textureLoader} from "./scene.js";
+import {pushTextToLabel, updateLabel} from "../design/designUtils.js";
 
 export class Spacecraft {
     constructor(mass, x, y, z, angularVelocity, acceleration, scale, tiltAngle) {
