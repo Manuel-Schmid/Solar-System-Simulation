@@ -17,7 +17,7 @@ const simulationSpeed = {
 
 const presets = ["recommended", "realistic", "cinematic"]; // add "high_performance"
 let distanceUnits = ["km", "au", "lm"] // units for distances
-let backgroundGridTextures = [false, "starmaps/celestial_grid_16k.png", "starmaps/constellation_bounds_8k.png", "starmaps/constellation_figures_8k.png"]
-const backgroundTextures = [false, 'starmaps/starmap_2020_4k_gal.exr', 'starmaps/starmap_2020_8k_gal.exr', 'starmaps/starmap_2020_8k.exr']
+let backgroundGridTextures = [false, "/starmaps/celestial_grid_16k.png", "/starmaps/constellation_bounds_8k.png", "/starmaps/constellation_figures_8k.png"]
+const backgroundTextures = [false, '/starmaps/starmap_2020_4k_gal.exr', '/starmaps/starmap_2020_8k_gal.exr', '/starmaps/starmap_2020_8k.exr']
 
 const jwstScaleFactor = 0.0001
