@@ -30,12 +30,11 @@ export function createStars() {
     for (let i = 0; i < starCount; i++) {
         let x, y, z;
 
-        // Generate positions while excluding the center range of -500 to 500 for x, y, and z
         do {
-            x = (Math.random() - 0.5) * 3000; // Scale to your desired range
-            y = (Math.random() - 0.5) * 3000; // Scale to your desired range
-            z = (Math.random() - 0.5) * 3000; // Scale to your desired range
-        } while (Math.abs(x) < 200 && Math.abs(y) < 200 && Math.abs(z) < 200); // Check if within the exclusion zone
+            x = (Math.random() - 0.5) * 4000; // coordinates scaled to range
+            y = (Math.random() - 0.5) * 4000; // coordinates scaled to range
+            z = (Math.random() - 0.5) * 4000; // coordinates scaled to range
+        } while (Math.abs(x) < 500 && Math.abs(y) < 200 && Math.abs(z) < 500); // excluded center range
 
         positions[i * 3] = x;
         positions[i * 3 + 1] = y;
