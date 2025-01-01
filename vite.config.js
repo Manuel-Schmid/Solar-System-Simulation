@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-    base: '/Solar-System-Simulation/',
+    base: '/', // for prod use: /Solar-System-Simulation/
 });

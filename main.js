@@ -11,8 +11,8 @@ import {
     updateSelectionElement,
     changeBackground,
     setTargetPlanet, toggleTransitionAnimation, toggleCameraLock, toggleCameraSunLock, initPlanetScaleSlider
-} from "./design/designUtils";
-import {getPointXBeyondLine, PlanetRingGeometry} from "./utils";
+} from "./scripts/design/designUtils.js";
+import {getPointXBeyondLine, PlanetRingGeometry} from "./scripts/utils.js";
 import {
     scene,
     camera,
@@ -20,9 +20,9 @@ import {
     textureLoader,
     gltfLoader,
     sunLight, controls, controls2, loadingManager, adjustFOV
-} from './setup/scene';
-import {OrbitTrail, Planet, Ring, Spacecraft} from "./setup/classes";
-import { initEventListeners } from "./eventListeners";
+} from './scripts/setup/scene.js';
+import {OrbitTrail, Planet, Ring, Spacecraft} from "./scripts/setup/classes.js";
+import { initEventListeners } from "./scripts/eventListeners.js";
 
 
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset

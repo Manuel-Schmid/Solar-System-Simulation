@@ -2,7 +2,7 @@
   "name": "Solar-System-Simulation",
   "version": "1.0.0",
   "description": "",
-  "main": "scripts/main.js",
+  "main": "main.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
