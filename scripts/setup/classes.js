@@ -450,7 +450,7 @@ export class Bolt {
 
         this.boltContainer.scale.set(spacecraftScale, spacecraftScale, spacecraftScale)
 
-        const geometry = new THREE.CylinderGeometry( 1, 1, 30, 32 );
+        const geometry = new THREE.CylinderGeometry( 1, 1, 45, 32 );
         const material = new THREE.MeshBasicMaterial( {color: 0x3cff00} );
         this.bolt1 = new THREE.Mesh( geometry, material );
         this.bolt2 = new THREE.Mesh( geometry, material );

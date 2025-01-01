@@ -106,12 +106,8 @@ body {
     user-select: none;
 }
 
-.test {
-    color: #f6c68e
-}
-
 #settings-menu {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.7);
     position: absolute;
     top: 1vh;
     right: 10px;

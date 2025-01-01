@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import {EXRLoader, GLTFLoader} from "three/addons";
+import {EXRLoader, GLTFLoader, TrackballControls} from "three/addons";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 //
 // const originalWarn = console.warn;
 // console.warn = function (message) {
@@ -24,6 +25,23 @@ sunLight.decay = 0;
 const softAmbientLight = new THREE.AmbientLight(0x404040, 0.7); // Soft white ambient light
 const brightAmbientLight = new THREE.AmbientLight(0xffffff, 2.5);
 
+// camera controls
+const controls = new OrbitControls( camera, renderer.domElement );
+controls.enableDamping = true;
+controls.dampingFactor = 0.1; // damping for rotation/panning
+controls.screenSpacePanning = true;
+
+controls.enableZoom = false;
+controls.rotateSpeed = 0.7;
+
+const controls2 = new TrackballControls(camera, renderer.domElement);
+controls2.noRotate = true;
+controls2.noPan = true;
+controls2.noZoom = false;
+controls2.zoomSpeed = 1;
+controls2.dynamicDampingFactor = 0.15; // damping for zooming
+
+// fov
 export function adjustFOV(targetFov, animation=true) {
     if (animation) camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, 0.1);
     else camera.fov = targetFov
@@ -34,6 +52,8 @@ export {
     scene,
     camera,
     renderer,
+    controls,
+    controls2,
     loadingManager,
     textureLoader,
     exrLoader,

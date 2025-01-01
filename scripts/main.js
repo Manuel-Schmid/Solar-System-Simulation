@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {
     calcPlanetOffset,
     createCircle,
@@ -13,35 +12,18 @@ import {
     changeBackground,
     setTargetPlanet, toggleTransitionAnimation, toggleCameraLock, toggleCameraSunLock, initPlanetScaleSlider
 } from "./design/designUtils";
-import {convertHexTo0x, getPointXBeyondLine, PlanetRingGeometry} from "./utils";
+import {getPointXBeyondLine, PlanetRingGeometry} from "./utils";
 import {
     scene,
     camera,
     renderer,
     textureLoader,
     gltfLoader,
-    sunLight, loadingManager, adjustFOV
+    sunLight, controls, controls2, loadingManager, adjustFOV
 } from './setup/scene';
 import {OrbitTrail, Planet, Ring, Spacecraft} from "./setup/classes";
 import { initEventListeners } from "./eventListeners";
-import {TrackballControls} from "three/addons";
 
-
-// setup
-const controls = new OrbitControls( camera, renderer.domElement );
-controls.enableDamping = true;
-controls.dampingFactor = 0.1; // damping for rotation/panning
-controls.screenSpacePanning = true;
-
-controls.enableZoom = false;
-controls.rotateSpeed = 0.7;
-
-const controls2 = new TrackballControls(camera, renderer.domElement);
-controls2.noRotate = true;
-controls2.noPan = true;
-controls2.noZoom = false;
-controls2.zoomSpeed = 1;
-controls2.dynamicDampingFactor = 0.15; // damping for zooming
 
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
 let jwstCameraOffset = new THREE.Vector3(jwstScaleFactor * 3, jwstScaleFactor * 3, jwstScaleFactor * 3)
@@ -64,15 +46,15 @@ earth.zVel = 29.78299948;
 const mars = new Planet("Mars", 3389.5 * PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_mars.jpg', 'planet_textures/8k/8k_mars.jpg');
 mars.zVel = 24.076988672178
 
-const jupiter = new Planet("Jupiter", 69911 * PLANET_SCALE,  3.13, 10,1.898 * 10 ** 27, 0xd8ca9d,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_jupiter.jpg', 'planet_textures/8k/8k_jupiter.jpg');
+const jupiter = new Planet("Jupiter", 69911 * PLANET_SCALE,  3.13, 10,1.898 * 10 ** 27, 0xB39B83,5.2 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_jupiter.jpg', 'planet_textures/8k/8k_jupiter.jpg');
 jupiter.zVel = 13.06000369219;
-new Ring(jupiter, 1.4, 1.7, 0xC0B09E,1, 'planet_textures/2k/2k_jupiter_ring.png')
+new Ring(jupiter, 1.4, 1.7, 0xC0B09E,0.9, 'planet_textures/2k/2k_jupiter_ring.png')
 
-const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd3cc81,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
+const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd8ca9d,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
 saturn.zVel = 9.679981775672;
 new Ring(saturn, 1.6, 2.7, 0xdcc49d, 0.9, 'planet_textures/2k/2k_saturn_ring.png')
 
-const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
+const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x72eded,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
 new Ring(uranus, 1.6, 2.1, 0xd5f7f7, 0.9, 'planet_textures/2k/2k_uranus_ring.png')
 

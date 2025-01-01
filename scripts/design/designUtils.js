@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {convertDistance, convertHexTo0x, convertHexToRGB} from "../utils";
 import {
     adjustFOV,
-    brightAmbientLight,
+    brightAmbientLight, controls, controls2,
     exrLoader,
     scene,
     softAmbientLight,
@@ -221,12 +221,23 @@ export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null
 }
 
 export function toggleCameraLock(lock) {
+    resetControls()
     isCameraLocked = lock
     document.getElementById('CAMERA_LOCK_CB').checked = isCameraLocked
 
     const enableLockCB = ((targetPlanet && !PAUSED) || (jwstSelected && !PAUSED) || (spacecraftSelected))
     if (enableLockCB) document.getElementById('CAMERA_LOCK').classList.remove('disabled')
     else document.getElementById('CAMERA_LOCK').classList.add('disabled')
+}
+
+function resetControls() {
+    controls._sphericalDelta.set(0, 0, 0);
+    controls._panOffset.set(0, 0, 0);
+
+    controls2._lastAngle = 0;
+    controls2._eye.set(0, 0, 0);
+    controls2._zoomStart.set(1, 1); // Reset zoom-related changes
+    controls2._zoomEnd.set(1, 1);   // Reset zoom-related changes
 }
 
 export function toggleCameraSunLock(sunLock) {
