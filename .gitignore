@@ -1,5 +1,5 @@
 .idea
 node_modules
+dist/
 public/starmaps
-public/models/jwst_reflective.glb
 public/models/spacecraft_fullSize.glb
