@@ -70,11 +70,11 @@ new Ring(jupiter, 1.4, 1.7, 0xC0B09E,1, 'planet_textures/2k/2k_jupiter_ring.png'
 
 const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd3cc81,9.538 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_saturn.jpg', 'planet_textures/8k/8k_saturn.jpg');
 saturn.zVel = 9.679981775672;
-new Ring(saturn, 1.6, 2.7, 0xdcc49d, 1, 'planet_textures/2k/2k_saturn_ring.png')
+new Ring(saturn, 1.6, 2.7, 0xdcc49d, 0.9, 'planet_textures/2k/2k_saturn_ring.png')
 
 const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x51dbdb,19.56 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
-new Ring(uranus, 1.3, 1.8, 0xcafcfc, 0.8, 'planet_textures/2k/2k_uranus_ring.png')
+new Ring(uranus, 1.6, 2.1, 0xd5f7f7, 0.9, 'planet_textures/2k/2k_uranus_ring.png')
 
 const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 8.32, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, 'planet_textures/2k/2k_neptune.jpg');
 neptune.zVel = 5.4299794
