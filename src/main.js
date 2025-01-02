@@ -336,8 +336,11 @@ issOrbitTrail.orbitTrailObj.rotation.x = THREE.MathUtils.degToRad(23.5);
 let jwst = null
 const jwstPlane = new THREE.Object3D();
 let jwstOrbit = createCircle(earth.radius * 62.8 * state.earthSystemScaling, 0xA2A1A1,128);
-gltfLoader.load('./models/jwst.glb' , (gltf) =>
-{
+const releaseFile = 'prod/jwst.glb'; // Path relative to your GitHub Release
+const proxyUrl = `https://Manuel-Schmid.github.io/Solar-System-Simulation/fetch-release.js?file=${releaseFile}`;
+
+gltfLoader.load(proxyUrl, (gltf) => {
+    jwst = gltf.scene;
     jwst = gltf.scene
     jwst.rotation.x = THREE.MathUtils.degToRad(90)
 
