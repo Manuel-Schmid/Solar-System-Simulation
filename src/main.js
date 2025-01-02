@@ -32,6 +32,17 @@ import {
 } from './scripts/setup/scene.js';
 import {OrbitTrail, Planet, Ring, Spacecraft} from "./scripts/setup/classes.js";
 import { initEventListeners } from "./scripts/eventListeners.js";
+import {
+    sun2kTexture, sun8kTexture,
+    mercury2kTexture, mercury8kTexture,
+    venus2kTexture, venus8kTexture,
+    earth2kTexture, earth8kTexture,
+    mars2kTexture, mars8kTexture,
+    jupiter2kTexture, jupiter8kTexture, jupiterRingTexture,
+    saturn2kTexture, saturn8kTexture, saturnRingTexture,
+    uranus2kTexture, uranusRingTexture,
+    neptune2kTexture, neptuneRingTexture, moon2kTexture, jwstModelPath
+} from "./scripts/data/paths.js";
 
 
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
@@ -41,35 +52,35 @@ const setCameraOffset = newOffset => { cameraOffset.copy(newOffset)};
 const setJwstCameraOffset = newOffset => { jwstCameraOffset.copy(newOffset)};
 
 // planets
-const sun = new Planet("Sun", 696340 * state.PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, './planet_textures/2k/2k_sun.jpg', './planet_textures/8k/8k_sun.jpg'); // 'p/lanet_textures/2k/2k_sun.jpg'
+const sun = new Planet("Sun", 696340 * state.PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, sun2kTexture.href, sun8kTexture.href);
 
-const mercury = new Planet("Mercury", 2440 * state.PLANET_SCALE, 0,  58*24, 	0.33010* 10 ** 24, 0x949494,0.387 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_mercury.jpg', './planet_textures/8k/8k_mercury.jpg');
-mercury.zVel = 47.39996051284; // speed in km/s
+const mercury = new Planet("Mercury", 2440 * state.PLANET_SCALE, 0,  58*24, 0.33010* 10 ** 24, 0x949494,0.387 * AU * DISTANCE_SCALE, 0, 0, false, mercury2kTexture.href, mercury8kTexture.href);
+mercury.zVel = 47.39996051284;
 
-const venus = new Planet("Venus", 6051.8 * state.PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_venus_surface.jpg', './planet_textures/8k/8k_venus_surface.jpg');
+const venus = new Planet("Venus", 6051.8 * state.PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, venus2kTexture.href, venus8kTexture.href);
 venus.zVel = 35.019991414096;
 
-const earth = new Planet("Earth", 6371 * state.PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_earth_daymap.jpg', './planet_textures/8k/8k_earth_daymap.jpg');
+const earth = new Planet("Earth", 6371 * state.PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, earth2kTexture.href, earth8kTexture.href);
 earth.zVel = 29.78299948;
 
-const mars = new Planet("Mars", 3389.5 * state.PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_mars.jpg', './planet_textures/8k/8k_mars.jpg');
-mars.zVel = 24.076988672178
+const mars = new Planet("Mars", 3389.5 * state.PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, mars2kTexture.href, mars8kTexture.href);
+mars.zVel = 24.076988672178;
 
-const jupiter = new Planet("Jupiter", 69911 * state.PLANET_SCALE,  3.13, 10,1.898 * 10 ** 27, 0xB39B83,5.2 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_jupiter.jpg', './planet_textures/8k/8k_jupiter.jpg');
+const jupiter = new Planet("Jupiter", 69911 * state.PLANET_SCALE,  3.13, 10,1.898 * 10 ** 27, 0xB39B83,5.2 * AU * DISTANCE_SCALE, 0, 0, false, jupiter2kTexture.href, jupiter8kTexture.href);
 jupiter.zVel = 13.06000369219;
-new Ring(jupiter, 1.4, 1.7, 0xC0B09E,0.9, './planet_textures/2k/2k_jupiter_ring.png')
+new Ring(jupiter, 1.4, 1.7, 0xC0B09E,0.9, jupiterRingTexture.href);
 
-const saturn = new Planet("Saturn", 58232 * state.PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd8ca9d,9.538 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_saturn.jpg', './planet_textures/8k/8k_saturn.jpg');
+const saturn = new Planet("Saturn", 58232 * state.PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd8ca9d,9.538 * AU * DISTANCE_SCALE, 0, 0, false, saturn2kTexture.href, saturn8kTexture.href);
 saturn.zVel = 9.679981775672;
-new Ring(saturn, 1.6, 2.7, 0xdcc49d, 0.9, './planet_textures/2k/2k_saturn_ring.png')
+new Ring(saturn, 1.6, 2.7, 0xdcc49d, 0.9, saturnRingTexture.href);
 
-const uranus = new Planet("Uranus", 25362 * state.PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x72eded,19.56 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_uranus.jpg');
+const uranus = new Planet("Uranus", 25362 * state.PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x72eded,19.56 * AU * DISTANCE_SCALE, 0, 0, false, uranus2kTexture.href);
 uranus.zVel = 6.7999974;
-new Ring(uranus, 1.6, 2.1, 0xd5f7f7, 0.9, './planet_textures/2k/2k_uranus_ring.png')
+new Ring(uranus, 1.6, 2.1, 0xd5f7f7, 0.9, uranusRingTexture.href);
 
-const neptune = new Planet("Neptune", 24622 * state.PLANET_SCALE, 8.32, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, './planet_textures/2k/2k_neptune.jpg');
-neptune.zVel = 5.4299794
-new Ring(neptune, 1.5, 2.3, 0xc2caed, 0.9, './planet_textures/2k/2k_neptune_ring.png')
+const neptune = new Planet("Neptune", 24622 * state.PLANET_SCALE, 8.32, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, neptune2kTexture.href);
+neptune.zVel = 5.4299794;
+new Ring(neptune, 1.5, 2.3, 0xc2caed, 0.9, neptuneRingTexture.href);
 
 const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune];
 const discardedPlanets = [];
@@ -290,7 +301,7 @@ connectionOutline.frustumCulled = false;
 
 // create moon
 const moonGeometry = new THREE.SphereGeometry(1737.4 * state.PLANET_SCALE, 32, 16); // Smaller radius for the moon
-const moonMapPath = './planet_textures/2k/2k_moon.jpg'
+const moonMapPath = moon2kTexture.href
 const moonTexture = textureLoader.load(moonMapPath);
 moonTexture.colorSpace = THREE.SRGBColorSpace
 const moonMaterial = new THREE.MeshStandardMaterial({
@@ -337,7 +348,7 @@ let jwst = null
 const jwstPlane = new THREE.Object3D();
 let jwstOrbit = createCircle(earth.radius * 62.8 * state.earthSystemScaling, 0xA2A1A1,128);
 
-gltfLoader.load('./models/jwst.glb' , (gltf) =>
+gltfLoader.load(jwstModelPath.href, (gltf) =>
 {
     jwst = gltf.scene
     jwst.rotation.x = THREE.MathUtils.degToRad(90)

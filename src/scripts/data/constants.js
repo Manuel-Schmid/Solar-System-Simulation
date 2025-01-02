@@ -1,3 +1,10 @@
+import {
+    celestialGridTexture,
+    constellationBoundsTexture,
+    constellationFiguresTexture,
+    starmap4kTexture, starmap8kGalTexture, starmap8kTexture
+} from "./paths.js";
+
 export const G = 6.67428e-11;  // Gravitational constant
 export const AU = 1.496e+8;    // 1 AU in km
 export const LM = 1.799e+7;    // 1 Light minute in km
@@ -20,14 +27,14 @@ export const presets = ["recommended", "realistic", "cinematic"]; // add "high_p
 export let distanceUnits = ["km", "au", "lm"]; // units for distances
 export let backgroundGridTextures = [
     false,
-    "./starmaps/celestial_grid_16k.png",
-    "./starmaps/constellation_bounds_8k.png",
-    "./starmaps/constellation_figures_8k.png"
+    celestialGridTexture.href,
+    constellationBoundsTexture.href,
+    constellationFiguresTexture.href
 ];
 export const backgroundTextures = [
     false,
-    './starmaps/starmap_2020_4k_gal.exr',
-    './starmaps/starmap_2020_8k_gal.exr',
-    './starmaps/starmap_2020_8k.exr'
+    starmap4kTexture.href,
+    starmap8kGalTexture.href,
+    starmap8kTexture.href
 ];
 export const jwstScaleFactor = 0.0001;

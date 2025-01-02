@@ -16,6 +16,7 @@ import {
 import { camera, scene, textureLoader} from "./setup/scene.js";
 import {getDistanceBetweenPoints} from "./utils.js";
 import {Planet} from "./setup/classes.js";
+import {earthCloud2kTexture, earthCloud8kTexture, sun2kTexture, sun8kTexture} from "./data/paths.js";
 
 export function initEventListeners({
                                        jwstCameraOffset,
@@ -418,7 +419,7 @@ export function initEventListeners({
                 planet.ring.ringObj.material.map = alphaTexture
             }
         }
-        const earthCloudTexture = textureLoader.load(state.HIGH_QUALITY_TEXTURES ? './planet_textures/8k/8k_earth_clouds.jpg' : './planet_textures/2k/2k_earth_clouds.jpg')
+        const earthCloudTexture = textureLoader.load(state.HIGH_QUALITY_TEXTURES ? earthCloud8kTexture.href : earthCloud2kTexture.href)
         earthCloudTexture.colorSpace = THREE.SRGBColorSpace
         earth.clouds.material.alphaMap = earthCloudTexture
     }
@@ -533,7 +534,19 @@ export function initEventListeners({
     }
     function transformTargetPlanet() {
         pushTextToLabel('Turn ' + state.targetPlanet.name + ' into a star')
-        const newSun = new Planet(state.targetPlanet.name + " (Star)", 696340 * state.PLANET_SCALE, 0, 150 * 365, 1.98892 * 10 ** 30, state.targetPlanet.colorHex, state.targetPlanet.sphere.position.x, 0, state.targetPlanet.sphere.position.z, true, './planet_textures/2k/2k_sun.jpg', './planet_textures/8k/8k_sun.jpg'); // 'planet_textures/2k/2k_sun.jpg'
+        const newSun = new Planet(
+            state.targetPlanet.name + " (Star)",
+            696340 * state.PLANET_SCALE,
+            0,
+            150 * 365,
+            1.98892 * 10 ** 30,
+            state.targetPlanet.colorHex,
+            state.targetPlanet.sphere.position.x,
+            0,
+            state.targetPlanet.sphere.position.z,
+            true,
+            state.HIGH_QUALITY_TEXTURES ? sun8kTexture.href : sun2kTexture.href
+        );
         newSun.xVel = state.targetPlanet.xVel;
         newSun.yVel = state.targetPlanet.yVel;
         newSun.zVel = state.targetPlanet.zVel;
