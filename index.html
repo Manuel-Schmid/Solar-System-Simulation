@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="src/styles/styles.css">
 </head>
 <body>
-<script src="src/scripts/data/constants.js"></script>
-<script src="src/scripts/data/variables.js"></script>
 <script type="module" src="src/main.js"></script>
 
 <div id="loading-screen">
@@ -130,15 +128,15 @@
                 <div id="PLANET_SPEED" class="menu-item">
                     <label>Velocity</label>
                     <div class="menu-button-container">
-                        <button id="decrease-speed" onclick="targetPlanet.changeSpeed(0.8)" class="menu-button">0.8x</button>
-                        <button id="increase-speed" onclick="targetPlanet.changeSpeed(1.2)" class="menu-button">1.2x</button>
+                        <button id="decrease-speed" class="menu-button">0.8x</button>
+                        <button id="increase-speed" class="menu-button">1.2x</button>
                     </div>
                 </div>
                 <div id="PLANET_MASS" class="menu-item">
                     <label>Mass</label>
                     <div class="menu-button-container">
-                        <button id="decrease-mass" onclick="targetPlanet.changeMass(0.5)" class="menu-button">0.5</button>
-                        <button id="increase-mass" onclick="targetPlanet.changeMass(2)" class="menu-button">2x</button>
+                        <button id="decrease-mass" class="menu-button">0.5</button>
+                        <button id="increase-mass" class="menu-button">2x</button>
                     </div>
                 </div>
                 <div id="PLANET_TRANSFORM_ITEM" class="menu-item">

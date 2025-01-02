@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {state} from "../data/variables.js";
 import {EXRLoader, GLTFLoader, TrackballControls} from "three/addons";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 //
@@ -9,7 +10,7 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 // };
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(STANDARD_FOV, window.innerWidth / window.innerHeight, 0.000001, 1000 );
+const camera = new THREE.PerspectiveCamera(state.STANDARD_FOV, window.innerWidth / window.innerHeight, 0.000001, 1000 );
 const renderer = new THREE.WebGLRenderer({antialias: true});
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);

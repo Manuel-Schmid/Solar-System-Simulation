@@ -1,4 +1,12 @@
 import * as THREE from "three";
+import {
+    AU,
+    LM,
+    c,
+    DISTANCE_SCALE,
+    backgroundTextures,
+} from '../data/constants.js';
+import {state} from "../data/variables.js";
 import {convertDistance, convertHexTo0x, convertHexToRGB} from "../utils.js";
 import {
     adjustFOV,
@@ -100,36 +108,36 @@ export function updateLabel() {
     const distanceLabel = document.getElementById('distance-label');
     const speedLabel = document.getElementById('speed-label');
     const weightLabel = document.getElementById('weight-label');
-    if (!SHOW_LABEL || (!targetPlanet && !spacecraftSelected)) { // if no target planet or birdseye view: no label
+    if (!state.SHOW_LABEL || (!state.targetPlanet && !state.spacecraftSelected)) { // if no target planet or birdseye view: no label
         labelContainer.style.display = 'none';
     } else {
-        if (targetPlanet) targetLabel.textContent = targetPlanet.name
-        if (targetPlanet && !spacecraftSelected) {
+        if (state.targetPlanet) targetLabel.textContent = state.targetPlanet.name
+        if (state.targetPlanet && !state.spacecraftSelected) {
             targetLabel.style.color = ''
-            labelContainer.style.color = convertHexToRGB(targetPlanet.colorHex)
-            if (targetPlanet.isSun) distanceLabel.textContent = ""
-            else distanceLabel.textContent = convertDistance(targetPlanet.distanceToSun, distanceUnit, AU, LM)
-            const v = Math.sqrt(targetPlanet.xVel ** 2 + targetPlanet.yVel ** 2 + targetPlanet.zVel ** 2);
+            labelContainer.style.color = convertHexToRGB(state.targetPlanet.colorHex)
+            if (state.targetPlanet.isSun) distanceLabel.textContent = ""
+            else distanceLabel.textContent = convertDistance(state.targetPlanet.distanceToSun, state.distanceUnit, AU, LM)
+            const v = Math.sqrt(state.targetPlanet.xVel ** 2 + state.targetPlanet.yVel ** 2 + state.targetPlanet.zVel ** 2);
             speedLabel.textContent = v.toPrecision(4) + " km/s"
-            weightLabel.textContent = targetPlanet.mass.toPrecision(4) + " kg";
-        } else if (spacecraftSelected) {
-            if (targetPlanet) {
-                targetLabel.style.color = convertHexToRGB(targetPlanet.colorHex)
-                distanceLabel.textContent = convertDistance(spacecraft.distanceToTarget, distanceUnit, AU, LM)
-                if (spacecraftMatchVelocity) labelContainer.style.color = convertHexToRGB(targetPlanet.colorHex)
+            weightLabel.textContent = state.targetPlanet.mass.toPrecision(4) + " kg";
+        } else if (state.spacecraftSelected) {
+            if (state.targetPlanet) {
+                targetLabel.style.color = convertHexToRGB(state.targetPlanet.colorHex)
+                distanceLabel.textContent = convertDistance(state.spacecraft.distanceToTarget, state.distanceUnit, AU, LM)
+                if (state.spacecraftMatchVelocity) labelContainer.style.color = convertHexToRGB(state.targetPlanet.colorHex)
                 else labelContainer.style.color = '#ffffff'
             }
             else {
                 labelContainer.style.color = "#ffffff"
                 targetLabel.textContent = ""
-                distanceLabel.textContent = convertDistance(spacecraft.distanceToSun, distanceUnit, AU, LM)
+                distanceLabel.textContent = convertDistance(state.spacecraft.distanceToSun, state.distanceUnit, AU, LM)
                 weightLabel.textContent = "";
             }
-            const v = Math.sqrt(spacecraft.xVel ** 2 + spacecraft.yVel ** 2 + spacecraft.zVel ** 2);
+            const v = Math.sqrt(state.spacecraft.xVel ** 2 + state.spacecraft.yVel ** 2 + state.spacecraft.zVel ** 2);
             const vInLightspeed = v / c
             const cPercentageText = (vInLightspeed >= 0.001) ? ' | ' + vInLightspeed.toPrecision(2) + 'c' : ''
             let speedText = v.toPrecision(4) + " km/s" + cPercentageText
-            if (spacecraftMatchVelocity) speedText = "[ " + speedText + " ]"
+            if (state.spacecraftMatchVelocity) speedText = "[ " + speedText + " ]"
             speedLabel.textContent = speedText
         }
 
@@ -138,7 +146,7 @@ export function updateLabel() {
 }
 
 export function updateLighting() {
-    if (REALISTIC_LIGHTING) {
+    if (state.REALISTIC_LIGHTING) {
         scene.add(sunLight)
         scene.add(softAmbientLight);
         scene.remove(brightAmbientLight);
@@ -151,9 +159,9 @@ export function updateLighting() {
 }
 
 export function updateGridTexture(constellationSphere) {
-    if (backgroundGrid) {
+    if (state.backgroundGrid) {
         document.getElementById('loading-screen').style.display = ''
-        textureLoader.load(backgroundGrid, (constellationTexture) => {
+        textureLoader.load(state.backgroundGrid, (constellationTexture) => {
             constellationTexture.mapping = THREE.EquirectangularReflectionMapping;
             constellationTexture.colorSpace = THREE.SRGBColorSpace;
             constellationSphere.material.map = constellationTexture;
@@ -163,31 +171,31 @@ export function updateGridTexture(constellationSphere) {
     else scene.remove(constellationSphere);
 }
 export function setTargetPlanet(planet) {
-    targetPlanet = planet
-    if (targetPlanet !== null) {
-        document.getElementById('target-planet-label').textContent = targetPlanet.name + ": "
+    state.targetPlanet = planet
+    if (state.targetPlanet !== null) {
+        document.getElementById('target-planet-label').textContent = state.targetPlanet.name + ": "
         document.getElementById('target-planet-settings').classList.remove('hidden')
-        if (targetPlanet.isSun) document.getElementById('PLANET_TRANSFORM_ITEM').classList.add('disabled')
+        if (state.targetPlanet.isSun) document.getElementById('PLANET_TRANSFORM_ITEM').classList.add('disabled')
         else document.getElementById('PLANET_TRANSFORM_ITEM').classList.remove('disabled')
     }
     else document.getElementById('target-planet-settings').classList.add('hidden')
 }
 export function toggleSpacecraftSelected(selected, planets) {
-    if(selected !== spacecraftSelected) updateTargetList(planets, selected,  null);
-    spacecraftSelected = selected;
-    if (spacecraftSelected) {
-        spacecraftMatchVelocity = false
+    if(selected !== state.spacecraftSelected) updateTargetList(planets, selected,  null);
+    state.spacecraftSelected = selected;
+    if (state.spacecraftSelected) {
+        state.spacecraftMatchVelocity = false
         document.getElementById("TOGGLE_SPACECRAFT_BTN").textContent = "Leave spacecraft"
         document.getElementById("SPACECRAFT_MATCH_VELOCITY").classList.add('disabled')
         document.getElementById('SPACECRAFT_MATCH_VELOCITY_CB').checked = false
 
         document.getElementById('spacecraft-settings').classList.remove('hidden')
-        adjustFOV(SPACECRAFT_FOV)
+        adjustFOV(state.SPACECRAFT_FOV)
     }
     else {
         document.getElementById("TOGGLE_SPACECRAFT_BTN").textContent = "Enter spacecraft"
         document.getElementById('spacecraft-settings').classList.add('hidden')
-        adjustFOV(STANDARD_FOV, false)
+        adjustFOV(state.STANDARD_FOV, false)
     }
 }
 
@@ -195,16 +203,16 @@ export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null
     const selectElement = document.getElementById("TARGET_SELECT")
     let selectedIdx = 0
 
-    if (oldPlanetName) selectedIdx = targets.indexOf(oldPlanetName);
-    targets.length = 0; // clear array
-    targets.push(spacecraftSelected ? "Free flight" : "None")
+    if (oldPlanetName) selectedIdx = state.targets.indexOf(oldPlanetName);
+    state.targets.length = 0; // clear array
+    state.targets.push(state.spacecraftSelected ? "Free flight" : "None")
     for (const planet of planets) {
-        targets.push(planet.name)
+        state.targets.push(planet.name)
     }
-    if (!spacecraftSelected) targets.push("JWST")
+    if (!state.spacecraftSelected) state.targets.push("JWST")
 
     selectElement.innerHTML = ""
-    targets.forEach((target, index) => {
+    state.targets.forEach((target, index) => {
         const option = document.createElement("option");
         option.value = index.toString();
         option.selected = index === selectedIdx
@@ -222,10 +230,10 @@ export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null
 
 export function toggleCameraLock(lock) {
     resetControls()
-    isCameraLocked = lock
-    document.getElementById('CAMERA_LOCK_CB').checked = isCameraLocked
+    state.isCameraLocked = lock
+    document.getElementById('CAMERA_LOCK_CB').checked = state.isCameraLocked
 
-    const enableLockCB = ((targetPlanet && !PAUSED) || (jwstSelected && !PAUSED) || (spacecraftSelected))
+    const enableLockCB = ((state.targetPlanet && !state.PAUSED) || (state.jwstSelected && !state.PAUSED) || (state.spacecraftSelected))
     if (enableLockCB) document.getElementById('CAMERA_LOCK').classList.remove('disabled')
     else document.getElementById('CAMERA_LOCK').classList.add('disabled')
 }
@@ -241,10 +249,10 @@ function resetControls() {
 }
 
 export function toggleCameraSunLock(sunLock) {
-    isCameraSunLocked = sunLock
-    document.getElementById('CAMERA_SUN_LOCK_CB').checked = isCameraSunLocked
+    state.isCameraSunLocked = sunLock
+    document.getElementById('CAMERA_SUN_LOCK_CB').checked = state.isCameraSunLocked
 
-    const enableSunLockCB = (((targetPlanet && targetPlanet.name !== "Sun") || jwstSelected) && !spacecraftSelected)
+    const enableSunLockCB = (((state.targetPlanet && state.targetPlanet.name !== "Sun") || state.jwstSelected) && !state.spacecraftSelected)
     if (enableSunLockCB) document.getElementById('CAMERA_SUN_LOCK').classList.remove('disabled')
     else document.getElementById('CAMERA_SUN_LOCK').classList.add('disabled')
 }
@@ -252,11 +260,11 @@ export function toggleCameraSunLock(sunLock) {
 export function changeBackground(backgroundTextureIdx) {
     const newBackground = backgroundTextures[backgroundTextureIdx]
     if (!newBackground) {
-        if (starBackground === null) starBackground = createStars()
+        if (state.starBackground === null) state.starBackground = createStars()
         scene.background = null;
-        scene.add(starBackground);
+        scene.add(state.starBackground);
     } else {
-        scene.remove(starBackground);
+        scene.remove(state.starBackground);
 
         const backgroundPath = newBackground
 
@@ -277,7 +285,7 @@ export function changeBackground(backgroundTextureIdx) {
 }
 
 export function initPlanetScaleSlider() {
-    let sliderScaleValue = PLANET_SCALE / DISTANCE_SCALE
+    let sliderScaleValue = state.PLANET_SCALE / DISTANCE_SCALE
     if (sliderScaleValue > 1) {
         sliderScaleValue = Math.round(sliderScaleValue / 2) * 2; // Snap to the nearest multiple of 2
     }
@@ -291,10 +299,10 @@ export function updateSelectionElement(selectElementID, selectedIdx) {
 }
 
 export function toggleTransitionAnimation(animationActive) {
-    transitionAnimationActive = animationActive
+    state.transitionAnimationActive = animationActive
     document.activeElement.blur();
-    cameraSunLockChanged = false;
-    if (transitionAnimationActive) document.getElementById('menu-content').classList.add('disabled')
+    state.cameraSunLockChanged = false;
+    if (state.transitionAnimationActive) document.getElementById('menu-content').classList.add('disabled')
     else document.getElementById('menu-content').classList.remove('disabled')
 }
 

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { DISTANCE_SCALE } from './data/constants.js';
 
 // function to find either closest or farthest 2 vectors in a list
 export function findVectorPair(vectorList, findClosest = true) {

@@ -1,5 +1,14 @@
 import * as THREE from 'three';
 import {
+    AU,
+    DISTANCE_SCALE,
+    simulationSpeed,
+    distanceUnits,
+    backgroundTextures,
+    jwstScaleFactor
+} from './scripts/data/constants.js';
+import {state} from "./scripts/data/variables.js";
+import {
     calcPlanetOffset,
     createCircle,
     drawConnection,
@@ -32,33 +41,33 @@ const setCameraOffset = newOffset => { cameraOffset.copy(newOffset)};
 const setJwstCameraOffset = newOffset => { jwstCameraOffset.copy(newOffset)};
 
 // planets
-const sun = new Planet("Sun", 696340 * PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, '/planet_textures/2k/2k_sun.jpg', '/planet_textures/8k/8k_sun.jpg'); // 'p/lanet_textures/2k/2k_sun.jpg'
+const sun = new Planet("Sun", 696340 * state.PLANET_SCALE, 0,  150 * 365, 1.98892 * 10 ** 30, 0xFF740F, 0, 0, 0, true, '/planet_textures/2k/2k_sun.jpg', '/planet_textures/8k/8k_sun.jpg'); // 'p/lanet_textures/2k/2k_sun.jpg'
 
-const mercury = new Planet("Mercury", 2440 * PLANET_SCALE, 0,  58*24, 	0.33010* 10 ** 24, 0x949494,0.387 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_mercury.jpg', '/planet_textures/8k/8k_mercury.jpg');
+const mercury = new Planet("Mercury", 2440 * state.PLANET_SCALE, 0,  58*24, 	0.33010* 10 ** 24, 0x949494,0.387 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_mercury.jpg', '/planet_textures/8k/8k_mercury.jpg');
 mercury.zVel = 47.39996051284; // speed in km/s
 
-const venus = new Planet("Venus", 6051.8 * PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_venus_surface.jpg', '/planet_textures/8k/8k_venus_surface.jpg');
+const venus = new Planet("Venus", 6051.8 * state.PLANET_SCALE, 177.4, -243*24,4.867 * 10 ** 24, 0xff9900,0.72 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_venus_surface.jpg', '/planet_textures/8k/8k_venus_surface.jpg');
 venus.zVel = 35.019991414096;
 
-const earth = new Planet("Earth", 6371 * PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_earth_daymap.jpg', '/planet_textures/8k/8k_earth_daymap.jpg');
+const earth = new Planet("Earth", 6371 * state.PLANET_SCALE, 23.5, 24,5.9722 * 10 ** 24, 0x006eff,AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_earth_daymap.jpg', '/planet_textures/8k/8k_earth_daymap.jpg');
 earth.zVel = 29.78299948;
 
-const mars = new Planet("Mars", 3389.5 * PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_mars.jpg', '/planet_textures/8k/8k_mars.jpg');
+const mars = new Planet("Mars", 3389.5 * state.PLANET_SCALE,  25.19, 24.5,6.39 * 10 ** 23, 0xff4d00,1.524 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_mars.jpg', '/planet_textures/8k/8k_mars.jpg');
 mars.zVel = 24.076988672178
 
-const jupiter = new Planet("Jupiter", 69911 * PLANET_SCALE,  3.13, 10,1.898 * 10 ** 27, 0xB39B83,5.2 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_jupiter.jpg', '/planet_textures/8k/8k_jupiter.jpg');
+const jupiter = new Planet("Jupiter", 69911 * state.PLANET_SCALE,  3.13, 10,1.898 * 10 ** 27, 0xB39B83,5.2 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_jupiter.jpg', '/planet_textures/8k/8k_jupiter.jpg');
 jupiter.zVel = 13.06000369219;
 new Ring(jupiter, 1.4, 1.7, 0xC0B09E,0.9, '/planet_textures/2k/2k_jupiter_ring.png')
 
-const saturn = new Planet("Saturn", 58232 * PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd8ca9d,9.538 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_saturn.jpg', '/planet_textures/8k/8k_saturn.jpg');
+const saturn = new Planet("Saturn", 58232 * state.PLANET_SCALE,  0, 10.5,5.683 * 10 ** 26, 0xd8ca9d,9.538 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_saturn.jpg', '/planet_textures/8k/8k_saturn.jpg');
 saturn.zVel = 9.679981775672;
 new Ring(saturn, 1.6, 2.7, 0xdcc49d, 0.9, '/planet_textures/2k/2k_saturn_ring.png')
 
-const uranus = new Planet("Uranus", 25362 * PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x72eded,19.56 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_uranus.jpg');
+const uranus = new Planet("Uranus", 25362 * state.PLANET_SCALE, 97.7, 17,8.681 * 10 ** 25, 0x72eded,19.56 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_uranus.jpg');
 uranus.zVel = 6.7999974;
 new Ring(uranus, 1.6, 2.1, 0xd5f7f7, 0.9, '/planet_textures/2k/2k_uranus_ring.png')
 
-const neptune = new Planet("Neptune", 24622 * PLANET_SCALE, 8.32, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_neptune.jpg');
+const neptune = new Planet("Neptune", 24622 * state.PLANET_SCALE, 8.32, 16, 1.024 * 10 ** 26, 0x233fc4,29.90 * AU * DISTANCE_SCALE, 0, 0, false, '/planet_textures/2k/2k_neptune.jpg');
 neptune.zVel = 5.4299794
 new Ring(neptune, 1.5, 2.3, 0xc2caed, 0.9, '/planet_textures/2k/2k_neptune_ring.png')
 
@@ -66,7 +75,7 @@ const planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, nept
 const discardedPlanets = [];
 
 
-spacecraft = new Spacecraft(
+state.spacecraft = new Spacecraft(
     1000,
     0, 0, -3 * AU * DISTANCE_SCALE,
     0.04,
@@ -121,10 +130,10 @@ loadingManager.onLoad = ()=>{
 }
 
 function changePlanetScale(newPlanetScale) {
-    const oldPlanetScale = PLANET_SCALE
-    PLANET_SCALE = DISTANCE_SCALE * newPlanetScale
+    const oldPlanetScale = state.PLANET_SCALE
+    state.PLANET_SCALE = DISTANCE_SCALE * newPlanetScale
     for (const planet of planets) {
-        let newPlanetRadius = planet.radius / oldPlanetScale * PLANET_SCALE
+        let newPlanetRadius = planet.radius / oldPlanetScale * state.PLANET_SCALE
         planet.radius = newPlanetRadius;
 
         const newGeometry = new THREE.SphereGeometry(newPlanetRadius, 64, 32);
@@ -163,38 +172,38 @@ function changePlanetScale(newPlanetScale) {
         }
     }
     moon.geometry.dispose();
-    moon.geometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16);
+    moon.geometry = new THREE.SphereGeometry(1737.4 * state.PLANET_SCALE, 32, 16);
 
     issOrbitTrail.reset()
     ISS.position.set(earth.radius * 1.1, 0, 0);
 
     // jwst
-    const newJwstScaleFactor = jwstScaleFactor * PLANET_SCALE / DISTANCE_SCALE / 10
+    const newJwstScaleFactor = jwstScaleFactor * state.PLANET_SCALE / DISTANCE_SCALE / 10
     jwst.scale.set(newJwstScaleFactor, newJwstScaleFactor, newJwstScaleFactor);
     setJwstCameraOffset(new THREE.Vector3(newJwstScaleFactor * 3, newJwstScaleFactor * 3, newJwstScaleFactor * 3))
 
     updateEarthSystemScaling()
 
-    if (targetPlanet && isCameraLocked) {
-        cameraOffset = calcPlanetOffset(targetPlanet);
-        camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
-        camera.lookAt(targetPlanet.sphere.position);
+    if (state.targetPlanet && state.isCameraLocked) {
+        cameraOffset = calcPlanetOffset(state.targetPlanet);
+        camera.position.copy(state.targetPlanet.sphere.position).add(cameraOffset);
+        camera.lookAt(state.targetPlanet.sphere.position);
     }
 }
 
 function updateEarthSystemScaling() {
     moonOrbitTrail.reset()
-    moon.position.set(earth.radius * 60.3 * earthSystemScaling, 0, 0);
+    moon.position.set(earth.radius * 60.3 * state.earthSystemScaling, 0, 0);
 
     // Jwst L2 Halo SIZE
-    const newJwstDistance = earth.radius * 62.8 * earthSystemScaling
+    const newJwstDistance = earth.radius * 62.8 * state.earthSystemScaling
     jwst.position.set(newJwstDistance, 0, 0);
     jwstPlane.remove(jwstOrbit)
     jwstOrbit.geometry.dispose();
     jwstOrbit = createCircle(newJwstDistance, 0xA2A1A1,128);
     jwstPlane.add(jwstOrbit);
 
-    if (jwstSelected) {
+    if (state.jwstSelected) {
         updateJWSTPosition()
         const jwstWorldPosition = new THREE.Vector3();
         jwst.getWorldPosition(jwstWorldPosition);
@@ -202,34 +211,34 @@ function updateEarthSystemScaling() {
         camera.lookAt(jwstWorldPosition);
     }
 
-    toggleJWSTSelected(jwstSelected)
+    toggleJWSTSelected(state.jwstSelected)
 }
 
 function setMenuSettings() { // set interface default values
     document.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
-        if (checkbox.id === "PAUSED_CB") checkbox.checked = PAUSED;
-        else if (checkbox.id === "SHOW_LABEL_CB") checkbox.checked = SHOW_LABEL;
-        else if (checkbox.id === "SHOW_ORBITS_CB") checkbox.checked = SHOW_ORBITS;
-        else if (checkbox.id === "SHOW_SPACECRAFT_ORBIT_CB") checkbox.checked = SHOW_ORBITS;
-        else if (checkbox.id === "HIGH_QUALITY_TEXTURES_CB") checkbox.checked = HIGH_QUALITY_TEXTURES;
-        else if (checkbox.id === "SHOW_VECTORS_CB") checkbox.checked = SHOW_VECTORS;
-        else if (checkbox.id === "REALISTIC_LIGHTING_CB") checkbox.checked = REALISTIC_LIGHTING;
-        else if (checkbox.id === "EARTH_SYSTEM_SCALING_CB") checkbox.checked = earthSystemScaling !== 1;
-        else if (checkbox.id === "TRUE_ROTATION_SPEEDS_CB") checkbox.checked = TRUE_ROTATION_SPEEDS;
-        else if (checkbox.id === "ACTIVE_ASCENSION_AXIS_CB") checkbox.checked = ACTIVE_ASCENSION_AXIS;
-        else if (checkbox.id === "SPACECRAFT_FIRST_PERSON_CB") checkbox.checked = spacecraftFirstPerson;
-        else if (checkbox.id === "SPACECRAFT_GRAVITY_CB") checkbox.checked = spacecraftGravity;
-        else if (checkbox.id === "SPACECRAFT_MATCH_VELOCITY_CB") checkbox.checked = spacecraftMatchVelocity;
-        else if (checkbox.id === "SPACECRAFT_LIGHT_CB") checkbox.checked = spacecraftLight;
-        else if (checkbox.id === "CAMERA_LOCK_CB") checkbox.checked = isCameraLocked;
-        else if (checkbox.id === "CAMERA_SUN_LOCK_CB") checkbox.checked = isCameraSunLocked;
+        if (checkbox.id === "PAUSED_CB") checkbox.checked = state.PAUSED;
+        else if (checkbox.id === "SHOW_LABEL_CB") checkbox.checked = state.SHOW_LABEL;
+        else if (checkbox.id === "SHOW_ORBITS_CB") checkbox.checked = state.SHOW_ORBITS;
+        else if (checkbox.id === "SHOW_SPACECRAFT_ORBIT_CB") checkbox.checked = state.SHOW_ORBITS;
+        else if (checkbox.id === "HIGH_QUALITY_TEXTURES_CB") checkbox.checked = state.HIGH_QUALITY_TEXTURES;
+        else if (checkbox.id === "SHOW_VECTORS_CB") checkbox.checked = state.SHOW_VECTORS;
+        else if (checkbox.id === "REALISTIC_LIGHTING_CB") checkbox.checked = state.REALISTIC_LIGHTING;
+        else if (checkbox.id === "EARTH_SYSTEM_SCALING_CB") checkbox.checked = state.earthSystemScaling !== 1;
+        else if (checkbox.id === "TRUE_ROTATION_SPEEDS_CB") checkbox.checked = state.TRUE_ROTATION_SPEEDS;
+        else if (checkbox.id === "ACTIVE_ASCENSION_AXIS_CB") checkbox.checked = state.ACTIVE_ASCENSION_AXIS;
+        else if (checkbox.id === "SPACECRAFT_FIRST_PERSON_CB") checkbox.checked = state.spacecraftFirstPerson;
+        else if (checkbox.id === "SPACECRAFT_GRAVITY_CB") checkbox.checked = state.spacecraftGravity;
+        else if (checkbox.id === "SPACECRAFT_MATCH_VELOCITY_CB") checkbox.checked = state.spacecraftMatchVelocity;
+        else if (checkbox.id === "SPACECRAFT_LIGHT_CB") checkbox.checked = state.spacecraftLight;
+        else if (checkbox.id === "CAMERA_LOCK_CB") checkbox.checked = state.isCameraLocked;
+        else if (checkbox.id === "CAMERA_SUN_LOCK_CB") checkbox.checked = state.isCameraSunLocked;
     });
     document.querySelectorAll("select").forEach((select) => {
         if (select.id === "DISTANCE_UNIT_SELECT") {
-            select.value = distanceUnits.indexOf(distanceUnit).toString();
+            select.value = distanceUnits.indexOf(state.distanceUnit).toString();
         }
     });
-    updateTargetList(planets, spacecraftSelected)
+    updateTargetList(planets, state.spacecraftSelected)
 
     document.getElementById("simulation-speed").addEventListener("input", (event) => {
         const speedKeys = Object.keys(simulationSpeed);
@@ -239,14 +248,14 @@ function setMenuSettings() { // set interface default values
         const speedValue = simulationSpeed[speedLabel];
 
         document.getElementById("simulation-speed-display").textContent = speedLabel;
-        TIME = 60 * 60 * speedValue; // update simulation speed
+        state.TIME = 60 * 60 * speedValue; // update simulation speed
     });
     document.getElementById("spacecraft-fov").addEventListener("input", (event) => {
         const fovValue = event.target.value;
         document.getElementById("spacecraft-fov-display").textContent = `${fovValue}°`;
 
-        SPACECRAFT_FOV = fovValue
-        adjustFOV(SPACECRAFT_FOV)
+        state.SPACECRAFT_FOV = fovValue
+        adjustFOV(state.SPACECRAFT_FOV)
     });
     document.getElementById("planet-scale").addEventListener("input", (event) => {
         let newPlanetScale = parseInt(event.target.value, 10);
@@ -259,7 +268,7 @@ function setMenuSettings() { // set interface default values
     });
 }
 
-changeBackground(backgroundTextures.indexOf(backgroundTexture).toString())
+changeBackground(backgroundTextures.indexOf(state.backgroundTexture).toString())
 initPlanetScaleSlider()
 updateLighting()
 
@@ -280,7 +289,7 @@ connectionOutline.frustumCulled = false;
 
 
 // create moon
-const moonGeometry = new THREE.SphereGeometry(1737.4 * PLANET_SCALE, 32, 16); // Smaller radius for the moon
+const moonGeometry = new THREE.SphereGeometry(1737.4 * state.PLANET_SCALE, 32, 16); // Smaller radius for the moon
 const moonMapPath = '/planet_textures/2k/2k_moon.jpg'
 const moonTexture = textureLoader.load(moonMapPath);
 moonTexture.colorSpace = THREE.SRGBColorSpace
@@ -293,7 +302,7 @@ const moon = new THREE.Mesh(moonGeometry, moonMaterial);
 const moonPlane = new THREE.Object3D();
 // const moonOrbit = createCircle(0.002606 * AU * DISTANCE_SCALE, 0xA2A1A1,128);
 moonPlane.add(moon)
-moon.position.set(earth.radius * 60.3 * earthSystemScaling, 0, 0);
+moon.position.set(earth.radius * 60.3 * state.earthSystemScaling, 0, 0);
 moon.rotation.y = Math.PI;
 moonPlane.position.copy(moon.position);
 moonPlane.rotation.x = THREE.MathUtils.degToRad(5.14); // axis tilt
@@ -326,7 +335,7 @@ issOrbitTrail.orbitTrailObj.rotation.x = THREE.MathUtils.degToRad(23.5);
 // create James Webb space telescope
 let jwst = null
 const jwstPlane = new THREE.Object3D();
-let jwstOrbit = createCircle(earth.radius * 62.8 * earthSystemScaling, 0xA2A1A1,128);
+let jwstOrbit = createCircle(earth.radius * 62.8 * state.earthSystemScaling, 0xA2A1A1,128);
 gltfLoader.load('/models/jwst.glb' , (gltf) =>
 {
     jwst = gltf.scene
@@ -335,7 +344,7 @@ gltfLoader.load('/models/jwst.glb' , (gltf) =>
     jwstPlane.add(jwst)
     jwstPlane.add(jwstOrbit)
 
-    jwst.position.set(earth.radius * 62.8 * earthSystemScaling, 0, 0);
+    jwst.position.set(earth.radius * 62.8 * state.earthSystemScaling, 0, 0);
     jwst.scale.set(jwstScaleFactor, jwstScaleFactor, jwstScaleFactor);
     jwstPlane.rotation.y = THREE.MathUtils.degToRad(90)
 
@@ -345,10 +354,10 @@ gltfLoader.load('/models/jwst.glb' , (gltf) =>
 });
 
 function toggleJWSTSelected(selected) {
-    jwstSelected = selected
-    if (jwstSelected) {
+    state.jwstSelected = selected
+    if (state.jwstSelected) {
         scene.add(jwstPlane)
-        jwstOrbit.visible = SHOW_ORBITS;
+        jwstOrbit.visible = state.SHOW_ORBITS;
     }
     else scene.remove(jwstPlane)
 }
@@ -374,7 +383,7 @@ function updateEarthSystemVisibility(visible) {
 
 // Move camera to selected planet
 function moveToPlanet(planet, topDown=false) {
-    if (planet === targetPlanet && !planet.isSun && !spacecraftSelected) {
+    if (planet === state.targetPlanet && !planet.isSun && !state.spacecraftSelected) {
         cameraOffset = calcPlanetOffset(planet)
         toggleCameraLock(true)
         return
@@ -383,19 +392,19 @@ function moveToPlanet(planet, topDown=false) {
     pushTextToLabel('Move to ' + planet.name)
     toggleSpacecraftSelected(false, planets)
     toggleJWSTSelected(false)
-    if (SHOW_ORBITS) jwstOrbit.visible = false;
-    inEarthSystem = (planet.name === "Earth");
-    if(targetPlanet && !planet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
+    if (state.SHOW_ORBITS) jwstOrbit.visible = false;
+    state.inEarthSystem = (planet.name === "Earth");
+    if(state.targetPlanet && !planet.isSun) state.targetPlanet.sphere.rotation.y = 0 // reset planet rotation
 
     let showLabelChanged = false
-    if (SHOW_LABEL) {
-        SHOW_LABEL = false // make label stop updating during transition
+    if (state.SHOW_LABEL) {
+        state.SHOW_LABEL = false // make label stop updating during transition
         showLabelChanged = true
     }
 
-    isCameraLocked = false
-    isCameraSunLocked = false
-    updateEarthSystemVisibility(inEarthSystem)
+    state.isCameraLocked = false
+    state.isCameraSunLocked = false
+    updateEarthSystemVisibility(state.inEarthSystem)
 
     const duration = 1; // Duration the movement in seconds
     const startPosition = camera.position.clone();
@@ -419,12 +428,12 @@ function moveToPlanet(planet, topDown=false) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
             setTargetPlanet(planet)
-            birdseye = topDown
-            toggleCameraLock(!topDown && !PAUSED)
+            state.birdseye = topDown
+            toggleCameraLock(!topDown && !state.PAUSED)
             toggleCameraSunLock(false)
-            if (showLabelChanged) SHOW_LABEL = true
-            if (SHOW_LABEL) updateLabel()
-            updateSelectionElement("TARGET_SELECT", targets.indexOf(planet.name))
+            if (showLabelChanged) state.SHOW_LABEL = true
+            if (state.SHOW_LABEL) updateLabel()
+            updateSelectionElement("TARGET_SELECT", state.targets.indexOf(planet.name))
             toggleTransitionAnimation(false)
         }
     }
@@ -433,21 +442,21 @@ function moveToPlanet(planet, topDown=false) {
 }
 
 function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
-    birdseye = false;
+    state.birdseye = false;
     toggleJWSTSelected(false)
     setTargetPlanet(null)
     toggleSpacecraftSelected(true, planets)
     toggleCameraLock(true)
     toggleCameraSunLock(false)
     updateLabel()
-    updateSelectionElement("TARGET_SELECT", targets.indexOf("Free flight"))
-    // if (!PAUSED) spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
+    updateSelectionElement("TARGET_SELECT", state.targets.indexOf("Free flight"))
+    // if (!state.PAUSED) state.spacecraft.container.rotation.z = THREE.MathUtils.lerp(state.spacecraft.container.rotation.z, Math.PI, 2.5) // do a flip
 }
 
 function moveToDefault() {
     toggleTransitionAnimation(true)
-    isCameraLocked = false;
-    isCameraSunLocked = false
+    state.isCameraLocked = false;
+    state.isCameraSunLocked = false
     toggleJWSTSelected(false)
     toggleSpacecraftSelected(false, planets)
     pushTextToLabel('Topdown view')
@@ -468,12 +477,12 @@ function moveToDefault() {
         if (t < 1) {
             requestAnimationFrame(animate); // Continue animation
         } else { // animation is finished
-            birdseye = true
+            state.birdseye = true
             setTargetPlanet(null)
             toggleCameraLock(false)
             toggleCameraSunLock(false)
-            if (SHOW_LABEL) updateLabel()
-            updateSelectionElement("TARGET_SELECT", targets.indexOf("None"))
+            if (state.SHOW_LABEL) updateLabel()
+            updateSelectionElement("TARGET_SELECT", state.targets.indexOf("None"))
             toggleTransitionAnimation(false)
         }
     }
@@ -482,23 +491,23 @@ function moveToDefault() {
 
 function moveToJWST() {
     toggleTransitionAnimation(true)
-    movingToJwst = true
+    state.movingToJwst = true
     jwstOrbit.visible = false;
     toggleSpacecraftSelected(false, planets)
     pushTextToLabel('Move to James Webb Space Telescope')
-    if(targetPlanet && !targetPlanet.isSun) targetPlanet.sphere.rotation.y = 0 // reset planet rotation
+    if(state.targetPlanet && !state.targetPlanet.isSun) state.targetPlanet.sphere.rotation.y = 0 // reset planet rotation
     let showLabelChanged = false
-    if (SHOW_LABEL) {
-        SHOW_LABEL = false // make label stop updating during transition
+    if (state.SHOW_LABEL) {
+        state.SHOW_LABEL = false // make label stop updating during transition
         showLabelChanged = true
     }
 
-    isCameraLocked = false
-    isCameraSunLocked = false
+    state.isCameraLocked = false
+    state.isCameraSunLocked = false
 
     updateJWSTPosition()
 
-    const currentJwstScaleFactor = jwstScaleFactor * PLANET_SCALE / DISTANCE_SCALE / 10
+    const currentJwstScaleFactor = jwstScaleFactor * state.PLANET_SCALE / DISTANCE_SCALE / 10
     setJwstCameraOffset(new THREE.Vector3(currentJwstScaleFactor * 3, currentJwstScaleFactor * 3, currentJwstScaleFactor * 3))
     setCameraOffset(jwstCameraOffset)
 
@@ -523,16 +532,16 @@ function moveToJWST() {
             requestAnimationFrame(animateJWST); // Continue animation
         } else { // animation is finished
             setTargetPlanet(null)
-            inEarthSystem = true
-            birdseye = false
-            updateEarthSystemVisibility(inEarthSystem)
+            state.inEarthSystem = true
+            state.birdseye = false
+            updateEarthSystemVisibility(state.inEarthSystem)
             toggleJWSTSelected(true)
-            toggleCameraLock(!PAUSED)
+            toggleCameraLock(!state.PAUSED)
             toggleCameraSunLock(false)
-            if (showLabelChanged) SHOW_LABEL = true
-            if (SHOW_LABEL) updateLabel()
-            updateSelectionElement("TARGET_SELECT", targets.indexOf("JWST"))
-            movingToJwst = false
+            if (showLabelChanged) state.SHOW_LABEL = true
+            if (state.SHOW_LABEL) updateLabel()
+            updateSelectionElement("TARGET_SELECT", state.targets.indexOf("JWST"))
+            state.movingToJwst = false
             toggleTransitionAnimation(false)
         }
     }
@@ -540,7 +549,7 @@ function moveToJWST() {
 }
 
 function updateJWSTPosition() {
-    const d = earth.radius * 235.4 * earthSystemScaling
+    const d = earth.radius * 235.4 * state.earthSystemScaling
     const P1 = new THREE.Vector3()
     const P2 = new THREE.Vector3()
     sun.sphere.getWorldPosition(P1);
@@ -562,28 +571,28 @@ function updateJWSTPosition() {
 
 function rotateTargetPlanet() {
     sun.sphere.rotation.y += -0.001;
-    if (inEarthSystem) {
-        earth.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? earth.rotationSpeed : -0.009
+    if (state.inEarthSystem) {
+        earth.sphere.rotation.y += state.TRUE_ROTATION_SPEEDS ? earth.rotationSpeed : -0.009
         // moon
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
-        moonPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
+        moonPlane.rotation.y += state.TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
         moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
         // iss
         issPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
-        issPlane.rotation.y += TRUE_ROTATION_SPEEDS ? -0.4446 : -0.2; // iss orbit speed (7.6x faster than the moon)
+        issPlane.rotation.y += state.TRUE_ROTATION_SPEEDS ? -0.4446 : -0.2; // iss orbit speed (7.6x faster than the moon)
         issOrbitTrail.orbitTrailObj.rotation.y = earth.sphere.rotation.y
         issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
         // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
         return
     }
-    if (targetPlanet && !targetPlanet.isSun) {
-         if (targetPlanet === uranus) {
-            targetPlanet.sphere.rotation.x += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009;
+    if (state.targetPlanet && !state.targetPlanet.isSun) {
+         if (state.targetPlanet === uranus) {
+            state.targetPlanet.sphere.rotation.x += state.TRUE_ROTATION_SPEEDS ? state.targetPlanet.rotationSpeed : -0.009;
             return
         }
-        targetPlanet.sphere.rotation.y += TRUE_ROTATION_SPEEDS ? targetPlanet.rotationSpeed : -0.009
-        if (targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.2;
+        state.targetPlanet.sphere.rotation.y += state.TRUE_ROTATION_SPEEDS ? state.targetPlanet.rotationSpeed : -0.009
+        if (state.targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.2;
     }
 }
 
@@ -595,126 +604,126 @@ function updateControls(controlsPosition) {
 }
 
 function render() { // runs with 60 fps
-    if(!PAUSED) {
+    if(!state.PAUSED) {
         for (const planet of planets) {
-            planet.updatePosition(planets, SHOW_VECTORS)
+            planet.updatePosition(planets)
         }
         rotateTargetPlanet()
-        if (spacecraftSelected) {
-            spacecraft.updatePosition(planets, sun.sphere.position)
-            spacecraft.updateBolts()
-            if (!portPressed && !starboardPressed) {
-                spacecraft.container.rotation.z = THREE.MathUtils.lerp(spacecraft.container.rotation.z, 0, 0.08);
+        if (state.spacecraftSelected) {
+            state.spacecraft.updatePosition(planets, sun.sphere.position)
+            state.spacecraft.updateBolts()
+            if (!state.portPressed && !state.starboardPressed) {
+                state.spacecraft.container.rotation.z = THREE.MathUtils.lerp(state.spacecraft.container.rotation.z, 0, 0.08);
             }
-            if (!forwardPressed) {
-                spacecraft.obj.flame1.visible = false;
-                spacecraft.obj.flame2.visible = false;
+            if (!state.forwardPressed) {
+                state.spacecraft.obj.flame1.visible = false;
+                state.spacecraft.obj.flame2.visible = false;
             }
-            if (!backwardPressed) {
-                spacecraft.obj.flame3.visible = false;
-                spacecraft.obj.flame4.visible = false;
+            if (!state.backwardPressed) {
+                state.spacecraft.obj.flame3.visible = false;
+                state.spacecraft.obj.flame4.visible = false;
             }
-            if (forwardPressed || backwardPressed) {
-                spacecraft.flameMaterial.uniforms.time.value += 2500 * spacecraft.scale;
+            if (state.forwardPressed || state.backwardPressed) {
+                state.spacecraft.flameMaterial.uniforms.time.value += 2500 * state.spacecraft.scale;
             }
-            if ((!forwardPressed && !backwardPressed && !handbrakePressed) && (Math.round(camera.fov) !== SPACECRAFT_FOV)) {
-                // spacecraft.obj.rotation.x = THREE.MathUtils.lerp(spacecraft.container.rotation.x, 0, 0.1);
-                adjustFOV(SPACECRAFT_FOV)
+            if ((!state.forwardPressed && !state.backwardPressed && !state.handbrakePressed) && (Math.round(camera.fov) !== state.SPACECRAFT_FOV)) {
+                // state.spacecraft.obj.rotation.x = THREE.MathUtils.lerp(state.spacecraft.container.rotation.x, 0, 0.1);
+                adjustFOV(state.SPACECRAFT_FOV)
             }
             // Smoothly reset to no tilt
-            if ((forwardPressed || backwardPressed || portPressed || starboardPressed || rotatePortPressed || rotateStarboardPressed || handbrakePressed) && !spacecraftMatchVelocity) {
-                spacecraft.changeMomentum()
+            if ((state.forwardPressed || state.backwardPressed || state.portPressed || state.starboardPressed || state.rotatePortPressed || state.rotateStarboardPressed || state.handbrakePressed) && !state.spacecraftMatchVelocity) {
+                state.spacecraft.changeMomentum()
             }
         }
-        if (jwstSelected || movingToJwst) updateJWSTPosition()
+        if (state.jwstSelected || state.movingToJwst) updateJWSTPosition()
 
-        if (REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
-        if (SHOW_CONNECTION) drawConnection([sun.sphere.position, earth.sphere.position, jwstPlane.position], connectionGeo);
-        if (SHOW_LABEL) updateLabel()
+        if (state.REALISTIC_LIGHTING) sunLight.position.copy(sun.sphere.position)
+        if (state.SHOW_CONNECTION) drawConnection([sun.sphere.position, earth.sphere.position, jwstPlane.position], connectionGeo);
+        if (state.SHOW_LABEL) updateLabel()
     }
 
-    if (jwstSelected && !transitionAnimationActive) {
+    if (state.jwstSelected && !state.transitionAnimationActive) {
         const jwstWorldPosition = new THREE.Vector3();
         jwst.getWorldPosition(jwstWorldPosition);
 
-        if (isCameraSunLocked) {
+        if (state.isCameraSunLocked) {
             const jwstOrbitWorldPosition = new THREE.Vector3();
             jwstOrbit.getWorldPosition(jwstOrbitWorldPosition);
 
-            const d = 0.4 * earth.radius * 235.4 * earthSystemScaling
+            const d = 0.4 * earth.radius * 235.4 * state.earthSystemScaling
             const P3 = getPointXBeyondLine(sun.sphere.position, jwstOrbitWorldPosition, d)
             camera.position.copy(new THREE.Vector3(P3.x, 0, P3.z))
             camera.lookAt(jwstOrbitWorldPosition);
 
-        } else if (isCameraLocked) {
+        } else if (state.isCameraLocked) {
             camera.position.copy(jwstWorldPosition).add(jwstCameraOffset);
             camera.lookAt(jwstWorldPosition);
         } else {
             updateControls(jwstWorldPosition)
         }
-    } else if (spacecraftSelected) {
-        if (isCameraLocked) {
-            if (!targetPlanet) { // free flight
+    } else if (state.spacecraftSelected) {
+        if (state.isCameraLocked) {
+            if (!state.targetPlanet) { // free flight
                 const globalCameraPosition = new THREE.Vector3();
-                if (spacecraftFirstPerson) spacecraft.obj.firstPersonCameraHelper.getWorldPosition(globalCameraPosition);
-                else spacecraft.obj.cameraHelperFar.getWorldPosition(globalCameraPosition);
+                if (state.spacecraftFirstPerson) state.spacecraft.obj.firstPersonCameraHelper.getWorldPosition(globalCameraPosition);
+                else state.spacecraft.obj.cameraHelperFar.getWorldPosition(globalCameraPosition);
                 camera.position.copy(globalCameraPosition);
 
                 // camera look forward
                 const localForward = new THREE.Vector3(0, 0, 1);
-                const containerQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, spacecraft.container.rotation.y, 0));
-                const objQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(spacecraft.obj.rotation.x, 0, 0));
+                const containerQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, state.spacecraft.container.rotation.y, 0));
+                const objQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(state.spacecraft.obj.rotation.x, 0, 0));
                 const globalForward = localForward.applyQuaternion(containerQuat.multiply(objQuat));
-                camera.lookAt(spacecraft.container.position.clone().add(globalForward.multiplyScalar(10)));
+                camera.lookAt(state.spacecraft.container.position.clone().add(globalForward.multiplyScalar(10)));
 
                 // axis flip fix
-                if (spacecraft.obj.rotation.x >= THREE.MathUtils.degToRad(90)) {
+                if (state.spacecraft.obj.rotation.x >= THREE.MathUtils.degToRad(90)) {
                     camera.rotation.z += THREE.MathUtils.degToRad(180)
-                } else if (spacecraft.obj.rotation.x <= THREE.MathUtils.degToRad(-90)) {
+                } else if (state.spacecraft.obj.rotation.x <= THREE.MathUtils.degToRad(-90)) {
                     camera.rotation.z -= THREE.MathUtils.degToRad(180)
                 }
             }
             else { // spacecraft locked to planet
                 const direction = new THREE.Vector3();
-                direction.subVectors(targetPlanet.sphere.position, spacecraft.container.position);
+                direction.subVectors(state.targetPlanet.sphere.position, state.spacecraft.container.position);
                 const yaw = Math.atan2(direction.x, direction.z); // Use atan2 to get the angle in the horizontal plane
-                spacecraft.container.rotation.y = yaw; // no rotate animation
+                state.spacecraft.container.rotation.y = yaw; // no rotate animation
 
                 const globalCameraPosition = new THREE.Vector3();
-                if (spacecraftFirstPerson) spacecraft.obj.firstPersonCameraHelper.getWorldPosition(globalCameraPosition);
-                else spacecraft.obj.cameraHelperClose.getWorldPosition(globalCameraPosition);
+                if (state.spacecraftFirstPerson) state.spacecraft.obj.firstPersonCameraHelper.getWorldPosition(globalCameraPosition);
+                else state.spacecraft.obj.cameraHelperClose.getWorldPosition(globalCameraPosition);
 
                 camera.position.copy(globalCameraPosition);
-                camera.lookAt(targetPlanet.sphere.position);
+                camera.lookAt(state.targetPlanet.sphere.position);
             }
             // first person camera tilt (only if first person and only while the tilt is still being lerped)
-            // if (spacecraftFirstPerson) { // optimization (causes lags sometimes):  && (portPressed || starboardPressed || (Math.abs(spacecraft.container.rotation.z) > 0.0000005 && Math.abs(spacecraft.container.rotation.z) <= spacecraft.tiltAngle))
+            // if (state.spacecraftFirstPerson) { // optimization (causes lags sometimes):  && (state.portPressed || state.starboardPressed || (Math.abs(state.spacecraft.container.rotation.z) > 0.0000005 && Math.abs(state.spacecraft.container.rotation.z) <= state.spacecraft.tiltAngle))
             //      //   almost works, but turning around y breaks z-rotation: solve by wrapping camera in container
-            //     const zRotation = new THREE.Euler(0, 0, spacecraft.container.rotation.z, 'XYZ');
+            //     const zRotation = new THREE.Euler(0, 0, state.spacecraft.container.rotation.z, 'XYZ');
             //     const zQuaternion = new THREE.Quaternion();
             //     zQuaternion.setFromEuler(zRotation);
             //     camera.quaternion.multiplyQuaternions(zQuaternion, camera.quaternion);
             // }
         } else {
-            updateControls(spacecraft.container.position)
+            updateControls(state.spacecraft.container.position)
         }
     }
-    else if (targetPlanet && !transitionAnimationActive) {
-        if (!isCameraSunLocked) sunLockedCameraDistance = 0
-        if (isCameraSunLocked) {
-            const d = (sunLockedCameraDistance > 0) ? sunLockedCameraDistance : targetPlanet.radius * AU * PLANET_SCALE / 10
-            const P3 = getPointXBeyondLine(sun.sphere.position, targetPlanet.sphere.position, d)
+    else if (state.targetPlanet && !state.transitionAnimationActive) {
+        if (!state.isCameraSunLocked) state.sunLockedCameraDistance = 0
+        if (state.isCameraSunLocked) {
+            const d = (state.sunLockedCameraDistance > 0) ? state.sunLockedCameraDistance : state.targetPlanet.radius * AU * state.PLANET_SCALE / 10
+            const P3 = getPointXBeyondLine(sun.sphere.position, state.targetPlanet.sphere.position, d)
             camera.position.copy(new THREE.Vector3(P3.x, 0, P3.z))
-            camera.lookAt(targetPlanet.sphere.position);
+            camera.lookAt(state.targetPlanet.sphere.position);
         }
-        else if (isCameraLocked) {
-            camera.position.copy(targetPlanet.sphere.position).add(cameraOffset);
-            camera.lookAt(targetPlanet.sphere.position);
+        else if (state.isCameraLocked) {
+            camera.position.copy(state.targetPlanet.sphere.position).add(cameraOffset);
+            camera.lookAt(state.targetPlanet.sphere.position);
         }
         else {
-            updateControls(targetPlanet.sphere.position)
+            updateControls(state.targetPlanet.sphere.position)
         }
-    } else if (!transitionAnimationActive) { // default (0,0,0) target
+    } else if (!state.transitionAnimationActive) { // default (0,0,0) target
         updateControls(new THREE.Vector3(0,0,0))
     }
     renderer.render( scene, camera );

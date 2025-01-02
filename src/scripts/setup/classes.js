@@ -1,8 +1,13 @@
 import * as THREE from "three";
+import {
+    G,
+    DISTANCE_SCALE,
+} from '../data/constants.js';
 import FakeGlowMaterial from "../design/GlowMaterial.js";
 import {getPositionDistance, PlanetRingGeometry} from "../utils.js";
 import {adjustFOV, gltfLoader, scene, textureLoader} from "./scene.js";
 import {pushTextToLabel, updateLabel} from "../design/designUtils.js";
+import {state} from "../data/variables.js";
 
 export class Spacecraft {
     constructor(mass, x, y, z, angularVelocity, acceleration, scale, tiltAngle) {
@@ -34,57 +39,57 @@ export class Spacecraft {
                 color2: { value: new THREE.Color( 0x00A8CE) }, // Tip color  0x00A8CE
             },
             vertexShader: `
-    varying vec3 vPosition;
-    void main() {
-        vPosition = position; // Pass position to fragment shader
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-    `,
+                varying vec3 vPosition;
+                void main() {
+                    vPosition = position; // Pass position to fragment shader
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
             fragmentShader: `
-    uniform float time;
-    uniform float scale; // Current scale
-    uniform float originalScale; // Reference scale (0.001)
-    uniform vec3 color1; // Base color
-    uniform vec3 color2; // Tip color
-    varying vec3 vPosition;
-
-    // 2D noise function
-    float noise(vec2 uv) {
-        return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
-    }
-
-    void main() {
-        // Compute the normalized position based on the scale ratio
-        float scaleRatio = scale / originalScale;
-        float normalizedY = vPosition.y * scaleRatio;
-
-        // Add procedural noise for texture, adjusted for scale ratio
-        float flameNoise = noise(vec2(normalizedY * 5.0, time * 0.5)) * 0.5 + 0.5;
-
-        // Blend base color and tip color based on height, adjusted for scale ratio
-        float heightFactor = smoothstep(0.0, 1.0, normalizedY + 0.5);
-        vec3 flameColor = mix(color1, color2, heightFactor);
-
-        // Combine noise and height factor for final intensity
-        float intensity = flameNoise;
-
-        // Normalize intensity for additive blending consistency
-        intensity = clamp(intensity, 0.0, 1.0); // Prevent oversaturation
-
-        // Add fading transparency toward the edges
-        float alpha = smoothstep(0.0, 1.0, intensity) * 2.8;
-
-        // Output the flame color with transparency
-        gl_FragColor = vec4(flameColor * intensity, alpha);
-    }
-    `,
+                uniform float time;
+                uniform float scale; // Current scale
+                uniform float originalScale; // Reference scale (0.001)
+                uniform vec3 color1; // Base color
+                uniform vec3 color2; // Tip color
+                varying vec3 vPosition;
+            
+                // 2D noise function
+                float noise(vec2 uv) {
+                    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+                }
+            
+                void main() {
+                    // Compute the normalized position based on the scale ratio
+                    float scaleRatio = scale / originalScale;
+                    float normalizedY = vPosition.y * scaleRatio;
+            
+                    // Add procedural noise for texture, adjusted for scale ratio
+                    float flameNoise = noise(vec2(normalizedY * 5.0, time * 0.5)) * 0.5 + 0.5;
+            
+                    // Blend base color and tip color based on height, adjusted for scale ratio
+                    float heightFactor = smoothstep(0.0, 1.0, normalizedY + 0.5);
+                    vec3 flameColor = mix(color1, color2, heightFactor);
+            
+                    // Combine noise and height factor for final intensity
+                    float intensity = flameNoise;
+            
+                    // Normalize intensity for additive blending consistency
+                    intensity = clamp(intensity, 0.0, 1.0); // Prevent oversaturation
+            
+                    // Add fading transparency toward the edges
+                    float alpha = smoothstep(0.0, 1.0, intensity) * 2.8;
+            
+                    // Output the flame color with transparency
+                    gl_FragColor = vec4(flameColor * intensity, alpha);
+                }
+            `,
             transparent: true, // Allows blending with the background
             blending: THREE.AdditiveBlending, // Glow effect
         });
 
         const shipLight = new THREE.PointLight(0xFF4D00, 0.03, 10); // 0x500505 0x7A1515
         shipLight.position.set(0, 0, 0); // Centered relative to the spaceship
-        shipLight.visible = spacecraftLight
+        shipLight.visible = state.spacecraftLight
 
         const flameGeometry = new THREE.ConeGeometry(500 * scale, 2000 * scale, 32); //
         const flame1 = new THREE.Mesh(flameGeometry, this.flameMaterial);
@@ -206,8 +211,8 @@ export class Spacecraft {
 
         // scaling velocities (smooth arrival)
         let accelScale = 1
-        if (targetPlanet && !spacecraftMatchVelocity && !spacecraftGravity) {
-            const CLOSE_DISTANCE = targetPlanet.radius * 200 / PLANET_SCALE; // start of downscaling
+        if (state.targetPlanet && !state.spacecraftMatchVelocity && !state.spacecraftGravity) {
+            const CLOSE_DISTANCE = state.targetPlanet.radius * 200 / state.PLANET_SCALE; // start of downscaling
             const MIN_ACCEL_SCALE = 0.001; // Minimum scaling factor for acceleration
             const distanceToTarget = this.distanceToTarget;
 
@@ -217,47 +222,47 @@ export class Spacecraft {
             }
         }
 
-        if (forwardPressed) {
+        if (state.forwardPressed) {
             this.xVel += forwardX * this.acceleration * accelScale;
-            if (ACTIVE_ASCENSION_AXIS) this.yVel += forwardY * this.acceleration * accelScale;
+            if (state.ACTIVE_ASCENSION_AXIS) this.yVel += forwardY * this.acceleration * accelScale;
             this.zVel += forwardZ * this.acceleration * accelScale;
 
             this.obj.flame1.visible = true;
             this.obj.flame2.visible = true;
-            adjustFOV(Math.min(SPACECRAFT_FOV * 1.2, 170));
+            adjustFOV(Math.min(state.SPACECRAFT_FOV * 1.2, 170));
         }
-        if (backwardPressed) {
+        if (state.backwardPressed) {
             this.xVel -= forwardX * this.acceleration * accelScale;
-            if (ACTIVE_ASCENSION_AXIS) this.yVel -= forwardY * this.acceleration * accelScale;
+            if (state.ACTIVE_ASCENSION_AXIS) this.yVel -= forwardY * this.acceleration * accelScale;
             this.zVel -= forwardZ * this.acceleration * accelScale;
 
             this.obj.flame3.visible = true;
             this.obj.flame4.visible = true;
-            adjustFOV(SPACECRAFT_FOV * 0.85);
+            adjustFOV(state.SPACECRAFT_FOV * 0.85);
         }
-        if (portPressed) {
+        if (state.portPressed) {
             this.xVel += leftX * lateralAcceleration * accelScale;
             this.zVel += leftZ * lateralAcceleration * accelScale;
 
             this.container.rotation.z = THREE.MathUtils.lerp(this.container.rotation.z, -this.tiltAngle, 0.08);
         }
-        if (starboardPressed) {
+        if (state.starboardPressed) {
             this.xVel -= leftX * lateralAcceleration * accelScale;
             this.zVel -= leftZ * lateralAcceleration * accelScale;
 
             this.container.rotation.z = THREE.MathUtils.lerp(this.container.rotation.z, this.tiltAngle, 0.08);
         }
-        if (handbrakePressed) {
+        if (state.handbrakePressed) {
             this.xVel = 0;
             this.yVel = 0;
             this.zVel = 0;
-            adjustFOV(SPACECRAFT_FOV * 0.85)
+            adjustFOV(state.SPACECRAFT_FOV * 0.85)
             updateLabel()
         }
-        if (rotatePortPressed && !targetPlanet) {
+        if (state.rotatePortPressed && !state.targetPlanet) {
             this.container.rotation.y += this.angularVelocity;
         }
-        if (rotateStarboardPressed && !targetPlanet) {
+        if (state.rotateStarboardPressed && !state.targetPlanet) {
             this.container.rotation.y -= this.angularVelocity;
         }
     }
@@ -273,13 +278,13 @@ export class Spacecraft {
         let addedYVel = 0;
         let addedZVel = 0;
 
-        if (!targetPlanet) spacecraftMatchVelocity = false
-        if (spacecraftMatchVelocity) {
-            this.xVel = targetPlanet.xVel;
-            this.yVel = targetPlanet.yVel;
-            this.zVel = targetPlanet.zVel;
+        if (!state.targetPlanet) state.spacecraftMatchVelocity = false
+        if (state.spacecraftMatchVelocity) {
+            this.xVel = state.targetPlanet.xVel;
+            this.yVel = state.targetPlanet.yVel;
+            this.zVel = state.targetPlanet.zVel;
         } else {
-            if (spacecraftGravity) {
+            if (state.spacecraftGravity) {
                 let totalFx = 0;
                 let totalFy = 0;
                 let totalFz = 0;
@@ -290,22 +295,22 @@ export class Spacecraft {
                     totalFz += forces[0].force_z; // Force in N
                 }
 
-                addedXVel = ((totalFx / this.mass)/1000) * TIME
-                addedYVel = ((totalFy / this.mass)/1000) * TIME;
-                addedZVel = ((totalFz / this.mass)/1000) * TIME
+                addedXVel = ((totalFx / this.mass)/1000) * state.TIME
+                addedYVel = ((totalFy / this.mass)/1000) * state.TIME;
+                addedZVel = ((totalFz / this.mass)/1000) * state.TIME
                 this.xVel += addedXVel; // in km/s
                 this.yVel += addedYVel;
                 this.zVel += addedZVel;
             }
         }
 
-        this.container.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
-        this.container.position.y += ((this.yVel * DISTANCE_SCALE) * TIME);
-        this.container.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
+        this.container.position.x += ((this.xVel * DISTANCE_SCALE) * state.TIME)
+        this.container.position.y += ((this.yVel * DISTANCE_SCALE) * state.TIME);
+        this.container.position.z += ((this.zVel * DISTANCE_SCALE) * state.TIME)
 
-        if (!spacecraftGravity) {
+        if (!state.spacecraftGravity) {
             this.distanceToSun = getPositionDistance(sunPosition, this.container.position) / 1000
-            if (targetPlanet) this.distanceToTarget = getPositionDistance(targetPlanet.sphere.position, this.container.position) / 1000
+            if (state.targetPlanet) this.distanceToTarget = getPositionDistance(state.targetPlanet.sphere.position, this.container.position) / 1000
         }
 
         // console.log("xVel: " + Math.round(this.xVel * 1000) / 1000 + " | zVel: " + Math.round(this.zVel * 1000) / 1000)
@@ -319,7 +324,7 @@ export class Spacecraft {
         const distance_z = ((planet.sphere.position.z - this.container.position.z) / DISTANCE_SCALE) * 1000 // distance in meters;
         const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // Total distance in km
         if (planet.isSun) this.distanceToSun = distance / 1000
-        if (planet === targetPlanet) this.distanceToTarget = distance / 1000
+        if (planet === state.targetPlanet) this.distanceToTarget = distance / 1000
 
         const force = G * this.mass * planet.mass / distance ** 2; // Law of attraction
         const theta = Math.atan2(distance_z, distance_x); // Horizontal angle
@@ -332,8 +337,8 @@ export class Spacecraft {
         return [{ force_x: force_x, force_y: force_y, force_z: force_z }];
     }
     updateVectorLines(addedXVel, addedYVel, addedZVel) {
-        if (SHOW_VECTORS) {
-            if (spacecraftGravity) {
+        if (state.SHOW_VECTORS) {
+            if (state.spacecraftGravity) {
                 const gVectorLinePoints = [
                     new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
                     new THREE.Vector3(this.container.position.x + addedXVel, this.container.position.y + addedYVel, this.container.position.z + addedZVel)
@@ -346,7 +351,7 @@ export class Spacecraft {
             // const xVectorLinePoints = [
             //     new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
             //     new THREE.Vector3(
-            //         this.container.position.x + ((this.xVel * DISTANCE_SCALE) * TIME * 10),
+            //         this.container.position.x + ((this.xVel * DISTANCE_SCALE) * state.TIME * 10),
             //         this.container.position.y,
             //         this.container.position.z
             //     )
@@ -356,7 +361,7 @@ export class Spacecraft {
             //     new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
             //     new THREE.Vector3(
             //         this.container.position.x,
-            //         this.container.position.y + ((this.yVel * DISTANCE_SCALE) * TIME * 10),
+            //         this.container.position.y + ((this.yVel * DISTANCE_SCALE) * state.TIME * 10),
             //         this.container.position.z
             //     )
             // ];
@@ -366,16 +371,16 @@ export class Spacecraft {
             //     new THREE.Vector3(
             //         this.container.position.x,
             //         this.container.position.y,
-            //         this.container.position.z + ((this.zVel * DISTANCE_SCALE) * TIME * 10)
+            //         this.container.position.z + ((this.zVel * DISTANCE_SCALE) * state.TIME * 10)
             //     )
             // ];
 
             const resVectorLinePoints = [
                 new THREE.Vector3(this.container.position.x, this.container.position.y, this.container.position.z),
                 new THREE.Vector3(
-                    this.container.position.x + ((this.xVel * DISTANCE_SCALE) * TIME * 10),
-                    this.container.position.y + ((this.yVel * DISTANCE_SCALE) * TIME * 10),
-                    this.container.position.z + ((this.zVel * DISTANCE_SCALE) * TIME * 10)
+                    this.container.position.x + ((this.xVel * DISTANCE_SCALE) * state.TIME * 10),
+                    this.container.position.y + ((this.yVel * DISTANCE_SCALE) * state.TIME * 10),
+                    this.container.position.z + ((this.zVel * DISTANCE_SCALE) * state.TIME * 10)
                 )
             ];
 
@@ -443,10 +448,10 @@ export class Bolt {
         this.boltContainer = new THREE.Object3D();
         this.boltContainerInner = new THREE.Object3D();
 
-        this.boltContainer.position.copy(spacecraft.container.position)
+        this.boltContainer.position.copy(state.spacecraft.container.position)
 
-        this.boltContainer.rotation.copy(spacecraft.container.rotation);
-        this.boltContainerInner.rotation.copy(spacecraft.obj.rotation);
+        this.boltContainer.rotation.copy(state.spacecraft.container.rotation);
+        this.boltContainerInner.rotation.copy(state.spacecraft.obj.rotation);
 
         this.boltContainer.scale.set(spacecraftScale, spacecraftScale, spacecraftScale)
 
@@ -505,7 +510,7 @@ export class Planet {
         });
         if (lowQMapPath || highQMapPath) {
             this.material.color = null;
-            const texture = textureLoader.load(HIGH_QUALITY_TEXTURES && highQMapPath ? highQMapPath : lowQMapPath);
+            const texture = textureLoader.load(state.HIGH_QUALITY_TEXTURES && highQMapPath ? highQMapPath : lowQMapPath);
             texture.colorSpace = THREE.SRGBColorSpace
             this.material.map = texture;
 
@@ -520,7 +525,7 @@ export class Planet {
                 this.material.roughness = 0.5
                 this.material.metalness = 0.7
 
-                const cloudTexture = textureLoader.load(HIGH_QUALITY_TEXTURES ? '/planet_textures/8k/8k_earth_clouds.jpg' : '/planet_textures/2k/2k_earth_clouds.jpg')
+                const cloudTexture = textureLoader.load(state.HIGH_QUALITY_TEXTURES ? '/planet_textures/8k/8k_earth_clouds.jpg' : '/planet_textures/2k/2k_earth_clouds.jpg')
                 texture.colorSpace = THREE.SRGBColorSpace
 
                 let cloudGeo = new THREE.SphereGeometry(this.radius * 1.005, 64, 32)
@@ -600,7 +605,7 @@ export class Planet {
         this.orbitLine.renderOrder = -3;
         this.orbitLine.material.depthTest = true;
         this.orbitLine.material.depthWrite = false;
-        if (SHOW_ORBITS) scene.add(this.orbitLine);
+        if (state.SHOW_ORBITS) scene.add(this.orbitLine);
 
         // vectors
         const gVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
@@ -633,7 +638,7 @@ export class Planet {
             this.axisLine.rotation.z = THREE.MathUtils.degToRad(axialTilt);
         }
     }
-    updatePosition(planets, SHOW_VECTORS) {
+    updatePosition(planets) {
         let totalFx = 0;
         let totalFz = 0;
         for (const planet of planets) {
@@ -645,15 +650,15 @@ export class Planet {
             totalFz += forces[0].force_z // Force in N
         }
 
-        const addedXVel = ((totalFx / this.mass)/1000) * TIME
-        const addedZVel = ((totalFz / this.mass)/1000) * TIME
+        const addedXVel = ((totalFx / this.mass)/1000) * state.TIME
+        const addedZVel = ((totalFz / this.mass)/1000) * state.TIME
         this.xVel += addedXVel // in km/s
         this.zVel += addedZVel // in km/s
 
-        this.sphere.position.x += ((this.xVel * DISTANCE_SCALE) * TIME)
-        this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * TIME)
+        this.sphere.position.x += ((this.xVel * DISTANCE_SCALE) * state.TIME)
+        this.sphere.position.z += ((this.zVel * DISTANCE_SCALE) * state.TIME)
 
-        this.updateVectorLines(addedXVel, addedZVel, SHOW_VECTORS)
+        this.updateVectorLines(addedXVel, addedZVel, state.SHOW_VECTORS)
         this.orbits.push(new THREE.Vector3( this.sphere.position.x, this.sphere.position.y, this.sphere.position.z ))
 
         if (this.ring) this.ring.ringObj.position.copy(this.sphere.position)
@@ -689,7 +694,7 @@ export class Planet {
 
             const vVectorLinePoints = [
                 new THREE.Vector3(this.sphere.position.x, 0, this.sphere.position.z),
-                new THREE.Vector3(this.sphere.position.x + ((this.xVel * DISTANCE_SCALE) * TIME * 10), 0, this.sphere.position.z + ((this.zVel * DISTANCE_SCALE) * TIME * 10))
+                new THREE.Vector3(this.sphere.position.x + ((this.xVel * DISTANCE_SCALE) * state.TIME * 10), 0, this.sphere.position.z + ((this.zVel * DISTANCE_SCALE) * state.TIME * 10))
             ]
 
             this.gVectorLine.geometry.setFromPoints( gVectorLinePoints );
@@ -813,7 +818,7 @@ export class OrbitTrail {
         this.orbitTrailGeometry.attributes.position.needsUpdate = true;
     }
     updateOrbitTrail(satellite, earth) {
-        if (SHOW_ORBITS) scene.add(this.orbitTrailObj)
+        if (state.SHOW_ORBITS) scene.add(this.orbitTrailObj)
         else {
             scene.remove(this.orbitTrailObj)
             this.reset()
