@@ -199,17 +199,17 @@ export function toggleSpacecraftSelected(selected, planets) {
     }
 }
 
-export function updateTargetList(planets, spacecraftSelected, oldPlanetName=null) {
+export function updateTargetList(planets, selected, oldPlanetName=null) {
     const selectElement = document.getElementById("TARGET_SELECT")
     let selectedIdx = 0
 
     if (oldPlanetName) selectedIdx = state.targets.indexOf(oldPlanetName);
     state.targets.length = 0; // clear array
-    state.targets.push(state.spacecraftSelected ? "Free flight" : "None")
+    state.targets.push(selected ? "Free flight" : "None")
     for (const planet of planets) {
         state.targets.push(planet.name)
     }
-    if (!state.spacecraftSelected) state.targets.push("JWST")
+    if (!selected) state.targets.push("JWST")
 
     selectElement.innerHTML = ""
     state.targets.forEach((target, index) => {
