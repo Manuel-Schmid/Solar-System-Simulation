@@ -20,14 +20,14 @@ export const presets = ["recommended", "realistic", "cinematic"]; // add "high_p
 export let distanceUnits = ["km", "au", "lm"]; // units for distances
 export let backgroundGridTextures = [
     false,
-    "/starmaps/celestial_grid_16k.png",
-    "/starmaps/constellation_bounds_8k.png",
-    "/starmaps/constellation_figures_8k.png"
+    "./starmaps/celestial_grid_16k.png",
+    "./starmaps/constellation_bounds_8k.png",
+    "./starmaps/constellation_figures_8k.png"
 ];
 export const backgroundTextures = [
     false,
-    '/starmaps/starmap_2020_4k_gal.exr',
-    '/starmaps/starmap_2020_8k_gal.exr',
-    '/starmaps/starmap_2020_8k.exr'
+    './starmaps/starmap_2020_4k_gal.exr',
+    './starmaps/starmap_2020_8k_gal.exr',
+    './starmaps/starmap_2020_8k.exr'
 ];
 export const jwstScaleFactor = 0.0001;

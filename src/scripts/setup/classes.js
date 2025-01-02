@@ -125,8 +125,8 @@ export class Spacecraft {
         firstPersonCameraHelper.position.set(0, 1, 0);
 
         // model
-        // gltfLoader.load('/models/spacecraft_fullSize.glb' , (gltf) =>
-        gltfLoader.load('/models/spacecraft.glb' , (gltf) =>
+        // gltfLoader.load('./models/spacecraft_fullSize.glb' , (gltf) =>
+        gltfLoader.load('./models/spacecraft.glb' , (gltf) =>
         {
             this.obj = gltf.scene
             this.obj.position.set(0,0,0)
@@ -520,12 +520,12 @@ export class Planet {
 
             if (this.name === "Earth") {
                 // add roughness & clouds
-                this.material.roughnessMap = textureLoader.load('/planet_textures/2k/Ocean.png');
-                this.material.metalnessMap = textureLoader.load('/planet_textures/2k/Ocean_og.png');
+                this.material.roughnessMap = textureLoader.load('./planet_textures/2k/Ocean.png');
+                this.material.metalnessMap = textureLoader.load('./planet_textures/2k/Ocean_og.png');
                 this.material.roughness = 0.5
                 this.material.metalness = 0.7
 
-                const cloudTexture = textureLoader.load(state.HIGH_QUALITY_TEXTURES ? '/planet_textures/8k/8k_earth_clouds.jpg' : '/planet_textures/2k/2k_earth_clouds.jpg')
+                const cloudTexture = textureLoader.load(state.HIGH_QUALITY_TEXTURES ? './planet_textures/8k/8k_earth_clouds.jpg' : './planet_textures/2k/2k_earth_clouds.jpg')
                 texture.colorSpace = THREE.SRGBColorSpace
 
                 let cloudGeo = new THREE.SphereGeometry(this.radius * 1.005, 64, 32)
@@ -557,7 +557,7 @@ export class Planet {
             }
 
             if(this.name === "Venus") {
-                const atmosphereTexture = textureLoader.load('/planet_textures/2k/2k_venus_atmosphere.jpg')
+                const atmosphereTexture = textureLoader.load('./planet_textures/2k/2k_venus_atmosphere.jpg')
                 atmosphereTexture.colorSpace = THREE.SRGBColorSpace
 
                 let atmosphereGeo = new THREE.SphereGeometry(this.radius * 1.015, 64, 64)
@@ -612,11 +612,13 @@ export class Planet {
         const gVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
         this.gVectorLine = new THREE.Line( gVectorLineGeometry, gVectorLineMaterial );
         this.gVectorLine.frustumCulled = false;
+        this.gVectorLine.renderOrder = -1;
 
         const vVectorLineMaterial = new THREE.LineBasicMaterial( { color: 0xffffff } );
         const vVectorLineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)]);
         this.vVectorLine = new THREE.Line( vVectorLineGeometry, vVectorLineMaterial );
         this.vVectorLine.frustumCulled = false;
+        this.vVectorLine.renderOrder = -1;
 
         if (!isSun) {
             const axisHeight = this.radius * 2
@@ -629,6 +631,7 @@ export class Planet {
             this.axisLine = new THREE.Line( axisLineGeometry, axisLineMaterial );
             this.axisLine.rotation.x = THREE.MathUtils.degToRad(axialTilt); // axis tilt
             this.axisLine.frustumCulled = false;
+            this.axisLine.renderOrder = -1;
         }
 
         if (this.name === "Uranus") {
