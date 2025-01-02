@@ -1,5 +1,6 @@
 // Proxy script to fetch GitHub Releases files
 addEventListener('fetch', (event) => {
+    console.log("fetch")
     const url = new URL(event.request.url);
     const releaseFile = url.searchParams.get('file');
 
