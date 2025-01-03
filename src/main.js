@@ -378,7 +378,7 @@ function updateEarthSystemVisibility(visible) {
     if (visible) {
         moonPlane.position.copy(earth.sphere.position)
         issPlane.position.copy(earth.sphere.position)
-        scene.add(jwstPlane)
+        if (state.jwstSelected || state.movingToJwst) scene.add(jwstPlane)
         scene.add(moonPlane)
         scene.add(issPlane)
         scene.add(moonOrbitTrail.orbitTrailObj)
