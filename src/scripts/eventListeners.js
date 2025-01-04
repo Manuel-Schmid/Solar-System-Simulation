@@ -269,6 +269,10 @@ export function initEventListeners({
     document.getElementById('SHOW_SPACECRAFT_ORBIT').addEventListener("change", (event) => {
         toggleSpacecraftOrbit()
     });
+    document.getElementById('SHOW_EARTH_SYSTEM_ORBITS').addEventListener("change", (event) => {
+        toggleEarthSystemOrbits(event.target.checked)
+        pushTextToLabel((state.SHOW_EARTH_SYSTEM_ORBITS ? 'Show' : 'Hide') + (state.jwstSelected ? ' JWST,' : '') + ' ISS & Moon orbits')
+    });
     document.getElementById('HIGH_QUALITY_TEXTURES').addEventListener("change", (event) => {
         toggleHighQualityTextures(event.target.checked)
     });
@@ -389,11 +393,25 @@ export function initEventListeners({
         }
         state.spacecraft.toggleOrbitLine(state.SHOW_ORBITS)
         document.getElementById('SHOW_SPACECRAFT_ORBIT_CB').checked = state.SHOW_ORBITS
-        if (state.inEarthSystem) {
+        toggleEarthSystemOrbits(state.SHOW_ORBITS)
+    }
+    function toggleEarthSystemOrbits(visible) {
+        state.SHOW_EARTH_SYSTEM_ORBITS = visible
+        if (state.SHOW_EARTH_SYSTEM_ORBITS) {
             moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
             issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
+            scene.add(moonOrbitTrail.orbitTrailObj)
+            scene.add(issOrbitTrail.orbitTrailObj)
         }
-        jwstPlane.children[1].visible = state.SHOW_ORBITS;
+        else {
+            scene.remove(moonOrbitTrail.orbitTrailObj)
+            scene.remove(issOrbitTrail.orbitTrailObj)
+            moonOrbitTrail.reset()
+            issOrbitTrail.reset()
+        }
+        jwstPlane.children[1].visible = state.SHOW_EARTH_SYSTEM_ORBITS;
+
+        document.getElementById('SHOW_EARTH_SYSTEM_ORBITS_CB').checked = state.SHOW_EARTH_SYSTEM_ORBITS
     }
     function toggleSpacecraftOrbit() {
         state.spacecraft.toggleOrbitLine(state.spacecraft.orbitLine.parent === null)

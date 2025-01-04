@@ -230,6 +230,7 @@ function setMenuSettings() { // set interface default values
         if (checkbox.id === "PAUSED_CB") checkbox.checked = state.PAUSED;
         else if (checkbox.id === "SHOW_LABEL_CB") checkbox.checked = state.SHOW_LABEL;
         else if (checkbox.id === "SHOW_ORBITS_CB") checkbox.checked = state.SHOW_ORBITS;
+        else if (checkbox.id === "SHOW_EARTH_SYSTEM_ORBITS_CB") checkbox.checked = state.SHOW_EARTH_SYSTEM_ORBITS;
         else if (checkbox.id === "SHOW_SPACECRAFT_ORBIT_CB") checkbox.checked = state.SHOW_ORBITS;
         else if (checkbox.id === "HIGH_QUALITY_TEXTURES_CB") checkbox.checked = state.HIGH_QUALITY_TEXTURES;
         else if (checkbox.id === "SHOW_VECTORS_CB") checkbox.checked = state.SHOW_VECTORS;
@@ -369,7 +370,7 @@ function toggleJWSTSelected(selected) {
     state.jwstSelected = selected
     if (state.jwstSelected) {
         scene.add(jwstPlane)
-        jwstOrbit.visible = state.SHOW_ORBITS;
+        jwstOrbit.visible = state.SHOW_EARTH_SYSTEM_ORBITS;
     }
     else scene.remove(jwstPlane)
 }
@@ -383,6 +384,7 @@ function updateEarthSystemVisibility(visible) {
         scene.add(issPlane)
         scene.add(moonOrbitTrail.orbitTrailObj)
         scene.add(issOrbitTrail.orbitTrailObj)
+        earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3 // update cloud rotation
     } else {
         scene.remove(jwstPlane);
         scene.remove(moonPlane)
@@ -413,6 +415,8 @@ function moveToPlanet(planet, topDown=false) {
         state.SHOW_LABEL = false // make label stop updating during transition
         showLabelChanged = true
     }
+
+    if (planet.name === "Venus") venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.8;
 
     state.isCameraLocked = false
     state.isCameraSunLocked = false
@@ -588,12 +592,12 @@ function rotateTargetPlanet() {
         // moon
         moonPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         moonPlane.rotation.y += state.TRUE_ROTATION_SPEEDS ? -0.0585 : -0.027;// moon orbit speed
-        moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
+        if (state.SHOW_EARTH_SYSTEM_ORBITS) moonOrbitTrail.updateOrbitTrail(moon, earth.sphere)
         // iss
         issPlane.position.copy(earth.sphere.position); // centers moon orbit on earth
         issPlane.rotation.y += state.TRUE_ROTATION_SPEEDS ? -0.4446 : -0.2; // iss orbit speed (7.6x faster than the moon)
         issOrbitTrail.orbitTrailObj.rotation.y = earth.sphere.rotation.y
-        issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
+        if (state.SHOW_EARTH_SYSTEM_ORBITS) issOrbitTrail.updateOrbitTrail(ISS, earth.sphere)
         // atmosphere
         earth.clouds.rotation.y = earth.sphere.rotation.y * 1.3
         return
@@ -604,7 +608,7 @@ function rotateTargetPlanet() {
             return
         }
         state.targetPlanet.sphere.rotation.y += state.TRUE_ROTATION_SPEEDS ? state.targetPlanet.rotationSpeed : -0.009
-        if (state.targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.2;
+        if (state.targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.8;
     }
 }
 
