@@ -507,7 +507,7 @@ export class Planet {
         this.glowSphere = null
         this.ring = null
 
-        this.geometry = new THREE.SphereGeometry( radius, 64, 32 );
+        this.geometry = new THREE.SphereGeometry( radius, 64, 64 );
         this.geometry.rotateY(THREE.MathUtils.degToRad(90));
 
         this.material = new THREE.MeshStandardMaterial({
@@ -595,6 +595,7 @@ export class Planet {
         }
 
         this.sphere = new THREE.Mesh(this.geometry, this.material);
+        if (this.name === "Saturn" || this.name === "Jupiter") this.sphere.scale.set(1, 0.985, 1); // add equatorial bulge to jup. & sat.
         this.sphere.rotation.x = THREE.MathUtils.degToRad(axialTilt); // axis tilt
         this.sphere.position.set(x, y, z)
         if (this.isSun) this.sphere.renderOrder = -2;

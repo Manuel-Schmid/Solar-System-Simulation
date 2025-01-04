@@ -70,7 +70,7 @@ if (preset === "recommended") {
     state.SHOW_LABEL = true;
     state.SHOW_ORBITS = true;
     state.HIGH_QUALITY_TEXTURES = true;
-    state.backgroundTexture = backgroundTextures[3];
+    state.backgroundTexture = backgroundTextures[2];
     state.PLANET_SCALE = DISTANCE_SCALE * 10;
     state.earthSystemScaling = 0.1;
 }
