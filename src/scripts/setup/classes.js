@@ -829,13 +829,6 @@ export class OrbitTrail {
         this.orbitTrailGeometry.attributes.position.needsUpdate = true;
     }
     updateOrbitTrail(satellite, earth) {
-        if (state.SHOW_ORBITS) scene.add(this.orbitTrailObj)
-        else {
-            scene.remove(this.orbitTrailObj)
-            this.reset()
-            return
-        }
-
         const satelliteWorldPosition = new THREE.Vector3();
         satellite.getWorldPosition(satelliteWorldPosition);  // Get satellite position in world coordinates
 
