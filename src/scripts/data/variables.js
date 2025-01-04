@@ -17,7 +17,7 @@ export const state = {
     backgroundTexture: backgroundTextures[0],
     SHOW_LABEL: true,
     SHOW_ORBITS: true,
-    SHOW_EARTH_SYSTEM_ORBITS: true,
+    SHOW_EARTH_SYSTEM_ORBITS: false,
     HIGH_QUALITY_TEXTURES: false,
     PLANET_SCALE: DISTANCE_SCALE * 10,
     earthSystemScaling: 0.1, // scale down jwst & moon orbit distance

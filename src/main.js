@@ -416,7 +416,7 @@ function moveToPlanet(planet, topDown=false) {
         showLabelChanged = true
     }
 
-    if (planet.name === "Venus") venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.2;
+    if (planet.name === "Venus") venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.8;
 
     state.isCameraLocked = false
     state.isCameraSunLocked = false
@@ -608,7 +608,7 @@ function rotateTargetPlanet() {
             return
         }
         state.targetPlanet.sphere.rotation.y += state.TRUE_ROTATION_SPEEDS ? state.targetPlanet.rotationSpeed : -0.009
-        if (state.targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.2;
+        if (state.targetPlanet === venus) venus.atmosphere.rotation.y = venus.sphere.rotation.y * 1.8;
     }
 }
 
