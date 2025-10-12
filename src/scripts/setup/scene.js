@@ -10,14 +10,18 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 // };
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(state.STANDARD_FOV, window.innerWidth / window.innerHeight, 0.000001, 1000 );
-const renderer = new THREE.WebGLRenderer({antialias: true});
+const camera = new THREE.PerspectiveCamera(state.STANDARD_FOV, window.innerWidth / window.innerHeight, 0.000001, 4000 );
+const renderer = new THREE.WebGLRenderer({antialias: true, logarithmicDepthBuffer: true});
 const loadingManager = new THREE.LoadingManager();
 const textureLoader = new THREE.TextureLoader(loadingManager);
 const exrLoader = new EXRLoader(loadingManager);
 const gltfLoader = new GLTFLoader(loadingManager);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
+
+// camera layers
+camera.layers.enable(0); // Default objects
+camera.layers.enable(1); // Gorilla + light
 
 // lighting
 const sunLight = new THREE.PointLight(0xffffff, 3, 1000);

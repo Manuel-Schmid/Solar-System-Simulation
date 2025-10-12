@@ -17,7 +17,7 @@ export const state = {
     backgroundTexture: backgroundTextures[0],
     SHOW_LABEL: true,
     SHOW_ORBITS: true,
-    SHOW_EARTH_SYSTEM_ORBITS: false,
+    SHOW_EARTH_SYSTEM_ORBITS: true,
     HIGH_QUALITY_TEXTURES: false,
     PLANET_SCALE: DISTANCE_SCALE * 10,
     earthSystemScaling: 0.1, // scale down jwst & moon orbit distance
@@ -43,6 +43,11 @@ export const state = {
     inEarthSystem: false,
     sunLockedCameraDistance: 0,
     birdseye: true,
+    SHOW_GORILLA: false,
+
+    // typing animation
+    typingAnimationActive: false,  // Track if an animation is in progress
+    currentAnimationInterval: null,
 
     // keys
     forwardPressed: false,
@@ -63,6 +68,7 @@ if (preset === "recommended") {
 } else if (preset === "realistic") {
     state.SHOW_LABEL = true;
     state.SHOW_ORBITS = true;
+    state.SHOW_EARTH_SYSTEM_ORBITS = true;
     state.HIGH_QUALITY_TEXTURES = false;
     state.backgroundTexture = backgroundTextures[3];
     state.PLANET_SCALE = DISTANCE_SCALE;
@@ -70,19 +76,21 @@ if (preset === "recommended") {
 } else if (preset === "cinematic") { // currently presentation mode
     state.SHOW_LABEL = true;
     state.SHOW_ORBITS = true;
+    state.SHOW_EARTH_SYSTEM_ORBITS = false;
     state.HIGH_QUALITY_TEXTURES = true;
     state.backgroundTexture = backgroundTextures[2];
     state.PLANET_SCALE = DISTANCE_SCALE * 10;
     state.earthSystemScaling = 0.1;
 }
-// else if (preset === "cinematic") { // todo: this is the real cinematic mode
-//     state.SHOW_LABEL = false;
-//     state.SHOW_ORBITS = false;
-//     state.HIGH_QUALITY_TEXTURES = true;
-//     state.backgroundTexture = backgroundTextures[3];
-//     state.PLANET_SCALE = DISTANCE_SCALE * 20;
-//     state.earthSystemScaling = 0.1;
-// }
+else if (preset === "cinematic_complete") { // todo: this is the real cinematic mode
+    state.SHOW_LABEL = false;
+    state.SHOW_ORBITS = false;
+    state.SHOW_EARTH_SYSTEM_ORBITS = false;
+    state.HIGH_QUALITY_TEXTURES = true;
+    state.backgroundTexture = backgroundTextures[3];
+    state.PLANET_SCALE = DISTANCE_SCALE * 20;
+    state.earthSystemScaling = 0.1;
+}
 
 function getPresetFromURL() {
     const currentPath = window.location.pathname;

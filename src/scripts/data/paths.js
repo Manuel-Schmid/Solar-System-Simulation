@@ -57,4 +57,5 @@ export const starmap8kTexture = new URL('/starmaps/starmap_2020_8k.exr', import.
 // models
 export const jwstModelPath = new URL('/models/jwst.glb', import.meta.url);
 export const spacecraftModel = new URL('/models/spacecraft.glb', import.meta.url);
+export const gorillaModelPath = new URL('/models/gorilla.glb', import.meta.url);
 // export const spacecraftFullSizeModel = new URL('/models/spacecraft_fullSize.glb', import.meta.url);

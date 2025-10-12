@@ -45,6 +45,10 @@ export function getPositionDistance(position1, position2) {
     return Math.sqrt(distance_x ** 2 + distance_y ** 2 + distance_z ** 2); // Total distance in km
 }
 
+export function getRandomNum(rangeMin, rangeMax) { // min (inclusive) | max (exclusive)
+    return Math.random() * (rangeMax - rangeMin) + rangeMin;
+}
+
 export function getPointXBeyondLine(P1, P2, d) { // two points and distance of P3
     const P3 = new THREE.Vector3(0,0,0);
 

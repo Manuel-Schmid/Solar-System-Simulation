@@ -104,6 +104,7 @@ export function pushTextToLabel(text) {
 
 export function updateLabel() {
     const labelContainer = document.getElementById('label-container');
+    const permLabelContainer = document.getElementById('permanent-labels-container');
     const targetLabel = document.getElementById('target-label');
     const distanceLabel = document.getElementById('distance-label');
     const speedLabel = document.getElementById('speed-label');
@@ -139,6 +140,16 @@ export function updateLabel() {
             let speedText = v.toPrecision(4) + " km/s" + cPercentageText
             if (state.spacecraftMatchVelocity) speedText = "[ " + speedText + " ]"
             speedLabel.textContent = speedText
+        }
+
+        // update label width
+        if (state.currentAnimationInterval == null) {
+            const currentMinWidth = parseFloat(getComputedStyle(labelContainer).minWidth) || 0;
+            const newMinWidth = permLabelContainer.offsetWidth;
+            if (newMinWidth > currentMinWidth) {
+                console.log(newMinWidth)
+                labelContainer.style.minWidth = `${newMinWidth}px`;
+            }
         }
 
         labelContainer.style.display = '';
@@ -296,6 +307,9 @@ export function initPlanetScaleSlider() {
 export function updateSelectionElement(selectElementID, selectedIdx) {
     const selectElement = document.getElementById(selectElementID)
     selectElement.value = selectedIdx
+
+    document.getElementById('info-label').classList.add('hidden');
+    document.getElementById('label-container').style.minWidth = ''
 }
 
 export function toggleTransitionAnimation(animationActive) {
@@ -304,6 +318,7 @@ export function toggleTransitionAnimation(animationActive) {
     state.cameraSunLockChanged = false;
     if (state.transitionAnimationActive) document.getElementById('menu-content').classList.add('disabled')
     else document.getElementById('menu-content').classList.remove('disabled')
+    document.getElementById('info-label').classList.add('hidden');
 }
 
 export function calcPlanetOffset(planet) {

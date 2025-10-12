@@ -32,6 +32,7 @@ export function initEventListeners({
                                        jwstPlane,
                                        constellationSphere,
                                        connectionOutline,
+                                       gorilla,
                                        moveToPlanet,
                                        moveToSpacecraft,
                                        moveToDefault,
@@ -253,6 +254,9 @@ export function initEventListeners({
         }
         if (event.key.toLowerCase() === 'j') {
             moveToJWST();
+        }
+        if (event.key === '§') {
+            toggleGorilla()
         }
     });
 
@@ -551,7 +555,9 @@ export function initEventListeners({
         updateSelectionElement("TARGET_SELECT", state.targets.indexOf(planet.name))
     }
     function transformTargetPlanet() {
+        document.getElementById('info-label').classList.add('hidden');
         pushTextToLabel('Turn ' + state.targetPlanet.name + ' into a star')
+
         const newSun = new Planet(
             state.targetPlanet.name + " (Star)",
             696340 * state.PLANET_SCALE,
@@ -661,5 +667,11 @@ export function initEventListeners({
             pushTextToLabel(state.cameraSunLockChanged ? 'Lock camera to sun' : 'Unlock camera from sun')
             document.getElementById('CAMERA_SUN_LOCK_CB').checked = state.cameraSunLockChanged
         }
+    }
+    function toggleGorilla() {
+        console.log(gorilla)
+        state.SHOW_GORILLA = !state.SHOW_GORILLA
+        if (state.SHOW_GORILLA) scene.add(gorilla)
+        else scene.remove(gorilla)
     }
 }
