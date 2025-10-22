@@ -41,8 +41,9 @@ import {
     jupiter2kTexture, jupiter8kTexture, jupiterRingTexture,
     saturn2kTexture, saturn8kTexture, saturnRingTexture,
     uranus2kTexture, uranusRingTexture,
-    neptune2kTexture, neptuneRingTexture, moon2kTexture, jwstModelPath
+    neptune2kTexture, neptuneRingTexture, moon2kTexture, jwstModelPath, gorillaModelPath
 } from "./scripts/data/paths.js";
+import {planetInfo} from "./scripts/data/infotext.js";
 
 
 let cameraOffset = new THREE.Vector3(0.001, 0.01, 0.001); // Default offset
@@ -90,7 +91,7 @@ state.spacecraft = new Spacecraft(
     1000,
     0, 0, -3 * AU * DISTANCE_SCALE,
     0.04,
-    0.25,
+    0.45, // 0.25
     0.0001, // 0.000001 (causes vector-line-bugs)
     0.2,
 );
@@ -122,6 +123,7 @@ loadingManager.onLoad = ()=>{
             jwstPlane: jwstPlane,
             constellationSphere: constellationSphere,
             connectionOutline: connectionOutline,
+            gorilla: gorilla,
             moveToPlanet: moveToPlanet,
             moveToSpacecraft: moveToSpacecraft,
             moveToDefault: moveToDefault,
@@ -278,6 +280,82 @@ function setMenuSettings() { // set interface default values
         document.getElementById("planet-scale-display").textContent = newPlanetScale.toString();
         changePlanetScale(newPlanetScale)
     });
+    document.getElementById("permanent-labels-container").addEventListener("mouseenter", (event) => {
+        const targetPlanetInfo = planetInfo[state.targetPlanet.name]
+        if (!targetPlanetInfo) return
+        typeOutLabelText('info-label', targetPlanetInfo, 65);
+    });
+    document.getElementById("label-container").addEventListener("mouseleave", (event) => {
+        reverseTypeLabelText('info-label', 40);
+    });
+}
+
+function typeOutLabelText(labelId, targetPlanetInfo, speed = 1) {
+    const label = document.getElementById(labelId);
+    if (!label) return;
+
+    if(state.typingAnimationActive) return
+    state.typingAnimationActive = true;
+
+    if (state.currentAnimationInterval) {
+        clearInterval(state.currentAnimationInterval);
+    }
+
+    const originalHTML = targetPlanetInfo;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = originalHTML;
+    const listItems = Array.from(tempDiv.querySelectorAll('li'));
+
+    label.textContent = '';
+    label.classList.remove('hidden');
+
+    label.innerHTML = '<ul></ul>';
+    const ul = label.querySelector('ul');
+
+
+    let i = 0;
+    state.currentAnimationInterval = setInterval(() => {
+        if (i < listItems.length) {
+            // Clone and append the next list item
+            const li = listItems[i].cloneNode(true);
+            ul.appendChild(li);
+            i++;
+        } else {
+            clearInterval(state.currentAnimationInterval);
+            state.typingAnimationActive = false;
+            document.getElementById('label-container').style.minWidth = '250px'
+            state.currentAnimationInterval = null;
+        }
+    }, speed);
+}
+
+function reverseTypeLabelText(labelId, speed = 100) {
+    state.typingAnimationActive = false;
+
+    const label = document.getElementById(labelId);
+    if (!label || !label.querySelector('ul')) return;
+
+    // Clear any existing animation
+    if (state.currentAnimationInterval) {
+        clearInterval(state.currentAnimationInterval);
+    }
+
+    const ul = label.querySelector('ul');
+    const listItems = Array.from(ul.querySelectorAll('li'));
+
+    let i = listItems.length;
+    state.currentAnimationInterval = setInterval(() => {
+        if (i > 0) {
+            // Remove the last list item
+            ul.removeChild(listItems[i-1]);
+            i--;
+        } else {
+            clearInterval(state.currentAnimationInterval);
+            label.classList.add('hidden');
+            document.getElementById('label-container').style.minWidth = '120px'
+            state.currentAnimationInterval = null;
+        }
+    }, speed);
 }
 
 changeBackground(backgroundTextures.indexOf(state.backgroundTexture).toString())
@@ -364,6 +442,30 @@ gltfLoader.load(jwstModelPath.href, (gltf) =>
     const pointLight = new THREE.PointLight(0xffffff, 0.003, 10000 * DISTANCE_SCALE); // (color, intensity, distance)
     pointLight.position.set(1, 4, 0); // Set the light's position
     jwst.add(pointLight);
+});
+
+// create gorilla
+let gorilla = null
+gltfLoader.load(gorillaModelPath.href, (gltf) =>
+{
+    gorilla = gltf.scene
+    gorilla.renderOrder = -4;
+    // gorilla.rotation.x = THREE.MathUtils.degToRad(90)
+
+    gorilla.position.set(0, -100, -200);
+    gorilla.scale.set(5000, 5000, 5000);
+
+    const gorillaLight = new THREE.AmbientLight(0x39ff14, 100);
+    // gorillaLight.layers.set(1);
+    gorilla.add(gorillaLight);
+
+    // gorilla.traverse((child) => {
+    //     if (child.isMesh) {
+    //         child.layers.set(1);
+    //     }
+    // });
+
+    // scene.add(gorilla)
 });
 
 function toggleJWSTSelected(selected) {
@@ -458,6 +560,7 @@ function moveToPlanet(planet, topDown=false) {
 }
 
 function moveToSpacecraft() {  // todo: move camera to spacecraft smoothly
+    state.spacecraft.updatePosition(planets, sun.sphere.position)
     state.birdseye = false;
     toggleJWSTSelected(false)
     setTargetPlanet(null)
@@ -742,6 +845,18 @@ function render() { // runs with 60 fps
     } else if (!state.transitionAnimationActive) { // default (0,0,0) target
         updateControls(new THREE.Vector3(0,0,0))
     }
+
+    // gorilla layers
+    // renderer.autoClear = false;
+    // renderer.clear();
+    // renderer.clearDepth();
+    // camera.layers.set(1); // Render only layer 1 (Gorilla & its light)
+    // renderer.render(scene, camera);
+    // renderer.clearDepth();
+    // camera.layers.set(0); // Render only layer 0 (Spacecraft & other objects)
+    // renderer.render(scene, camera);
+    // ---
+
     renderer.render( scene, camera );
 }
 renderer.setAnimationLoop( render );
