@@ -30,7 +30,7 @@ import {
     gltfLoader,
     sunLight, controls, controls2, loadingManager, adjustFOV
 } from './scripts/setup/scene.js';
-import {OrbitTrail, Planet, Ring, Spacecraft} from "./scripts/setup/classes.js";
+import {Comet, OrbitTrail, Planet, Ring, Spacecraft} from "./scripts/setup/classes.js";
 import { initEventListeners } from "./scripts/eventListeners.js";
 import {
     sun2kTexture, sun8kTexture,
@@ -96,6 +96,16 @@ state.spacecraft = new Spacecraft(
     0.2,
 );
 
+const comets = [];
+
+function createComets(num) {
+    for (let i = 0; i < num; i++) {
+        // comets.push(new Comet(0.5, 5000))
+        comets.push(new Comet(0.002, 5000))
+    }
+}
+
+createComets(4) // this number of comets will stay constant
 
 camera.position.y = 40; // moving out the camera
 controls.update();
@@ -728,6 +738,13 @@ function render() { // runs with 60 fps
             planet.updatePosition(planets)
         }
         rotateTargetPlanet()
+        for (let i = comets.length - 1; i >= 0; i--) {
+            const outOfBounds = comets[i].updatePosition();
+            if (outOfBounds) {
+                comets.splice(i, 1);
+                createComets(1)
+            }
+        }
         if (state.spacecraftSelected) {
             state.spacecraft.updatePosition(planets, sun.sphere.position)
             state.spacecraft.updateBolts()

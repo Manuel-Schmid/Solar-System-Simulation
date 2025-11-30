@@ -1,10 +1,7 @@
 import * as THREE from "three";
-import {
-    G,
-    DISTANCE_SCALE,
-} from '../data/constants.js';
+import {DISTANCE_SCALE, G,} from '../data/constants.js';
 import FakeGlowMaterial from "../design/GlowMaterial.js";
-import {getPositionDistance, PlanetRingGeometry} from "../utils.js";
+import {getPositionDistance, getRandomNum, PlanetRingGeometry} from "../utils.js";
 import {adjustFOV, gltfLoader, scene, textureLoader} from "./scene.js";
 import {pushTextToLabel, updateLabel} from "../design/designUtils.js";
 import {state} from "../data/variables.js";
@@ -13,7 +10,8 @@ import {
     earthCloud8kTexture,
     oceanMetalnessMap,
     oceanRoughnessMap,
-    spacecraftModel, venusAtmosphereTexture
+    spacecraftModel,
+    venusAtmosphereTexture
 } from "../data/paths.js";
 
 export class Spacecraft {
@@ -879,4 +877,150 @@ export class OrbitTrail {
         // Update the trail's position relative to Earth
         this.orbitTrailObj.position.copy(earth.position);
     }
+}
+
+export class Comet {
+    constructor(scale, trailLength) {
+        this.xVel = 0;
+        this.yVel = 0;
+        this.zVel = 0;
+
+        this.cometObj = new THREE.Object3D();
+
+        const cometColor = 0xebfeff // -> 00A8CE
+        // const test = convertHexTo0x("#d31245")
+
+        const cometMat = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 }, // For animation
+                scale: { value: scale },
+                originalScale: { value: 0.001 },
+                color1: { value: new THREE.Color(cometColor) }, // Base color
+                color2: { value: new THREE.Color(cometColor) }, // Tip color
+            },
+            vertexShader: `
+                varying vec3 vPosition;
+                void main() {
+                    vPosition = position; // Pass position to fragment shader
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform float scale; // Current scale
+                uniform float originalScale; // Reference scale (0.001)
+                uniform vec3 color1; // Base color
+                uniform vec3 color2; // Tip color
+                varying vec3 vPosition;
+            
+                // 2D noise function
+                float noise(vec2 uv) {
+                    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+                }
+            
+                void main() {
+                    // Compute the normalized position based on the scale ratio
+                    float scaleRatio = scale / originalScale;
+                    float normalizedY = vPosition.y * scaleRatio;
+            
+                    // Add procedural noise for texture, adjusted for scale ratio
+                    float flameNoise = noise(vec2(normalizedY * 5.0, time * 0.5)) * 0.5 + 0.5;
+            
+                    // Blend base color and tip color based on height, adjusted for scale ratio
+                    float heightFactor = smoothstep(0.0, 1.0, normalizedY + 0.5);
+                    vec3 flameColor = mix(color1, color2, heightFactor);
+            
+                    // Combine noise and height factor for final intensity
+                    float intensity = flameNoise;
+            
+                    // Normalize intensity for additive blending consistency
+                    intensity = clamp(intensity, 0.0, 1.0); // Prevent oversaturation
+            
+                    // Add fading transparency toward the edges
+                    float alpha = smoothstep(0.0, 1.0, intensity) * 2.8;
+            
+                    // Output the flame color with transparency
+                    gl_FragColor = vec4(flameColor * intensity, alpha);
+                }
+            `,
+            transparent: true, // Allows blending with the background
+            blending: THREE.AdditiveBlending, // Glow effect
+        });
+
+
+        const cometBodyGeo = new THREE.SphereGeometry(500 * scale, 32, 32);
+        const cometBodyMat = new THREE.MeshStandardMaterial( {
+            color: cometColor,
+            emissive: 0xabfcff, // self illuminationäüööööööööö877777777777777
+            emissiveIntensity: 0.4,
+            opacity: 0.2,
+        } );
+        const cometBody = new THREE.Mesh(cometBodyGeo, cometBodyMat);
+
+        const scaledTrailLength = trailLength * scale
+
+        const trailGeometry = new THREE.ConeGeometry(500 * scale, scaledTrailLength, 32);
+        const trail = new THREE.Mesh(trailGeometry, cometMat);
+
+        trail.position.set(0, 0, -scaledTrailLength/2)
+        trail.rotation.x = THREE.MathUtils.degToRad(-90)
+
+        this.cometObj.add(cometBody);
+        this.cometObj.add(trail);
+        // this.cometObj.scale.set(0.1 / scale, 0.1 / scale, 0.1 / scale);
+
+        // const axesHelper = new THREE.AxesHelper(2000);
+        // this.cometObj.add(axesHelper);
+
+        // position
+        this.cometObj.position.set(
+            getRandomNum(-1000, 1000),
+            getRandomNum(-1000, 1000),
+            getRandomNum(-1000, 1000)
+        )
+
+        // rotation
+        const randomQuat = getRandomRotation();
+        this.cometObj.quaternion.copy( randomQuat );
+
+        // velocity
+        const direction = new THREE.Vector3(0, 0, 1).applyQuaternion( randomQuat ).normalize();
+
+        const totalSpeed = getRandomNum(3500, 4500)
+        // const totalSpeed = getRandomNum(500, 1200)
+
+        // scale by totalSpeed
+        this.xVel = direction.x * totalSpeed;
+        this.yVel = direction.y * totalSpeed;
+        this.zVel = direction.z * totalSpeed;
+
+        scene.add(this.cometObj)
+    }
+
+    updatePosition() {
+        this.cometObj.position.x += ((this.xVel * DISTANCE_SCALE) * state.TIME)
+        this.cometObj.position.y += ((this.yVel * DISTANCE_SCALE) * state.TIME)
+        this.cometObj.position.z += ((this.zVel * DISTANCE_SCALE) * state.TIME)
+
+        if (Object.values(this.cometObj.position).some(coord => coord > 1400 || coord < -1400)) { // if comet out of bounds
+            scene.remove(this.cometObj)
+            return true;
+        } else return false;
+    }
+}
+
+
+function getRandomRotation() {
+    // random axis
+    const axis = new THREE.Vector3(
+        Math.random()*2 - 1,
+        Math.random()*2 - 1,
+        Math.random()*2 - 1,
+    ).normalize();
+
+    // random angle 0–2π
+    const angle = Math.random() * Math.PI * 2;
+
+    // quaternion from axis‑angle
+    return new THREE.Quaternion().setFromAxisAngle(axis, angle);
 }
